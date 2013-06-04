@@ -1,0 +1,15 @@
+{% extends "stripey_app/base.html" %}
+
+{% block content %}
+
+{% if all_mss %}
+    <ul>
+    {% for ms in all_mss %}
+        <li>{{ ms.ms_ref }}</li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No mss are available.</p>
+{% endif %}
+
+{% endblock content %}
