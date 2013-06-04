@@ -18,7 +18,8 @@ class Hand(models.Model):
     name = models.CharField(max_length=30)
     
 class Book(models.Model):
-	name = models.CharField(max_length=20)
+    name = models.CharField(max_length=20)
+    num = models.IntegerField()
 	
 class Chapter(models.Model):
 	book = models.ForeignKey(Book)

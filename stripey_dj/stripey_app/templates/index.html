@@ -15,7 +15,7 @@
 {% if all_mss %}
     <ul>
     {% for ms in all_mss %}
-        <li>{{ ms.ms_ref }} : {{ ms.xml_url }} : {{ ms.status }}</li>
+        <li><a href="manuscript.html?ms_id={{ ms.id }}">{{ ms.ms_ref }} : {{ ms.xml_url }}</a> : {{ ms.status }}</li>
     {% endfor %}
     </ul>
 {% else %}

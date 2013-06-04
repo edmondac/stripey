@@ -1,4 +1,4 @@
-from django.shortcuts import render_to_response, redirect
+from django.shortcuts import render_to_response, redirect, get_object_or_404
 from stripey_app.models import ManuscriptTranscription, Book, Chapter, Hand, Verse
 from stripey_lib import xmlmss
 from django.core.exceptions import ObjectDoesNotExist
@@ -12,9 +12,44 @@ def index(request):
     n_collated = ManuscriptTranscription.objects.filter(status='collated').count()
     n_new = all_mss.count() - n_loaded - n_collated
 
-    return render_to_response('stripey_app/index.html', {'all_mss': all_mss,
-														 'n_loaded': n_loaded,
-														 'n_new': n_new})
+    return render_to_response('index.html', {'all_mss': all_mss,
+                                             'n_loaded': n_loaded,
+											 'n_new': n_new})
+
+def manuscript(request):
+    ms = get_object_or_404(ManuscriptTranscription, pk=request.GET.get('ms_id'))
+    hands = Hand.objects.filter(manuscript=ms)
+    verses = Verse.objects.filter(hand__in=hands)
+    chapters = Chapter.objects.filter(id__in=list(set([v.chapter.id for v in verses]))).order_by('num')
+    
+    books = Book.objects.filter(id__in=list(set([c.book.id for c in chapters]))).order_by('num')
+    ch_per_book = {}
+    # We want a list of chapters - per book.
+    for book in books:
+        book.chapters = chapters.filter(book=book)
+
+    # Are we showing any particular text?
+    book_num = request.GET.get('bk')
+    if book_num:
+        book = [x for x in books if x.num == int(book_num)][0]
+    else:
+        # Show the first one
+        book = books[0]
+
+    chapter_num = request.GET.get('ch')
+    if chapter_num:
+        chapter = book.chapters.filter(num=chapter_num)[0]
+    else:
+        # Show the first one
+        chapter = book.chapters[0]
+
+    # Set the verses to display
+    chapter.verses = verses.filter(chapter=chapter).order_by('num')
+
+    return render_to_response('manuscript.html', {'ms': ms,
+                                                  'hands': [x.name for x in hands],
+                                                  'books': books,
+                                                  'chapter_to_show': chapter})
 
 def load(request):
     all_mss = ManuscriptTranscription.objects.all()
@@ -28,7 +63,7 @@ def load(request):
         if not obj.book:
             raise ValueError("Couldn't work out the book")
             
-        db_book = _get_book(obj.book)
+        db_book = _get_book(obj.book, obj.num)
 
         for ch in obj.chapters.values():
             db_chapter = _get_chapter(db_book, ch.num)
@@ -48,13 +83,14 @@ def load(request):
         
     return redirect('index.html')
 	
-def _get_book(name):
+def _get_book(name, num):
     try:
         db_book = Book.objects.get(name=name)
     except ObjectDoesNotExist:
         logger.debug("Creating book object for {}".format(name))
         db_book = Book()
         db_book.name = name
+        db_book.num = num
         db_book.save()
     return db_book
 

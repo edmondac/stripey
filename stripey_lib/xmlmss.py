@@ -15,7 +15,6 @@ import logging
 logger = logging.getLogger('XmlMss')
 import xml.etree.ElementTree as ET
 from collections import OrderedDict
-
 idents = string.lowercase
 
 # What tags do we just ignore?
@@ -26,6 +25,9 @@ ignore_tags = ['lb',    # Line break
                'pc',    # Punctuation
                'space', # White space
                'gap',   # Lacuna, illegible etc.
+               'seg',   # Marginal text
+               'note',  # Notes
+               'num',   # (Mostly) paratextual numbners
                ]
 
 # What tags are ok inside words?
@@ -34,6 +36,7 @@ word_tags = ['supplied',
              'abbr',
              'hi',
              'w',
+             'ex',
              ] + ignore_tags
 
 
@@ -41,12 +44,10 @@ class Verse(object):
     """
     Takes an ElementTree element representing a verse and parses it.
     """
-    def __init__(self, element, chapter):
+    def __init__(self, element, number, chapter):
         self.element = element
         self.chapter = chapter
-
-        # This is the verse tag - extract the verse number
-        self.num = self.element.attrib['n']
+        self.num = number
 
         # Note - we can have multiple different texts and idents if
         # correctors have been at work
@@ -174,15 +175,19 @@ class Chapter(object):
         for i in element.getchildren():
             if i.tag == "{http://www.tei-c.org/ns/1.0}ab":
                 # This is a verse
-                v = int(i.attrib['n'])
+                v = i.attrib['n']
+                if v.startswith('B'):
+                    # e.g. B04K12V17
+                    v = v.split('V')[-1]
+                v = int(v)
                 if v in self.verses:
                     raise ValueError("Duplicate verse found")
-                self.verses[v] = Verse(i, self.num)
+                self.verses[v] = Verse(i, v, self.num)
 
 
 class Manuscript(object):
     """
-    Fetches a manuscript from www.iohannes.com/XML/?.xml (or uses a
+    Fetches a manuscript from e.g. www.iohannes.co (or uses a
     local copy if present) and parses it.
     """
     cache = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".mss")
@@ -192,7 +197,10 @@ class Manuscript(object):
         self.url = url
         self.tree = None
         self.chapters = {}
+        
+        # Book identification - FIXME, am I limited to one book per ms?
         self.book = None
+        self.num = None
 
         self._load_xml()
         self._parse_tree()
@@ -234,11 +242,16 @@ class Manuscript(object):
                 # This is the book name
                 self.book = title.text
                 logger.info("Detected book: {}".format(self.book))
-                break
+            elif title.attrib.get('type') == 'work':
+                # This is the book number
+                self.num = title.attrib.get('n')
         
         for child in root.iter("{http://www.tei-c.org/ns/1.0}div"):
             if child.attrib.get('type') == 'chapter':
                 my_ch = child.attrib['n']
+                if my_ch.startswith('B'):
+                    # e.g. B04K12
+                    my_ch = my_ch.split('K')[-1]
                 logger.debug("Found chapter %s" % (my_ch, ))
                 if my_ch in self.chapters:
                     raise ValueError("Duplicate chapter found")
