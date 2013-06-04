@@ -1,0 +1,17 @@
+body {
+  background-color:ffffee;
+}
+
+table, tr, td, th {
+  font-family: monospace;
+  font-size: 9pt;
+  color: 770000;
+}
+
+th {
+  text-align: left;
+}
+
+td {
+  letter-spacing: 2px;
+}
