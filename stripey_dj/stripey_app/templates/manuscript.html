@@ -1,0 +1,25 @@
+{% extends "stripey_app/base.html" %}
+
+{% block content %}
+
+<h2>Manuscript {{ ms.ms_ref }}</h2>
+
+<p>Hands: {{ hands|join:', ' }}</p>
+
+{% for book in books %}
+ <div>
+  <b>Book: {{ book.name|title }}</b>
+  {% for chapter in book.chapters %}
+    <a href="?ms_id={{ ms.id }}&bk={{ book.num }}&ch={{ chapter.num }}">{{ chapter.num }}</a>
+  {% endfor %}
+ </div>
+{% endfor %}
+
+<h3>{{ chapter_to_show.book.name|title }} {{ chapter_to_show.num }}</h3>
+<table>
+{% for verse in chapter_to_show.verses %}
+  <tr><th>{{ verse.num }} [<i>{{ verse.hand.name }}</i>]</th><td>{{ verse.text }}</td></tr>
+{% endfor %}
+</table>
+
+{% endblock content %}
