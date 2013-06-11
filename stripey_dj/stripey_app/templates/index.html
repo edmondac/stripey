@@ -11,7 +11,7 @@
  <div>
   <b>Book: {{ book.name|title }}</b>
   {% for chapter in book.chapters %}
-    <a href="collate.html?bk={{ book.num }}&ch={{ chapter.num }}">{{ chapter.num }}</a>
+    <a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num }}">{{ chapter.num }}</a>
   {% endfor %}
  </div>
 {% endfor %}

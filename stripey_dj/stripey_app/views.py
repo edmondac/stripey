@@ -1,11 +1,17 @@
+import os
 from django.shortcuts import render_to_response, redirect, get_object_or_404
 from stripey_app.models import ManuscriptTranscription, Book, Chapter, Hand, Verse
 from stripey_lib import xmlmss
 from django.core.exceptions import ObjectDoesNotExist
+from django.utils.encoding import smart_unicode
 
 import logging
 logger = logging.getLogger('stripey_app.views')
 
+from stripey_lib import collatex as _mod
+os.environ['COLLATE_JAR_PATH'] = os.path.dirname(_mod.__file__)
+logger.debug(os.environ['COLLATE_JAR_PATH'])
+from stripey_lib.collatex import collatex
 
 def index(request):
     all_mss = ManuscriptTranscription.objects.all().order_by('ms_ref')
@@ -65,7 +71,50 @@ def collate(request):
     book_obj = Book.objects.filter(num=request.GET.get('bk'))[0]
     chapter_obj = Chapter.objects.filter(book=book_obj,
                                          num=request.GET.get('ch'))[0]
+    all_verses = _get_all_verses(book_obj, chapter_obj)
+    collated_verses = []
+    for v, mss in all_verses:
+        collation = collatex.Collation()
+        for ms in mss:
+            for hand, greek in ms[1]:
+                collation.add_witness('{}:{}'.format(ms[0].ms_ref, hand), greek)
+        rows = collation.get_alignment_table().rows
+        
+        collated_verses.append((v, [(row.sigil,
+                                    [smart_unicode(unicode(i.token)) for i in row.cells])
+                                    for row in rows]))
+        break
 
+    return render_to_response('collate.html', {'book': book_obj,
+                                               'chapter': chapter_obj,
+                                               'verses': collated_verses})
+            
+
+def chapter(request):
+    """
+    View the text of a chapter in all manuscripts
+    """
+    book_obj = Book.objects.filter(num=request.GET.get('bk'))[0]
+    chapter_obj = Chapter.objects.filter(book=book_obj,
+                                         num=request.GET.get('ch'))[0]
+    all_verses = _get_all_verses(book_obj, chapter_obj)
+    return render_to_response('chapter.html', {'book': book_obj,
+                                               'chapter': chapter_obj,
+                                               'verses': all_verses})
+        
+
+def _get_all_verses(book_obj, chapter_obj):
+    """
+    Return all verses in a particular chapter, in this form:
+    [(1, [(<ManuscriptTranscription: Manuscript 87 transcription (loaded)>,
+           [(u'firsthand', u'(greek text)'),
+            (u'secunda_manu', u'(greek text)')]),
+          (<ManuscriptTranscription...
+     (2, [(<ManuscriptTranscription: Manuscript 01 transcription (loaded)>,
+           [(u'firsthand', u'(greek text)')]),
+          (<ManuscriptTranscription: Manuscript 02 transcription (loaded)>,
+           [(u'firsthand', u'(greek text)')]), ...
+    """
     all_mss = ManuscriptTranscription.objects.all()
     vs_d = {}
     for ms in all_mss:
@@ -83,12 +132,7 @@ def collate(request):
     for k in keys:
         all_verses.append((k, vs_d[k]))
 
-    return render_to_response('collate.html', {'book': book_obj,
-                                               'chapter': chapter_obj,
-                                               'verses': all_verses})
-            
-        
-    
+    return all_verses
 
 def load(request):
     all_mss = ManuscriptTranscription.objects.all()

@@ -1,0 +1,28 @@
+{% extends "stripey_app/base.html" %}
+
+{% block content %}
+
+<h2>Text of {{ book.name|title }} {{ chapter.num }}</h2>
+
+<h3><a href="collate.html?bk={{ book.num }}&ch={{ chapter.num }}">View collation</a></h3>
+
+<table>
+    {% for verse in verses %}
+        <tr><th colspan="3" align="left">Verse {{ verse.0 }}</th></tr>
+        {% for ms_verses in verse.1 %}
+            <tr>
+                <th rowspan="{{ ms_verses.1|length }}">{{ ms_verses.0.ms_ref }}</th>
+                <th>{{ ms_verses.1.0.0 }}</th>
+                <td>{{ ms_verses.1.0.1 }}</td>
+            </tr>
+            {% for hand in ms_verses.1|slice:"1:" %}
+                <tr>
+                    <th>{{ hand.0 }}</th>
+                    <td>{{ hand.1 }}</td>
+                </tr>
+            {% endfor %}
+        {% endfor %}
+    {% endfor %}
+</table>
+
+{% endblock content %}
