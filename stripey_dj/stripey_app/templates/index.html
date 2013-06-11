@@ -2,14 +2,19 @@
 
 {% block content %}
 
-{% if n_loaded %}
- <p>{{ n_loaded }} manuscripts need collating</p>
-{% endif %}
-
 {% if n_new %}
  <p>{{ n_new }} manuscripts need loading: <a href="load.html">load now</a></p>
 {% endif %}
 
+<h2>Books</h2>
+{% for book in books %}
+ <div>
+  <b>Book: {{ book.name|title }}</b>
+  {% for chapter in book.chapters %}
+    <a href="collate.html?bk={{ book.num }}&ch={{ chapter.num }}">{{ chapter.num }}</a>
+  {% endfor %}
+ </div>
+{% endfor %}
 
 <h2>Manuscript transcriptions</h2>
 {% if all_mss %}

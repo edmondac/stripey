@@ -6,24 +6,30 @@ from django.core.exceptions import ObjectDoesNotExist
 import logging
 logger = logging.getLogger('stripey_app.views')
 
+
 def index(request):
-    all_mss = ManuscriptTranscription.objects.all().order_by('-ms_ref')
+    all_mss = ManuscriptTranscription.objects.all().order_by('ms_ref')
     n_loaded = ManuscriptTranscription.objects.filter(status='loaded').count()
-    n_collated = ManuscriptTranscription.objects.filter(status='collated').count()
-    n_new = all_mss.count() - n_loaded - n_collated
+    n_new = all_mss.count() - n_loaded
+    books = Book.objects.all().order_by('num')
+    # We want a list of chapters - per book.
+    for book in books:
+        book.chapters = Chapter.objects.filter(book=book).order_by('num')
 
     return render_to_response('index.html', {'all_mss': all_mss,
                                              'n_loaded': n_loaded,
-											 'n_new': n_new})
+                                             'n_new': n_new,
+                                             'books': books})
+
 
 def manuscript(request):
     ms = get_object_or_404(ManuscriptTranscription, pk=request.GET.get('ms_id'))
     hands = Hand.objects.filter(manuscript=ms)
     verses = Verse.objects.filter(hand__in=hands)
     chapters = Chapter.objects.filter(id__in=list(set([v.chapter.id for v in verses]))).order_by('num')
-    
+
     books = Book.objects.filter(id__in=list(set([c.book.id for c in chapters]))).order_by('num')
-    ch_per_book = {}
+
     # We want a list of chapters - per book.
     for book in books:
         book.chapters = chapters.filter(book=book)
@@ -51,23 +57,56 @@ def manuscript(request):
                                                   'books': books,
                                                   'chapter_to_show': chapter})
 
+
+def collate(request):
+    """
+    Collate all manuscripts
+    """
+    book_obj = Book.objects.filter(num=request.GET.get('bk'))[0]
+    chapter_obj = Chapter.objects.filter(book=book_obj,
+                                         num=request.GET.get('ch'))[0]
+
+    all_mss = ManuscriptTranscription.objects.all()
+    vs_d = {}
+    for ms in all_mss:
+        verses = ms.get_text(book_obj, chapter_obj)
+        for v in verses:
+            me = vs_d.get(v[0])
+            if not me:
+                me = []
+                vs_d[v[0]] = me
+            me.append((ms, v[1]))
+
+    keys = vs_d.keys()
+    keys.sort()
+    all_verses = []
+    for k in keys:
+        all_verses.append((k, vs_d[k]))
+
+    return render_to_response('collate.html', {'book': book_obj,
+                                               'chapter': chapter_obj,
+                                               'verses': all_verses})
+            
+        
+    
+
 def load(request):
     all_mss = ManuscriptTranscription.objects.all()
     for ms in all_mss:
         if ms.status in ('loaded', 'collated'):
             logger.debug("MS {} is already loaded - ignoring".format(ms))
             continue
-        
+
         logger.info("Loading MS {}".format(ms))
         obj = xmlmss.Manuscript(ms.ms_ref, ms.xml_url)
         if not obj.book:
             raise ValueError("Couldn't work out the book")
-            
+
         db_book = _get_book(obj.book, obj.num)
 
         for ch in obj.chapters.values():
             db_chapter = _get_chapter(db_book, ch.num)
-            
+
             for vs in ch.verses.values():
                 for i, hand in enumerate(vs.hands):
                     db_hand = _get_hand(ms, hand)
@@ -77,13 +116,17 @@ def load(request):
                     db_verse.num = vs.num
                     db_verse.text = vs.texts[i]
                     db_verse.save()
-        
+
         ms.status = 'loaded'
         ms.save()
-        
+
     return redirect('index.html')
-	
+
+
 def _get_book(name, num):
+    """
+    Retrieve or create the specified book
+    """
     try:
         db_book = Book.objects.get(name=name)
     except ObjectDoesNotExist:
@@ -94,7 +137,11 @@ def _get_book(name, num):
         db_book.save()
     return db_book
 
+
 def _get_chapter(db_book, num):
+    """
+    Retrieve or create the specified chapter
+    """
     try:
         db_chapter = Chapter.objects.get(book=db_book, num=num)
     except ObjectDoesNotExist:
@@ -104,8 +151,12 @@ def _get_chapter(db_book, num):
         db_chapter.book = db_book
         db_chapter.save()
     return db_chapter
-    
+
+
 def _get_hand(ms, hand):
+    """
+    Retrieve or create the specified hand
+    """
     if hand is None:
         hand = 'firsthand'
     try:
