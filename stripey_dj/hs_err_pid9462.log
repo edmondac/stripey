@@ -1,0 +1,461 @@
+#
+# A fatal error has been detected by the Java Runtime Environment:
+#
+#  SIGSEGV (0xb) at pc=0xb5b98c04, pid=9462, tid=3047160640
+#
+# JRE version: 7.0_21-b02
+# Java VM: OpenJDK Client VM (23.7-b01 mixed mode, sharing linux-x86 )
+# Problematic frame:
+# C  [_jpype.so+0x2ac04]  JPJavaEnv::NewObjectA(_jclass*, _jmethodID*, jvalue*)+0x44
+#
+# Failed to write core dump. Core dumps have been disabled. To enable core dumping, try "ulimit -c unlimited" before starting Java again
+#
+# If you would like to submit a bug report, please include
+# instructions on how to reproduce the bug and visit:
+#   https://bugs.launchpad.net/ubuntu/+source/openjdk-7/
+#
+
+---------------  T H R E A D  ---------------
+
+Current thread is native thread
+
+siginfo:si_signo=SIGSEGV: si_errno=0, si_code=1 (SEGV_MAPERR), si_addr=0x00000000
+
+Registers:
+EAX=0xb641f8b0, EBX=0xb5bfd000, ECX=0xb1f168b0, EDX=0x00000001
+ESP=0xb59fc940, EBP=0x00000000, ESI=0x00000000, EDI=0xb1f324e8
+EIP=0xb5b98c04, EFLAGS=0x00210282, CR2=0x00000000
+
+Top of Stack: (sp=0xb59fc940)
+0xb59fc940:   b5a0c788 b51fd794 b51f578c b771c000
+0xb59fc950:   b5000010 b1f324e8 00000000 b641f8b0
+0xb59fc960:   b5be3088 b5be30ab b59fca04 b5bfd000
+0xb59fc970:   00000000 b1f324e8 00000000 b5ba171a
+0xb59fc980:   b1f0b048 b1f168b0 b1f02224 b504b858
+0xb59fc990:   00000000 00000000 00000000 00000000
+0xb59fc9a0:   00000000 b504b858 00000000 00000000
+0xb59fc9b0:   00000000 00000000 00000000 00000000 
+
+Instructions: (pc=0xb5b98c04)
+0xb5b98be4:   38 e8 76 fb ff ff 8b 8b 68 fe ff ff 89 c5 8b 01
+0xb5b98bf4:   8b 08 89 04 24 ff 51 18 8b 4c 24 44 89 44 24 1c
+0xb5b98c04:   8b 45 00 89 4c 24 04 89 2c 24 ff 50 6c 8b bb c0
+0xb5b98c14:   ff ff ff 89 c6 8b 07 89 04 24 e8 fd fb ff ff 84 
+
+Register to memory mapping:
+
+EAX=0xb641f8b0 is an unknown value
+EBX=0xb5bfd000: <offset 0x8f000> in /usr/local/lib/python2.7/dist-packages/_jpype.so at 0xb5b6e000
+ECX=0xb1f168b0 is a global jni handle
+EDX=0x00000001 is an unknown value
+ESP=0xb59fc940 is an unknown value
+EBP=0x00000000 is an unknown value
+ESI=0x00000000 is an unknown value
+EDI=0xb1f324e8 is an unknown value
+
+
+Stack: [0xb51ff000,0xb5a00000],  sp=0xb59fc940,  free space=8182k
+Native frames: (J=compiled Java code, j=interpreted, Vv=VM code, C=native code)
+C  [_jpype.so+0x2ac04]  JPJavaEnv::NewObjectA(_jclass*, _jmethodID*, jvalue*)+0x44
+
+[error occurred during error reporting (printing native stack), id 0xb]
+
+
+---------------  P R O C E S S  ---------------
+
+VM state:not at safepoint (normal execution)
+
+VM Mutex/Monitor currently owned by a thread: None
+
+Heap
+ def new generation   total 4800K, used 1070K [0x6f780000, 0x6fcb0000, 0x79d80000)
+  eden space 4288K,  24% used [0x6f780000, 0x6f88bba0, 0x6fbb0000)
+  from space 512K,   0% used [0x6fbb0000, 0x6fbb0000, 0x6fc30000)
+  to   space 512K,   0% used [0x6fc30000, 0x6fc30000, 0x6fcb0000)
+ tenured generation   total 10624K, used 0K [0x79d80000, 0x7a7e0000, 0x8e980000)
+   the space 10624K,   0% used [0x79d80000, 0x79d80000, 0x79d80200, 0x7a7e0000)
+ compacting perm gen  total 12288K, used 274K [0x8e980000, 0x8f580000, 0x92980000)
+   the space 12288K,   2% used [0x8e980000, 0x8e9c4918, 0x8e9c4a00, 0x8f580000)
+    ro space 10240K,  60% used [0x92980000, 0x92f928e0, 0x92f92a00, 0x93380000)
+    rw space 12288K,  61% used [0x93380000, 0x93ae8c88, 0x93ae8e00, 0x93f80000)
+
+Card table byte_map: [0xb2463000,0xb2588000] byte_map_base: 0xb20e7400
+
+Polling page: 0xb7761000
+
+Code Cache  [0xb2608000, 0xb26b0000, 0xb4608000)
+ total_blobs=151 nmethods=22 adapters=65 free_code_cache=32118Kb largest_free_block=32889472
+
+Compilation events (10 events):
+Event: 2.323 Thread 0xb1f05800   18             java.lang.Math::min (11 bytes)
+Event: 2.324 Thread 0xb1f05800 nmethod 18 0xb26a6688 code [0xb26a6780, 0xb26a67f0]
+Event: 2.350 Thread 0xb1f05800   19             java.lang.StringBuilder::append (8 bytes)
+Event: 2.355 Thread 0xb1f05800 nmethod 19 0xb26a6848 code [0xb26a6950, 0xb26a6a3c]
+Event: 2.355 Thread 0xb1f05800   20             java.lang.AbstractStringBuilder::append (29 bytes)
+Event: 2.356 Thread 0xb1f05800 nmethod 20 0xb26a6b88 code [0xb26a6c90, 0xb26a6d7c]
+Event: 2.356 Thread 0xb1f05800   21   !         sun.net.www.ParseUtil::decode (316 bytes)
+Event: 2.369 Thread 0xb1f05800 nmethod 21 0xb26a6e88 code [0xb26a71d0, 0xb26a7f78]
+Event: 2.478 Thread 0xb1f05800   22             java.util.Properties$LineReader::readLine (452 bytes)
+Event: 2.483 Thread 0xb1f05800 nmethod 22 0xb26a94c8 code [0xb26a9660, 0xb26a9e5c]
+
+GC Heap History (0 events):
+No events
+
+Deoptimization events (0 events):
+No events
+
+Internal exceptions (10 events):
+Event: 2.346 Thread 0xb5ac0400 Threw 0x6f843ac8 at /build/buildd/openjdk-7-7u21-2.3.9/build/openjdk/hotspot/src/share/vm/prims/jvm.cpp:1166
+Event: 2.347 Thread 0xb5ac0400 Threw 0x6f8443c0 at /build/buildd/openjdk-7-7u21-2.3.9/build/openjdk/hotspot/src/share/vm/prims/jvm.cpp:1166
+Event: 2.347 Thread 0xb5ac0400 Threw 0x6f8444d8 at /build/buildd/openjdk-7-7u21-2.3.9/build/openjdk/hotspot/src/share/vm/prims/jvm.cpp:1166
+Event: 2.348 Thread 0xb5ac0400 Threw 0x6f845450 at /build/buildd/openjdk-7-7u21-2.3.9/build/openjdk/hotspot/src/share/vm/prims/jvm.cpp:1166
+Event: 2.348 Thread 0xb5ac0400 Threw 0x6f845568 at /build/buildd/openjdk-7-7u21-2.3.9/build/openjdk/hotspot/src/share/vm/prims/jvm.cpp:1166
+Event: 2.348 Thread 0xb5ac0400 Threw 0x6f845de0 at /build/buildd/openjdk-7-7u21-2.3.9/build/openjdk/hotspot/src/share/vm/prims/jvm.cpp:1166
+Event: 2.348 Thread 0xb5ac0400 Threw 0x6f845ef8 at /build/buildd/openjdk-7-7u21-2.3.9/build/openjdk/hotspot/src/share/vm/prims/jvm.cpp:1166
+Event: 2.356 Thread 0xb5ac0400 Threw 0x6f84ae28 at /build/buildd/openjdk-7-7u21-2.3.9/build/openjdk/hotspot/src/share/vm/prims/jni.cpp:716
+Event: 2.356 Thread 0xb5ac0400 Threw 0x6f84b038 at /build/buildd/openjdk-7-7u21-2.3.9/build/openjdk/hotspot/src/share/vm/prims/jvm.cpp:1166
+Event: 2.356 Thread 0xb5ac0400 Threw 0x6f84b150 at /build/buildd/openjdk-7-7u21-2.3.9/build/openjdk/hotspot/src/share/vm/prims/jvm.cpp:1166
+
+Events (10 events):
+Event: 2.531 loading class 0xb1f31528
+Event: 2.531 loading class 0xb1f31528 done
+Event: 2.561 loading class 0x9401f708
+Event: 2.562 loading class 0x9401f708 done
+Event: 2.565 loading class 0x94022620
+Event: 2.565 loading class 0x94022620 done
+Event: 2.566 loading class 0x94022658
+Event: 2.566 loading class 0x94022658 done
+Event: 5.592 Executing VM operation: EnableBiasedLocking
+Event: 5.592 Executing VM operation: EnableBiasedLocking done
+
+
+Dynamic libraries:
+08048000-0827a000 r-xp 00000000 08:01 9175344    /usr/bin/python2.7
+0827a000-0827b000 r--p 00231000 08:01 9175344    /usr/bin/python2.7
+0827b000-082da000 rw-p 00232000 08:01 9175344    /usr/bin/python2.7
+082da000-082e6000 rw-p 00000000 00:00 0 
+0933b000-09a6f000 rw-p 00000000 00:00 0          [heap]
+6f780000-6fcb0000 rw-p 00000000 00:00 0 
+6fcb0000-79d80000 rw-p 00000000 00:00 0 
+79d80000-7a7e0000 rw-p 00000000 00:00 0 
+7a7e0000-8e980000 rw-p 00000000 00:00 0 
+8e980000-8f580000 rw-p 00000000 00:00 0 
+8f580000-92980000 rw-p 00000000 00:00 0 
+92980000-92f93000 r--p 00001000 08:01 788259     /usr/lib/jvm/java-7-openjdk-i386/jre/lib/i386/client/classes.jsa
+92f93000-93380000 rw-p 00000000 00:00 0 
+93380000-93ae9000 rw-p 00614000 08:01 788259     /usr/lib/jvm/java-7-openjdk-i386/jre/lib/i386/client/classes.jsa
+93ae9000-93f80000 rw-p 00000000 00:00 0 
+93f80000-94299000 rw-p 00d7d000 08:01 788259     /usr/lib/jvm/java-7-openjdk-i386/jre/lib/i386/client/classes.jsa
+94299000-94380000 rw-p 00000000 00:00 0 
+94380000-94389000 r-xp 01096000 08:01 788259     /usr/lib/jvm/java-7-openjdk-i386/jre/lib/i386/client/classes.jsa
+94389000-94780000 rw-p 00000000 00:00 0 
+b1c00000-b1cfc000 rw-p 00000000 00:00 0 
+b1cfc000-b1d00000 ---p 00000000 00:00 0 
+b1d5c000-b1d5f000 ---p 00000000 00:00 0 
+b1d5f000-b1dad000 rw-p 00000000 00:00 0          [stack:9474]
+b1dad000-b1dae000 ---p 00000000 00:00 0 
+b1dae000-b1e2e000 rw-p 00000000 00:00 0          [stack:9473]
+b1e2e000-b1e31000 ---p 00000000 00:00 0 
+b1e31000-b1e7f000 rw-p 00000000 00:00 0          [stack:9472]
+b1e7f000-b1e82000 ---p 00000000 00:00 0 
+b1e82000-b1f00000 rw-p 00000000 00:00 0          [stack:9471]
+b1f00000-b1fe1000 rw-p 00000000 00:00 0 
+b1fe1000-b2000000 ---p 00000000 00:00 0 
+b2021000-b2032000 r--s 000aa000 00:15 1053542    /home/ed/Documents/Ed's Documents/Work/Birmingham University/PhD/sandpit/stripey/stripey_lib/collatex/collatex-nodeps-0.9.jar
+b2032000-b2035000 ---p 00000000 00:00 0 
+b2035000-b2083000 rw-p 00000000 00:00 0          [stack:9470]
+b2083000-b2086000 ---p 00000000 00:00 0 
+b2086000-b20d4000 rw-p 00000000 00:00 0          [stack:9469]
+b20d4000-b20d7000 ---p 00000000 00:00 0 
+b20d7000-b2125000 rw-p 00000000 00:00 0          [stack:9468]
+b2125000-b2126000 ---p 00000000 00:00 0 
+b2126000-b21ee000 rw-p 00000000 00:00 0          [stack:9467]
+b21ee000-b239b000 r--s 01cde000 08:01 792034     /usr/lib/jvm/java-7-openjdk-i386/jre/lib/rt.jar
+b239b000-b23a2000 rw-p 00000000 00:00 0 
+b23a2000-b23bc000 rw-p 00000000 00:00 0 
+b23bc000-b23c2000 rw-p 00000000 00:00 0 
+b23c2000-b2463000 rw-p 00000000 00:00 0 
+b2463000-b2466000 rw-p 00000000 00:00 0 
+b2466000-b24b6000 rw-p 00000000 00:00 0 
+b24b6000-b24bc000 rw-p 00000000 00:00 0 
+b24bc000-b255c000 rw-p 00000000 00:00 0 
+b255c000-b2562000 rw-p 00000000 00:00 0 
+b2562000-b257c000 rw-p 00000000 00:00 0 
+b257c000-b258b000 rw-p 00000000 00:00 0 
+b258b000-b2608000 rw-p 00000000 00:00 0 
+b2608000-b26b0000 rwxp 00000000 00:00 0 
+b26b0000-b4608000 rw-p 00000000 00:00 0 
+b4608000-b4bc1000 r-xp 00000000 08:01 788033     /usr/lib/jvm/java-7-openjdk-i386/jre/lib/i386/client/libjvm.so
+b4bc1000-b4bd8000 r--p 005b8000 08:01 788033     /usr/lib/jvm/java-7-openjdk-i386/jre/lib/i386/client/libjvm.so
+b4bd8000-b4be7000 rw-p 005cf000 08:01 788033     /usr/lib/jvm/java-7-openjdk-i386/jre/lib/i386/client/libjvm.so
+b4be7000-b5000000 rw-p 00000000 00:00 0 
+b5000000-b5100000 rw-p 00000000 00:00 0 
+b5106000-b510f000 r--s 000bc000 08:01 787814     /usr/lib/jvm/java-7-openjdk-common/jre/lib/resources.jar
+b510f000-b5116000 rw-p 00000000 00:00 0 
+b5116000-b51f2000 r-xp 00000000 08:01 9175191    /usr/lib/i386-linux-gnu/libstdc++.so.6.0.17
+b51f2000-b51f3000 ---p 000dc000 08:01 9175191    /usr/lib/i386-linux-gnu/libstdc++.so.6.0.17
+b51f3000-b51f7000 r--p 000dc000 08:01 9175191    /usr/lib/i386-linux-gnu/libstdc++.so.6.0.17
+b51f7000-b51f8000 rw-p 000e0000 08:01 9175191    /usr/lib/i386-linux-gnu/libstdc++.so.6.0.17
+b51f8000-b51ff000 rw-p 00000000 00:00 0 
+b51ff000-b5200000 ---p 00000000 00:00 0 
+b5200000-b5a00000 rw-p 00000000 00:00 0          [stack:9478]
+b5a00000-b5b00000 rw-p 00000000 00:00 0 
+b5b06000-b5b10000 r-xp 00000000 08:01 5636273    /lib/i386-linux-gnu/libnss_nis-2.17.so
+b5b10000-b5b11000 r--p 00009000 08:01 5636273    /lib/i386-linux-gnu/libnss_nis-2.17.so
+b5b11000-b5b12000 rw-p 0000a000 08:01 5636273    /lib/i386-linux-gnu/libnss_nis-2.17.so
+b5b12000-b5b27000 r-xp 00000000 08:01 5636282    /lib/i386-linux-gnu/libnsl-2.17.so
+b5b27000-b5b28000 r--p 00014000 08:01 5636282    /lib/i386-linux-gnu/libnsl-2.17.so
+b5b28000-b5b29000 rw-p 00015000 08:01 5636282    /lib/i386-linux-gnu/libnsl-2.17.so
+b5b29000-b5b2b000 rw-p 00000000 00:00 0 
+b5b2d000-b5b33000 rw-p 00000000 00:00 0 
+b5b33000-b5b3b000 r-xp 00000000 08:01 787625     /usr/lib/jvm/java-7-openjdk-i386/jre/lib/i386/libzip.so
+b5b3b000-b5b3c000 r--p 00007000 08:01 787625     /usr/lib/jvm/java-7-openjdk-i386/jre/lib/i386/libzip.so
+b5b3c000-b5b3d000 rw-p 00008000 08:01 787625     /usr/lib/jvm/java-7-openjdk-i386/jre/lib/i386/libzip.so
+b5b3d000-b5b45000 rw-s 00000000 08:01 265637     /tmp/hsperfdata_ed/9462
+b5b45000-b5b6c000 r-xp 00000000 08:01 787613     /usr/lib/jvm/java-7-openjdk-i386/jre/lib/i386/libjava.so
+b5b6c000-b5b6d000 r--p 00026000 08:01 787613     /usr/lib/jvm/java-7-openjdk-i386/jre/lib/i386/libjava.so
+b5b6d000-b5b6e000 rw-p 00027000 08:01 787613     /usr/lib/jvm/java-7-openjdk-i386/jre/lib/i386/libjava.so
+b5b6e000-b5bfb000 r-xp 00000000 08:01 9321037    /usr/local/lib/python2.7/dist-packages/_jpype.so
+b5bfb000-b5bfd000 r--p 0008c000 08:01 9321037    /usr/local/lib/python2.7/dist-packages/_jpype.so
+b5bfd000-b5bff000 rw-p 0008e000 08:01 9321037    /usr/local/lib/python2.7/dist-packages/_jpype.so
+b5bff000-b5c02000 ---p 00000000 00:00 0 
+b5c02000-b6400000 rw-p 00000000 00:00 0 
+b6400000-b6425000 rw-p 00000000 00:00 0 
+b6425000-b6500000 ---p 00000000 00:00 0 
+b6503000-b651e000 r-xp 00000000 08:01 5636383    /lib/i386-linux-gnu/libgcc_s.so.1
+b651e000-b651f000 r--p 0001a000 08:01 5636383    /lib/i386-linux-gnu/libgcc_s.so.1
+b651f000-b6520000 rw-p 0001b000 08:01 5636383    /lib/i386-linux-gnu/libgcc_s.so.1
+b6520000-b652b000 r-xp 00000000 08:01 5636267    /lib/i386-linux-gnu/libnss_files-2.17.so
+b652b000-b652c000 r--p 0000a000 08:01 5636267    /lib/i386-linux-gnu/libnss_files-2.17.so
+b652c000-b652d000 rw-p 0000b000 08:01 5636267    /lib/i386-linux-gnu/libnss_files-2.17.so
+b652d000-b652e000 ---p 00000000 00:00 0 
+b652e000-b6d2e000 rw-p 00000000 00:00 0          [stack:9463]
+b6d2e000-b6dda000 r-xp 00000000 08:01 9175542    /usr/lib/i386-linux-gnu/libsqlite3.so.0.8.6
+b6dda000-b6ddb000 r--p 000ac000 08:01 9175542    /usr/lib/i386-linux-gnu/libsqlite3.so.0.8.6
+b6ddb000-b6ddc000 rw-p 000ad000 08:01 9175542    /usr/lib/i386-linux-gnu/libsqlite3.so.0.8.6
+b6ddc000-b6ddd000 rw-p 00000000 00:00 0 
+b6ddf000-b6de6000 r-xp 00000000 08:01 5636265    /lib/i386-linux-gnu/libnss_compat-2.17.so
+b6de6000-b6de7000 r--p 00006000 08:01 5636265    /lib/i386-linux-gnu/libnss_compat-2.17.so
+b6de7000-b6de8000 rw-p 00007000 08:01 5636265    /lib/i386-linux-gnu/libnss_compat-2.17.so
+b6de8000-b6df5000 r-xp 00000000 08:01 792021     /usr/lib/jvm/java-7-openjdk-i386/jre/lib/i386/libverify.so
+b6df5000-b6df6000 r--p 0000d000 08:01 792021     /usr/lib/jvm/java-7-openjdk-i386/jre/lib/i386/libverify.so
+b6df6000-b6df7000 rw-p 0000e000 08:01 792021     /usr/lib/jvm/java-7-openjdk-i386/jre/lib/i386/libverify.so
+b6df7000-b6f3c000 rw-p 00000000 00:00 0 
+b6f3e000-b6f45000 r-xp 00000000 08:01 5636263    /lib/i386-linux-gnu/librt-2.17.so
+b6f45000-b6f46000 r--p 00006000 08:01 5636263    /lib/i386-linux-gnu/librt-2.17.so
+b6f46000-b6f47000 rw-p 00007000 08:01 5636263    /lib/i386-linux-gnu/librt-2.17.so
+b6f47000-b6f56000 r-xp 00000000 08:01 9306831    /usr/lib/python2.7/dist-packages/pysqlite2/_sqlite.so
+b6f56000-b6f57000 r--p 0000e000 08:01 9306831    /usr/lib/python2.7/dist-packages/pysqlite2/_sqlite.so
+b6f57000-b6f59000 rw-p 0000f000 08:01 9306831    /usr/lib/python2.7/dist-packages/pysqlite2/_sqlite.so
+b6f59000-b6f64000 r-xp 00000000 08:01 9307060    /usr/lib/python2.7/lib-dynload/_json.i386-linux-gnu.so
+b6f64000-b6f65000 r--p 0000a000 08:01 9307060    /usr/lib/python2.7/lib-dynload/_json.i386-linux-gnu.so
+b6f65000-b6f66000 rw-p 0000b000 08:01 9307060    /usr/lib/python2.7/lib-dynload/_json.i386-linux-gnu.so
+b6f66000-b70f8000 r-xp 00000000 08:01 5636377    /lib/i386-linux-gnu/libcrypto.so.1.0.0
+b70f8000-b7107000 r--p 00192000 08:01 5636377    /lib/i386-linux-gnu/libcrypto.so.1.0.0
+b7107000-b710e000 rw-p 001a1000 08:01 5636377    /lib/i386-linux-gnu/libcrypto.so.1.0.0
+b710e000-b7111000 rw-p 00000000 00:00 0 
+b7111000-b7162000 r-xp 00000000 08:01 5636379    /lib/i386-linux-gnu/libssl.so.1.0.0
+b7162000-b7164000 r--p 00050000 08:01 5636379    /lib/i386-linux-gnu/libssl.so.1.0.0
+b7164000-b7168000 rw-p 00052000 08:01 5636379    /lib/i386-linux-gnu/libssl.so.1.0.0
+b716b000-b717e000 r-xp 00000000 08:01 9307058    /usr/lib/python2.7/lib-dynload/datetime.i386-linux-gnu.so
+b717e000-b717f000 r--p 00012000 08:01 9307058    /usr/lib/python2.7/lib-dynload/datetime.i386-linux-gnu.so
+b717f000-b7182000 rw-p 00013000 08:01 9307058    /usr/lib/python2.7/lib-dynload/datetime.i386-linux-gnu.so
+b7182000-b7265000 rw-p 00000000 00:00 0 
+b7265000-b7465000 r--p 00000000 08:01 9175169    /usr/lib/locale/locale-archive
+b7465000-b752a000 rw-p 00000000 00:00 0 
+b752a000-b756b000 r-xp 00000000 08:01 5636266    /lib/i386-linux-gnu/libm-2.17.so
+b756b000-b756c000 r--p 00040000 08:01 5636266    /lib/i386-linux-gnu/libm-2.17.so
+b756c000-b756d000 rw-p 00041000 08:01 5636266    /lib/i386-linux-gnu/libm-2.17.so
+b756d000-b771a000 r-xp 00000000 08:01 5636268    /lib/i386-linux-gnu/libc-2.17.so
+b771a000-b771c000 r--p 001ad000 08:01 5636268    /lib/i386-linux-gnu/libc-2.17.so
+b771c000-b771d000 rw-p 001af000 08:01 5636268    /lib/i386-linux-gnu/libc-2.17.so
+b771d000-b7720000 rw-p 00000000 00:00 0 
+b7720000-b7737000 r-xp 00000000 08:01 5636295    /lib/i386-linux-gnu/libz.so.1.2.7
+b7737000-b7738000 r--p 00016000 08:01 5636295    /lib/i386-linux-gnu/libz.so.1.2.7
+b7738000-b7739000 rw-p 00017000 08:01 5636295    /lib/i386-linux-gnu/libz.so.1.2.7
+b7739000-b773b000 r-xp 00000000 08:01 5636280    /lib/i386-linux-gnu/libutil-2.17.so
+b773b000-b773c000 r--p 00001000 08:01 5636280    /lib/i386-linux-gnu/libutil-2.17.so
+b773c000-b773d000 rw-p 00002000 08:01 5636280    /lib/i386-linux-gnu/libutil-2.17.so
+b773d000-b773e000 rw-p 00000000 00:00 0 
+b773e000-b7741000 r-xp 00000000 08:01 5636277    /lib/i386-linux-gnu/libdl-2.17.so
+b7741000-b7742000 r--p 00002000 08:01 5636277    /lib/i386-linux-gnu/libdl-2.17.so
+b7742000-b7743000 rw-p 00003000 08:01 5636277    /lib/i386-linux-gnu/libdl-2.17.so
+b7743000-b775a000 r-xp 00000000 08:01 5636272    /lib/i386-linux-gnu/libpthread-2.17.so
+b775a000-b775b000 r--p 00016000 08:01 5636272    /lib/i386-linux-gnu/libpthread-2.17.so
+b775b000-b775c000 rw-p 00017000 08:01 5636272    /lib/i386-linux-gnu/libpthread-2.17.so
+b775c000-b775e000 rw-p 00000000 00:00 0 
+b775f000-b7760000 r--p 00000000 08:01 535075     /usr/share/locale-langpack/en_GB/LC_MESSAGES/libc.mo
+b7760000-b7761000 rw-p 00000000 00:00 0 
+b7761000-b7762000 r--p 00000000 00:00 0 
+b7762000-b7763000 rw-p 00000000 00:00 0 
+b7763000-b7766000 r-xp 00000000 08:01 9307061    /usr/lib/python2.7/lib-dynload/termios.i386-linux-gnu.so
+b7766000-b7767000 r--p 00002000 08:01 9307061    /usr/lib/python2.7/lib-dynload/termios.i386-linux-gnu.so
+b7767000-b7769000 rw-p 00003000 08:01 9307061    /usr/lib/python2.7/lib-dynload/termios.i386-linux-gnu.so
+b7769000-b776c000 r-xp 00000000 08:01 9307073    /usr/lib/python2.7/lib-dynload/_hashlib.i386-linux-gnu.so
+b776c000-b776d000 r--p 00002000 08:01 9307073    /usr/lib/python2.7/lib-dynload/_hashlib.i386-linux-gnu.so
+b776d000-b776e000 rw-p 00003000 08:01 9307073    /usr/lib/python2.7/lib-dynload/_hashlib.i386-linux-gnu.so
+b776e000-b7775000 r-xp 00000000 08:01 9307083    /usr/lib/python2.7/lib-dynload/_ssl.i386-linux-gnu.so
+b7775000-b7776000 r--p 00006000 08:01 9307083    /usr/lib/python2.7/lib-dynload/_ssl.i386-linux-gnu.so
+b7776000-b7777000 rw-p 00007000 08:01 9307083    /usr/lib/python2.7/lib-dynload/_ssl.i386-linux-gnu.so
+b7777000-b7778000 r--p 002bd000 08:01 9175169    /usr/lib/locale/locale-archive
+b7778000-b777a000 rw-p 00000000 00:00 0 
+b777a000-b777b000 r-xp 00000000 00:00 0          [vdso]
+b777b000-b779b000 r-xp 00000000 08:01 5636281    /lib/i386-linux-gnu/ld-2.17.so
+b779b000-b779c000 r--p 0001f000 08:01 5636281    /lib/i386-linux-gnu/ld-2.17.so
+b779c000-b779d000 rw-p 00020000 08:01 5636281    /lib/i386-linux-gnu/ld-2.17.so
+bff6f000-bff90000 rw-p 00000000 00:00 0          [stack]
+
+VM Arguments:
+jvm_args: -Djava.ext.dirs=/home/ed/Documents/Ed's Documents/Work/Birmingham University/PhD/sandpit/stripey/stripey_dj/stripey_lib/collatex 
+java_command: <unknown>
+Launcher Type: generic
+
+Environment Variables:
+PATH=/usr/lib/i386-linux-gnu/qt4/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
+SHELL=/bin/bash
+DISPLAY=:0
+
+Signal Handlers:
+SIGSEGV: [libjvm.so+0x49e740], sa_mask[0]=0x7ffbfeff, sa_flags=0x10000004
+SIGBUS: [libjvm.so+0x49e740], sa_mask[0]=0x7ffbfeff, sa_flags=0x10000004
+SIGFPE: [libjvm.so+0x39cb80], sa_mask[0]=0x7ffbfeff, sa_flags=0x10000004
+SIGPIPE: [libjvm.so+0x39cb80], sa_mask[0]=0x7ffbfeff, sa_flags=0x10000004
+SIGXFSZ: [libjvm.so+0x39cb80], sa_mask[0]=0x7ffbfeff, sa_flags=0x10000004
+SIGILL: [libjvm.so+0x39cb80], sa_mask[0]=0x7ffbfeff, sa_flags=0x10000004
+SIGUSR1: SIG_DFL, sa_mask[0]=0x00000000, sa_flags=0x00000000
+SIGUSR2: [libjvm.so+0x39ca30], sa_mask[0]=0x00000000, sa_flags=0x10000004
+SIGHUP: [libjvm.so+0x39cfc0], sa_mask[0]=0x7ffbfeff, sa_flags=0x10000004
+SIGINT: [libjvm.so+0x39cfc0], sa_mask[0]=0x7ffbfeff, sa_flags=0x10000004
+SIGTERM: [libjvm.so+0x39cfc0], sa_mask[0]=0x7ffbfeff, sa_flags=0x10000004
+SIGQUIT: [libjvm.so+0x39cfc0], sa_mask[0]=0x7ffbfeff, sa_flags=0x10000004
+
+
+---------------  S Y S T E M  ---------------
+
+OS:Ubuntu 13.04 (raring)
+uname:Linux 3.8.0-22-generic #33-Ubuntu SMP Thu May 16 15:17:59 UTC 2013 i686
+libc:glibc 2.17 NPTL 2.17 
+rlimit: STACK 8192k, CORE 0k, NPROC 7709, NOFILE 4096, AS infinity
+load average:1.06 1.67 1.16
+
+/proc/meminfo:
+MemTotal:        1017440 kB
+MemFree:          189644 kB
+Buffers:           25988 kB
+Cached:           413348 kB
+SwapCached:        13340 kB
+Active:           321640 kB
+Inactive:         433864 kB
+Active(anon):     139824 kB
+Inactive(anon):   229304 kB
+Active(file):     181816 kB
+Inactive(file):   204560 kB
+Unevictable:           0 kB
+Mlocked:               0 kB
+HighTotal:        125768 kB
+HighFree:           3744 kB
+LowTotal:         891672 kB
+LowFree:          185900 kB
+SwapTotal:       1037308 kB
+SwapFree:        1010008 kB
+Dirty:               260 kB
+Writeback:             0 kB
+AnonPages:        304116 kB
+Mapped:           109852 kB
+Shmem:             52920 kB
+Slab:              43892 kB
+SReclaimable:      26304 kB
+SUnreclaim:        17588 kB
+KernelStack:        2648 kB
+PageTables:         8768 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:     1546028 kB
+Committed_AS:    1948732 kB
+VmallocTotal:     122880 kB
+VmallocUsed:       10676 kB
+VmallocChunk:     110276 kB
+HardwareCorrupted:     0 kB
+AnonHugePages:         0 kB
+HugePages_Total:       0
+HugePages_Free:        0
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+Hugepagesize:       2048 kB
+DirectMap4k:       14328 kB
+DirectMap2M:      899072 kB
+
+
+CPU:total 2 (1 cores per cpu, 2 threads per core) family 6 model 28 stepping 2, cmov, cx8, fxsr, mmx, sse, sse2, sse3, ssse3, ht, tsc
+
+/proc/cpuinfo:
+processor	: 0
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 28
+model name	: Intel(R) Atom(TM) CPU N270   @ 1.60GHz
+stepping	: 2
+microcode	: 0x212
+cpu MHz		: 1600.000
+cache size	: 512 KB
+physical id	: 0
+siblings	: 1
+core id		: 0
+cpu cores	: 1
+apicid		: 0
+initial apicid	: 0
+fdiv_bug	: no
+hlt_bug		: no
+f00f_bug	: no
+coma_bug	: no
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 10
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe nx constant_tsc arch_perfmon pebs bts aperfmperf pni dtes64 monitor ds_cpl est tm2 ssse3 xtpr pdcm movbe lahf_lm dtherm
+bogomips	: 3192.15
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 32 bits physical, 32 bits virtual
+power management:
+
+processor	: 1
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 28
+model name	: Intel(R) Atom(TM) CPU N270   @ 1.60GHz
+stepping	: 2
+microcode	: 0x212
+cpu MHz		: 800.000
+cache size	: 512 KB
+physical id	: 0
+siblings	: 1
+core id		: 0
+cpu cores	: 0
+apicid		: 1
+initial apicid	: 1
+fdiv_bug	: no
+hlt_bug		: no
+f00f_bug	: no
+coma_bug	: no
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 10
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe nx constant_tsc arch_perfmon pebs bts aperfmperf pni dtes64 monitor ds_cpl est tm2 ssse3 xtpr pdcm movbe lahf_lm dtherm
+bogomips	: 3192.15
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 32 bits physical, 32 bits virtual
+power management:
+
+
+
+Memory: 4k page, physical 1017440k(189644k free), swap 1037308k(1010008k free)
+
+vm_info: OpenJDK Client VM (23.7-b01) for linux-x86 JRE (1.7.0_21-b02), built on Apr 22 2013 07:43:42 by "buildd" with gcc 4.7.3
+
+time: Tue Jun 18 12:39:58 2013
+elapsed time: 32 seconds
+
