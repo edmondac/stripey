@@ -8,6 +8,7 @@ sys.path.append('../stripey_dj/')
 os.environ['DJANGO_SETTINGS_MODULE'] = 'stripey_dj.settings'
 
 from stripey_app.models import Book, Chapter, Verse, Hand, ManuscriptTranscription
+from django.db.utils import IntegrityError
 
 import logging
 logger = logging.getLogger('load_all.py')
@@ -22,7 +23,12 @@ def load_all(folder):
         m = ManuscriptTranscription()
         m.ms_ref = name
         m.xml_filename = os.path.join(folder, f)
-        m.save()
+        try:
+            m.save()
+        except IntegrityError:
+            # Already got this one
+            logger.warning("{} is not unique - presuming it's already loaded".format(name))
+            continue
         m.load()
     
 if __name__ == "__main__":

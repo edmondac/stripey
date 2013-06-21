@@ -181,7 +181,7 @@ class Chapter(object):
                     v = v.split('V')[-1]
                 v = int(v)
                 if v in self.verses:
-                    raise ValueError("Duplicate verse found ({})".format(i))
+                    raise ValueError("Duplicate verse found ({})".format(v))
                 self.verses[v] = Verse(i, v, self.num)
 
 
