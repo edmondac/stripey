@@ -27,15 +27,17 @@ class ManuscriptTranscription(models.Model):
         for ch in obj.chapters.values():
             db_chapter = _get_chapter(db_book, ch.num)
 
-            for vs in ch.verses.values():
-                for i, hand in enumerate(vs.hands):
-                    db_hand = _get_hand(self, hand)
-                    db_verse = Verse()
-                    db_verse.chapter = db_chapter
-                    db_verse.hand = db_hand
-                    db_verse.num = vs.num
-                    db_verse.text = vs.texts[i]
-                    db_verse.save()
+            for verse_list in ch.verses.values():
+                for j, vs in enumerate(verse_list):
+                    for i, hand in enumerate(vs.hands):
+                        db_hand = _get_hand(self, hand)
+                        db_verse = Verse()
+                        db_verse.chapter = db_chapter
+                        db_verse.hand = db_hand
+                        db_verse.num = vs.num
+                        db_verse.item = j
+                        db_verse.text = vs.texts[i]
+                        db_verse.save()
 
         self.status = 'loaded'
         self.save()
@@ -90,6 +92,7 @@ class Verse(models.Model):
     chapter = models.ForeignKey(Chapter)
     hand = models.ForeignKey(Hand)
     num = models.IntegerField()
+    item = models.IntegerField()  # for "duplicate" verses
     text = models.CharField(max_length=1000)
 
 def _get_book(name, num):

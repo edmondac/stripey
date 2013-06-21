@@ -28,6 +28,7 @@ ignore_tags = ['lb',    # Line break
                'note',  # Notes
                'num',   # (Mostly) paratextual numbners
                'unclear', # TODO - should these be ignored?
+               'supplied', # for supplied tags outside words...
                ]
 
 # What tags are ok inside words?
@@ -180,9 +181,10 @@ class Chapter(object):
                     # e.g. B04K12V17
                     v = v.split('V')[-1]
                 v = int(v)
-                if v in self.verses:
-                    raise ValueError("Duplicate verse found ({})".format(v))
-                self.verses[v] = Verse(i, v, self.num)
+                v_obj = Verse(i, v, self.num)
+                already = self.verses.get(v, [])
+                already.append(v_obj)
+                self.verses[v] = already
 
 
 class Manuscript(object):
