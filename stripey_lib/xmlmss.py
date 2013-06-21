@@ -9,7 +9,6 @@ Notes:
 
 import os
 import hashlib
-import urllib2
 import string
 import logging
 logger = logging.getLogger('XmlMss')
@@ -28,6 +27,7 @@ ignore_tags = ['lb',    # Line break
                'seg',   # Marginal text
                'note',  # Notes
                'num',   # (Mostly) paratextual numbners
+               'unclear', # TODO - should these be ignored?
                ]
 
 # What tags are ok inside words?
@@ -192,9 +192,9 @@ class Manuscript(object):
     """
     cache = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".mss")
     
-    def __init__(self, name, url):
+    def __init__(self, name, filepath):
         self.name = name
-        self.url = url
+        self.filepath = filepath
         self.tree = None
         self.chapters = {}
         
@@ -207,29 +207,10 @@ class Manuscript(object):
 
     def _load_xml(self):
         """
-        Check the cache directory exists, look in it and the load from
-        the Internet if necessary.
+        Load the file from disk.
         """        
-        if not os.path.exists(self.cache):
-            os.mkdir(self.cache)
-        if not os.path.isdir(self.cache):
-            raise IOError("%s isn't a directory"
-                          % (self.cache, ))
-                          
-        cache_key = hashlib.sha224(self.url).hexdigest()
-        cf = os.path.join(self.cache, cache_key)
-
-        if not os.path.exists(cf):
-            logger.info("Downloading {}".format(self.url))
-            try:
-                data = urllib2.urlopen(self.url).read()
-                with open(cf, 'w') as fh:
-                    fh.write(data)
-            except Exception as e:
-                raise IOError("Error downloading XML file: {}".format(str(e)))
-
-        logger.info("Parsing {}".format(self.url))
-        self.tree = ET.parse(cf)
+        logger.info("Parsing {}".format(self.filepath))
+        self.tree = ET.parse(self.filepath)
 
     def _parse_tree(self):
         """
