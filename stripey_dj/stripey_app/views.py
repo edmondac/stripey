@@ -80,10 +80,29 @@ def chapter(request):
     book_obj = Book.objects.filter(num=request.GET.get('bk'))[0]
     chapter_obj = Chapter.objects.filter(book=book_obj,
                                          num=request.GET.get('ch'))[0]
+    # Optional ms to treat as "base" text
+    ms_id = request.GET.get('ms_id')
     all_verses = get_all_verses(book_obj, chapter_obj)
+    # Group readings together... We want a list of readings for each verse, with a list of witnesses per reading.
+    grouped_verses = []
+    for v, mss in all_verses:
+        readings = {}
+        for ms, hands in mss:
+            for hand, text in hands:
+                if len(hands) > 1:
+                    wit = (ms, hand)
+                else:
+                    wit = (ms, None)
+                witnesses = readings.get(text, [])
+                witnesses.append(wit)
+                readings[text] = witnesses
+        # FIXME - order the readings
+        # by ms_id first, and then by quantity??
+        grouped_verses.append((v, readings.items()))
+        
     return render_to_response('chapter.html', {'book': book_obj,
                                                'chapter': chapter_obj,
-                                               'verses': all_verses})
+                                               'verses': grouped_verses})
         
 
 #~ def load(request):

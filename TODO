@@ -4,4 +4,5 @@ TODO file
 - javascript etc.
 - refine the XML import process (which is a bit rough at the mo.)
 - perhaps show corrections as red text with uncorrected portions shown in black - easier to see the correction in context and to compare with other mss...
-- a button to show identical readings/stripes with a group of mss:hand references, rather than listing them all.
+- Default to showing identical readings/stripes with a group of mss:hand references, rather than listing them all (I.e. local text groups).
+- show mss (hand) in the listings, rather than two columns. Also, if a ms has no correctors, then don't show any hand (rather than saying firsthand).

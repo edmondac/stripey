@@ -29,7 +29,10 @@ def load_all(folder):
             # Already got this one
             logger.warning("{} is not unique - presuming it's already loaded".format(name))
             continue
-        m.load()
+        try:
+            m.load()
+        except ValueError as e:
+            logger.error("{} failed to load: {}".format(name, e))
     
 if __name__ == "__main__":
     load_all(os.path.abspath(sys.argv[1]))
