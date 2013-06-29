@@ -12,7 +12,7 @@ logger = logging.getLogger('stripey_app.views')
 #~ from stripey_lib.collatex import collatex
 
 def index(request):
-    all_mss = ManuscriptTranscription.objects.all().order_by('ms_ref')
+    all_mss = ManuscriptTranscription.objects.all().order_by('liste_id')
     books = Book.objects.all().order_by('num')
     # We want a list of chapters - per book.
     for book in books:
@@ -96,6 +96,9 @@ def chapter(request):
                 witnesses = readings.get(text, [])
                 witnesses.append(wit)
                 readings[text] = witnesses
+
+        for i in readings:
+            readings[i].sort(lambda a,b: cmp(a[0].liste_id, b[0].liste_id))
         # FIXME - order the readings
         # by ms_id first, and then by quantity??
         grouped_verses.append((v, readings.items()))

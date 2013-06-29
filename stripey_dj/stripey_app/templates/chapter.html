@@ -14,7 +14,7 @@
             <tr>
                 <th>
                     {% for ms in text.1 %}
-                        <a href="/manuscript.html?ms_id={{ ms.0.id }}&bk={{ book.num }}&ch={{ chapter.num }}">{% if ms.0.tischendorf %}{{ ms.0.tischendorf }}{% else %}{% if ms.0.ga %}{{ ms.0.ga }}{% else %}{{ ms.0.ms_ref }}{% endif %}{% endif %}{% if ms.1 %}({{ ms.1 }}){% endif %}</a>&nbsp;
+                        <a href="/manuscript.html?ms_id={{ ms.0.id }}&bk={{ book.num }}&ch={{ chapter.num }}" title="{{ ms.0.display_ref }}">{% if ms.0.tischendorf %}{{ ms.0.tischendorf }}{% else %}{% if ms.0.ga %}{{ ms.0.ga }}{% else %}{{ ms.0.ms_ref }}{% endif %}{% endif %}{% if ms.1 %}({{ ms.1 }}){% endif %}</a>&nbsp;
                     {% endfor %}
                 </th>
                 <td>{{ text.0 }}</td>

@@ -71,7 +71,6 @@ class Verse(object):
         """
         hand = el.attrib.get('hand')
         if not hand:
-            logger.critical(el)
             hand = el.attrib.get('auto-%s'
                                  % (el.attrib['n'], ))
         return hand

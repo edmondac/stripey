@@ -2,6 +2,7 @@
 
 import os
 import sys
+import xmlmss
 
 # Sort out the paths so we can import the django stuff
 sys.path.append('../stripey_dj/')
@@ -21,7 +22,7 @@ def load_all(folder):
     logger.info("Loading everything in {}".format(folder))
     failures = []
     for f in [x for x in os.listdir(folder) if x.endswith('.xml')]:
-        name = f.rsplit('.', 1)[0]
+        name = f.rsplit('.', 1)[0]       
         m = ManuscriptTranscription()
         m.ms_ref = name
         m.xml_filename = os.path.join(folder, f)
@@ -29,7 +30,7 @@ def load_all(folder):
             m.save()
         except IntegrityError:
             # Already got this one
-            logger.warning("{} is not unique - presuming it's already loaded".format(name))
+            logger.warning("{} is not unique - presuming it's already loaded".format(name))        
             continue
         try:
             m.load()
@@ -37,6 +38,7 @@ def load_all(folder):
             logger.error("{} failed to load: {}".format(name, e))
             m.delete()
             failures.append("{} ({})".format(name, e))
+            raise
 
     if failures:
         logger.error("Load failed for: \n{}".format('\n\t'.join(failures)))

@@ -14,8 +14,12 @@ class ManuscriptTranscription(models.Model):
     ms_name = models.CharField(max_length=50, blank=True)
     tischendorf = models.CharField(max_length=5, blank=True)
     ga = models.CharField(max_length=10, blank=True)
+    liste_id = models.IntegerField()
 
     def load(self):
+        """
+        Load the XML, parse it, and create chapter, verse and hand objects.
+        """        
         if self.status == 'loaded':
             logger.debug("MS {} is already loaded - ignoring".format(self))
             return
@@ -28,9 +32,11 @@ class ManuscriptTranscription(models.Model):
         self.ms_name = obj.ms_desc.get('ms_name', '')
         self.tischendorf = obj.ms_desc.get('Tischendorf', '')
         self.ga = obj.ms_desc.get('GA', '')
-        logger.debug("Found info: {}, {}, {}".format(self.ms_name,
-                                                     self.tischendorf,
-                                                     self.ga))
+        self.liste_id = obj.ms_desc.get('Liste', '')
+        logger.debug(u"Found info: {}, {}, {}, {}".format(self.ms_name,
+                                                          self.tischendorf,
+                                                          self.ga,
+                                                          self.liste_id))
         
         db_book = _get_book(obj.book, obj.num)
 
@@ -56,6 +62,25 @@ class ManuscriptTranscription(models.Model):
         return "Manuscript {} transcription ({})".format(
             self.ms_ref,
             self.status)
+
+    def display_ref(self):
+        """
+        A combination of the various ids to give a helpful reference.
+        """
+        ref = []
+        if self.ms_name:
+            ref.append(self.ms_name)
+        
+        if self.tischendorf:
+            ref.append(self.tischendorf)
+
+        if self.ga:
+            ref.append(u"GA:{}".format(self.ga))
+
+        if not ref:
+            ref = [self.ms_ref]
+
+        return u", ".join(ref)
 
     def get_text(self, book_obj, chapter_obj):
         """
