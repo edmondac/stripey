@@ -2,7 +2,6 @@
 
 import os
 import sys
-import xmlmss
 
 # Sort out the paths so we can import the django stuff
 sys.path.append('../stripey_dj/')
