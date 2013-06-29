@@ -71,6 +71,7 @@ class Verse(object):
         """
         hand = el.attrib.get('hand')
         if not hand:
+            logger.critical(el)
             hand = el.attrib.get('auto-%s'
                                  % (el.attrib['n'], ))
         return hand
@@ -172,7 +173,14 @@ class Chapter(object):
     def __init__(self, element, num):
         self.verses = {}
         self.num = num
-        v = None
+        self.parse_element(element)
+
+    def parse_element(self, element):
+        """
+        Parse the XML element and children to get the verses.
+        This function can be called multiple times, for example in
+        commentary mss where a chapter turns up more than once.
+        """
         for i in element.getchildren():
             if i.tag == "{http://www.tei-c.org/ns/1.0}ab":
                 # This is a verse
@@ -199,6 +207,7 @@ class Manuscript(object):
         self.filepath = filepath
         self.tree = None
         self.chapters = {}
+        self.ms_desc = {}
         
         # Book identification - FIXME, am I limited to one book per ms?
         self.book = None
@@ -220,6 +229,14 @@ class Manuscript(object):
         contents into Chapter objects in self.chapters.
         """
         root = self.tree.getroot()
+        # MS information
+        for n in root.iter('{http://www.tei-c.org/ns/1.0}msName'):
+            self.ms_desc['ms_name'] = n.text
+            break
+        for alt in root.iter('{http://www.tei-c.org/ns/1.0}altIdentifier'):
+            self.ms_desc[alt.attrib['type']] = alt.find('{http://www.tei-c.org/ns/1.0}idno').text
+
+        # Book information
         for title in root.iter('{http://www.tei-c.org/ns/1.0}title'):
             if title.attrib.get('type') == 'short':
                 # This is the book name
@@ -237,8 +254,10 @@ class Manuscript(object):
                     my_ch = my_ch.split('K')[-1]
                 logger.debug("Found chapter %s" % (my_ch, ))
                 if my_ch in self.chapters:
-                    raise ValueError("Duplicate chapter found")
-                self.chapters[my_ch] = Chapter(child, my_ch)
+                    logger.debug("Duplicate chapter - adding verses")
+                    self.chapters[my_ch].parse_element(child)
+                else:
+                    self.chapters[my_ch] = Chapter(child, my_ch)
 
         logger.debug("Finished parsing %s" % (self.name, ))
     

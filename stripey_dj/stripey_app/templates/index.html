@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<h2>Books</h2>
+<h1>Books</h1>
 {% for book in books %}
  <div>
   <b>Book: {{ book.name|title }}</b>
@@ -12,11 +12,11 @@
  </div>
 {% endfor %}
 
-<h2>Manuscript transcriptions</h2>
+<h1>Manuscript transcriptions</h1>
 {% if all_mss %}
     <ul>
     {% for ms in all_mss %}
-        <li><a href="manuscript.html?ms_id={{ ms.id }}">{{ ms.ms_ref }}</a> : {{ ms.status }}</li>
+        <li><a href="manuscript.html?ms_id={{ ms.id }}">{{ ms.ms_ref }} ({{ ms.ms_name }}{% if ms.tischendorf %}, {{ ms.tischendorf }}{% endif %})</a> : {{ ms.status }}</li>
     {% endfor %}
     </ul>
 {% else %}

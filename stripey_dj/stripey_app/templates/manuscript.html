@@ -2,7 +2,9 @@
 
 {% block content %}
 
-<h2>Manuscript {{ ms.ms_ref }}</h2>
+<h1>Manuscript {{ ms.ms_ref }}</h1>
+
+<h2>{{ ms.ms_name }}, {{ ms.ga }} {% if ms.tischendorf %}, {{ ms.tischendorf }}{% endif %}</h2>
 
 <p>Hands: {{ hands|join:', ' }}</p>
 
@@ -18,7 +20,7 @@
 <h3>{{ chapter_to_show.book.name|title }} {{ chapter_to_show.num }}</h3>
 <table>
 {% for verse in chapter_to_show.verses %}
-  <tr><th>{{ verse.num }} [<i>{{ verse.hand.name }}</i>]</th><td>{{ verse.text }}</td></tr>
+  <tr><th>{{ verse.num }}{% if verse.hand.name != 'firsthand' %} [<i>{{ verse.hand.name }}</i>]{% endif %}</th><td>{{ verse.text }}</td></tr>
 {% endfor %}
 </table>
 

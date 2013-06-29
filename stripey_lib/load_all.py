@@ -13,11 +13,13 @@ from django.db.utils import IntegrityError
 import logging
 logger = logging.getLogger('load_all.py')
 
+
 def load_all(folder):
     """
     Load all the XML files in a folder into the database
     """
     logger.info("Loading everything in {}".format(folder))
+    failures = []
     for f in [x for x in os.listdir(folder) if x.endswith('.xml')]:
         name = f.rsplit('.', 1)[0]
         m = ManuscriptTranscription()
@@ -31,8 +33,13 @@ def load_all(folder):
             continue
         try:
             m.load()
-        except ValueError as e:
+        except Exception as e:
             logger.error("{} failed to load: {}".format(name, e))
+            m.delete()
+            failures.append("{} ({})".format(name, e))
+
+    if failures:
+        logger.error("Load failed for: \n{}".format('\n\t'.join(failures)))
     
 if __name__ == "__main__":
     load_all(os.path.abspath(sys.argv[1]))

@@ -11,9 +11,12 @@ class ManuscriptTranscription(models.Model):
     xml_filename = models.CharField(max_length=200)
     status = models.CharField(max_length=20,
                               blank=True)
+    ms_name = models.CharField(max_length=50, blank=True)
+    tischendorf = models.CharField(max_length=5, blank=True)
+    ga = models.CharField(max_length=10, blank=True)
 
     def load(self):
-        if self.status in ('loaded', 'collated'):
+        if self.status == 'loaded':
             logger.debug("MS {} is already loaded - ignoring".format(self))
             return
 
@@ -22,6 +25,13 @@ class ManuscriptTranscription(models.Model):
         if not obj.book:
             raise ValueError("Couldn't work out the book")
 
+        self.ms_name = obj.ms_desc.get('ms_name', '')
+        self.tischendorf = obj.ms_desc.get('Tischendorf', '')
+        self.ga = obj.ms_desc.get('GA', '')
+        logger.debug("Found info: {}, {}, {}".format(self.ms_name,
+                                                     self.tischendorf,
+                                                     self.ga))
+        
         db_book = _get_book(obj.book, obj.num)
 
         for ch in obj.chapters.values():
