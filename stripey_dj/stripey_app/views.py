@@ -1,6 +1,7 @@
 from django.shortcuts import render_to_response, get_object_or_404
-from stripey_app.models import ManuscriptTranscription, Book, Chapter, Hand, Verse, get_all_verses
-#~ from django.utils.encoding import smart_unicode
+from stripey_app.models import (ManuscriptTranscription, Book, Chapter,
+                                Hand, Verse, get_all_verses,
+                                MappedCollation)
 from django.http import HttpResponseRedirect
 
 import logging
@@ -74,19 +75,25 @@ def manuscript(request):
 
 def collation(request):
     """
-    Collate all manuscripts
+    Show the requested chapter in collated variants.
     """
+    base_ms_id = int(request.COOKIES.get('base_ms', '0'))
     book_obj = Book.objects.get(num=request.GET.get('bk'))
     chapter_obj = Chapter.objects.get(book=book_obj,
                                       num=request.GET.get('ch'))
-    # TODO - get out of database
-    collated_verses = []
 
+    last_chapter = Chapter.objects.filter(book=book_obj).order_by('-num')[0]
+    is_last_chapter = False
+    if chapter_obj.num == last_chapter.num:
+        is_last_chapter = True
+
+    collation = MappedCollation(book_obj, chapter_obj).get_stripes(base_ms_id)
     return default_response(request,
                             'collation.html',
                             {'book': book_obj,
                              'chapter': chapter_obj,
-                             'verses': collated_verses})
+                             'collation': collation,
+                             'is_last_chapter': is_last_chapter})
 
 
 def set_base_text(request):

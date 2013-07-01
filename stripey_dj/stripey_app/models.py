@@ -1,6 +1,9 @@
+# coding=UTF-8
+
 from django.db import models
 from django.core.exceptions import ObjectDoesNotExist
 from stripey_lib import xmlmss
+from collections import OrderedDict
 
 import logging
 logger = logging.getLogger('stripey_app.models')
@@ -59,9 +62,7 @@ class ManuscriptTranscription(models.Model):
         self.save()
 
     def __unicode__(self):
-        return "Manuscript {} transcription ({})".format(
-            self.ms_ref,
-            self.status)
+        return "Manuscript {}".format(self.ga)
 
     def display_ref(self):
         """
@@ -81,6 +82,18 @@ class ManuscriptTranscription(models.Model):
             ref = [self.ms_ref]
 
         return u", ".join(ref)
+
+    def display_short(self):
+        """
+        A short ref to display
+        """
+        if self.tischendorf:
+            return self.tischendorf
+
+        if self.ga:
+            return self.ga
+
+        return self.ms_ref
 
     def get_text(self, book_obj, chapter_obj):
         """
@@ -117,6 +130,9 @@ class Hand(models.Model):
     manuscript = models.ForeignKey(ManuscriptTranscription)
     name = models.CharField(max_length=30)
 
+    def __unicode__(self):
+        return u"Hand {} of {}".format(self.name, self.manuscript)
+
 
 class Book(models.Model):
     name = models.CharField(max_length=20)
@@ -144,10 +160,32 @@ class Verse(models.Model):
             self.item)
 
 
+class Variant(models.Model):
+    chapter = models.ForeignKey(Chapter)
+    verse_num = models.IntegerField()
+    variant_num = models.IntegerField()
+
+
+class Reading(models.Model):
+    variant = models.ForeignKey(Variant)
+    text = models.CharField(max_length=1000)
+
+    def __unicode__(self):
+        return u"Reading: {}:{}:{}:{}".format(
+            self.variant.chapter.num,
+            self.variant.verse_num,
+            self.variant.variant_num,
+            self.text)
+
+
 class CollatedVerse(models.Model):
     verse = models.ForeignKey(Verse)
-    variant = models.IntegerField()
-    text = models.CharField(max_length=1000)
+    reading = models.ForeignKey(Reading)
+
+    def __unicode__(self):
+        return u"CollatedVerse: ({}) {} : {}".format(self.verse,
+                                                     self.reading.variant.variant_num,
+                                                     self.reading.text)
 
 
 def _get_book(name, num):
@@ -234,3 +272,81 @@ def get_all_verses(book_obj, chapter_obj):
         all_verses.append((k, vs_d[k]))
 
     return all_verses
+
+
+class MappedCollation(object):
+    """
+    Create the collation for a particular chapter, in this form:
+
+    {2: {(reading1, reading 2, ...): [mss1, mss2],}}
+
+    """
+    def __init__(self, book_obj, chapter_obj):
+        # Get collated verses in order of (verse number)
+        # then (verse item - I.e. a particular instance of a verse)
+        # then (variant number).
+        self.cvs = CollatedVerse.objects.filter(verse__chapter=chapter_obj).order_by(
+            'verse__num',
+            'verse__id')
+
+        self.current_verse_obj = self.cvs[0].verse
+        self.current_verse_num = self.cvs[0].verse.num
+        self.my_stripe = OrderedDict()
+        self.v_stripes = {}
+        self.all_stripes = {}
+        self._calculate_all_stripes()
+
+    def _calculate_all_stripes(self):
+        for cv in self.cvs:
+            if cv.verse != self.current_verse_obj:
+                # Finished this particular ms:hand:verse
+                self._wrapup_verse_obj()
+                self.current_verse_obj = cv.verse
+
+                if cv.verse.num != self.current_verse_num:
+                    # Finished one verse
+                    self._wrapup_whole_verse()
+                    self.current_verse_num = cv.verse.num
+
+            # Add this reading to the stripe
+            assert (cv.reading.variant.variant_num not in self.my_stripe), (self.my_stripe, cv.reading)
+            self.my_stripe[cv.reading.variant.variant_num] = cv.reading
+
+        self._wrapup_verse_obj()
+        self._wrapup_whole_verse()
+
+    def _wrapup_whole_verse(self):
+        logger.debug("Finished collating verse {}".format(self.current_verse_num))
+        assert self.current_verse_num not in self.all_stripes
+        self.all_stripes[self.current_verse_num] = self.v_stripes
+        self.v_stripes = {}
+
+    def _wrapup_verse_obj(self):
+        key = tuple(self.my_stripe.values())
+        already = self.v_stripes.get(key, [])
+        already.append(self.current_verse_obj)
+        self.v_stripes[key] = already
+        self.my_stripe = OrderedDict()
+
+    def get_stripes(self, base_ms_id):
+        """
+        Get stripes, with the base_ms_id in the first set each time...
+        [(1,
+          [((<Reading: Reading: 1:1:0:εν αρχη>,
+             <Reading: Reading: 1:1:1:ην ο λογος>,
+             <Reading: Reading: 1:1:2:και>,
+             <Reading: Reading: 1:1:3:ο λογος ην προς τον>,
+             <Reading: Reading: 1:1:4:θν>,
+             <Reading: Reading: 1:1:5:>,
+             <Reading: Reading: 1:1:6:>),
+            [<Verse: Verse: ms:45, hand:firsthand, chapter:Chapter object, v:1-4>, ...]),
+           ((<Reading: Reading: 1:1:0:εν αρχηι>,
+             <Reading: Reading: 1:1:1:ην ο λογος>,
+             ...
+        """
+        ret = []
+        for v in self.all_stripes:
+            sorted_d = sorted(self.all_stripes[v].items(),
+                              key=lambda t: base_ms_id not in [x.hand.manuscript.id for x in t[1]])
+            ret.append((v, sorted_d))
+        return ret

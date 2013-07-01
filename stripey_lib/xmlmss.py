@@ -136,7 +136,11 @@ class Verse(object):
         # right order
         ret = []
         for t in el.itertext():
-            ret.append(t.strip())
+            t = t.strip()
+            if t == 'om':
+                # Ignore 'om' and leave it blank
+                continue
+            ret.append(t)
 
         # Just check that we've only got known tags...
         for el in el.iter():

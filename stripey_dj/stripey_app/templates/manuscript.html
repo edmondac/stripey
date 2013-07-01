@@ -23,7 +23,10 @@
 (<a href="chapter.html?bk={{ chapter_to_show.book.num }}&ch={{ chapter_to_show.num }}">View in all manuscripts</a>)
 <table>
 {% for verse in chapter_to_show.verses %}
-  <tr><th>{{ verse.num }}{% if verse.hand.name != 'firsthand' %} [<i>{{ verse.hand.name }}</i>]{% endif %}</th><td>{{ verse.text }}</td></tr>
+  <tr>
+      <th>{{ verse.num }}{% if verse.hand.name != 'firsthand' %} [<i>{{ verse.hand.name }}</i>]{% endif %}</th>
+      <td>{{ verse.text }}</td>
+  </tr>
 {% endfor %}
 </table>
 

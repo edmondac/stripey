@@ -2,20 +2,27 @@
 
 {% block content %}
 
-<h2>Collation of {{ book.name|title }} {{ chapter.num }}</h2>
+<h2>{% if chapter.num > 1 %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num|add:"-1" }}">-1</a>{% endif %} Text of {{ book.name|title }} {{ chapter.num }} {% if not is_last_chapter %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num|add:"+1" }}">+1</a>{% endif %}</h2>
 
+<h3><a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num }}">View text</a></h3>
+
+
+{% for verse, variants in collation %}
+<b>Verse {{ verse }}</b>
 <table>
-    {% for x in verses %}
-      <td colspan="{{ x.1|length }}">Verse: {{ x.0 }}</td>
-      {% for row in x.1 %}
+    {% for readings, v_objs in variants %}
         <tr>
-            <th>{{ row.0 }}</th>
-            {% for token in row.1 %}
-                <td>{{ token }}</td>
+            <th width="30%">
+                {% for v in v_objs %}
+                    <a href="/manuscript.html?ms_id={{ v.hand.manuscript.id }}&bk={{ book.num }}&ch={{ chapter.num }}" title="{{ v.hand.manuscript.display_ref }}"><font {% if v.hand.manuscript.id == base_ms_id %}color="red"{% endif %}>{{ v.hand.manuscript.display_short }}{% if v.hand.name != 'firsthand' %} <i>{{ v.hand.name }}</i>{% endif %}</font></a>&nbsp;
+                {% endfor %}
+            </th>
+            {% for reading in readings %}
+                <td>{{ reading.text }}</td>
             {% endfor %}
         </tr>
-      {% endfor %}
     {% endfor %}
 </table>
+{% endfor %}
 
 {% endblock content %}
