@@ -1,5 +1,4 @@
-import os
-from django.shortcuts import render_to_response, redirect, get_object_or_404
+from django.shortcuts import render_to_response, get_object_or_404
 from stripey_app.models import ManuscriptTranscription, Book, Chapter, Hand, Verse, get_all_verses
 #~ from django.utils.encoding import smart_unicode
 from django.http import HttpResponseRedirect
@@ -20,6 +19,7 @@ def default_response(request, url, data):
         data['all_mss'] = ManuscriptTranscription.objects.all().order_by('liste_id')
 
     return render_to_response(url, data)
+
 
 def index(request):
     all_mss = ManuscriptTranscription.objects.all().order_by('liste_id')
@@ -96,7 +96,7 @@ def set_base_text(request):
     base_ms = get_object_or_404(ManuscriptTranscription, pk=request.GET.get('ms_id'))
     referer = request.META.get('HTTP_REFERER', '/index.html')
     ret = HttpResponseRedirect(referer)
-    ret.set_cookie('base_ms', value=base_ms.id, max_age=3600*24*365)
+    ret.set_cookie('base_ms', value=base_ms.id, max_age=3600 * 24 * 365)
     return ret
 
 
@@ -108,8 +108,6 @@ def chapter(request):
     book_obj = Book.objects.filter(num=request.GET.get('bk'))[0]
     chapter_obj = Chapter.objects.filter(book=book_obj,
                                          num=request.GET.get('ch'))[0]
-    # Optional ms to treat as "base" text
-    ms_id = request.GET.get('ms_id')
     all_verses = get_all_verses(book_obj, chapter_obj)
     # Group readings together... We want a list of readings for each verse, with a list of witnesses per reading.
     grouped_verses = []
@@ -127,10 +125,11 @@ def chapter(request):
 
         # Sort each group by ms id
         for i in readings:
-            readings[i].sort(lambda a,b: cmp(a[0].liste_id, b[0].liste_id))
+            readings[i].sort(lambda a, b: cmp(a[0].liste_id, b[0].liste_id))
 
         # Now sort the groups so our base_ms is in the top one (if present)
         all_readings = readings.items()
+
         def sort_fn(a, b):
             a_ids = [x[0].id for x in a[1]]
             b_ids = [y[0].id for y in b[1]]
@@ -143,13 +142,13 @@ def chapter(request):
 
         all_readings.sort(sort_fn)
         grouped_verses.append((v, all_readings))
-        
+
     return default_response(request,
                             'chapter.html',
                             {'book': book_obj,
                              'chapter': chapter_obj,
                              'verses': grouped_verses})
-        
+
 
 #~ def load(request):
     #~ all_mss = ManuscriptTranscription.objects.all()
@@ -157,17 +156,17 @@ def chapter(request):
         #~ if ms.status in ('loaded', 'collated'):
             #~ logger.debug("MS {} is already loaded - ignoring".format(ms))
             #~ continue
-#~ 
+#~
         #~ logger.info("Loading MS {}".format(ms))
         #~ obj = xmlmss.Manuscript(ms.ms_ref, ms.xml_url)
         #~ if not obj.book:
             #~ raise ValueError("Couldn't work out the book")
-#~ 
+#~
         #~ db_book = _get_book(obj.book, obj.num)
-#~ 
+#~
         #~ for ch in obj.chapters.values():
             #~ db_chapter = _get_chapter(db_book, ch.num)
-#~ 
+#~
             #~ for vs in ch.verses.values():
                 #~ for i, hand in enumerate(vs.hands):
                     #~ db_hand = _get_hand(ms, hand)
@@ -177,10 +176,8 @@ def chapter(request):
                     #~ db_verse.num = vs.num
                     #~ db_verse.text = vs.texts[i]
                     #~ db_verse.save()
-#~ 
+#~
         #~ ms.status = 'loaded'
         #~ ms.save()
 
     #~ return redirect('index.html')
-
-
