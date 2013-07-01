@@ -67,6 +67,10 @@ color: #66999a;
 border: 1px solid white;
 }
 
+#basetext {
+float: right;
+}
+
 #footer {
 width: 100%;
 color: #ffea00;

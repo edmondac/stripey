@@ -16,6 +16,16 @@
      <div id="menu">
        <a href="index.html">Home</a>
        <a href="{% url admin:index %}" target="admin">Manage</a>
+     <div id="basetext">
+         <form action="set_base_text.html">
+             <label for="base_ms_id">Base Text:</label>
+             <select name="ms_id" onchange="this.form.submit()">
+                 {% for ms in all_mss %}
+                     <option value="{{ ms.id }}" {% if ms.id == base_ms_id %}selected{% endif %}>{{ ms.display_ref }}</option>
+                 {% endfor %}
+             </select>
+         </form>
+     </div>
      </div>
     </div>
       

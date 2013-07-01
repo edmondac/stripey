@@ -2,6 +2,7 @@ import os
 from django.shortcuts import render_to_response, redirect, get_object_or_404
 from stripey_app.models import ManuscriptTranscription, Book, Chapter, Hand, Verse, get_all_verses
 #~ from django.utils.encoding import smart_unicode
+from django.http import HttpResponseRedirect
 
 import logging
 logger = logging.getLogger('stripey_app.views')
@@ -11,6 +12,15 @@ logger = logging.getLogger('stripey_app.views')
 #~ logger.debug(os.environ['COLLATE_JAR_PATH'])
 #~ from stripey_lib.collatex import collatex
 
+
+def default_response(request, url, data):
+    if 'base_ms_id' not in data:
+        data['base_ms_id'] = int(request.COOKIES.get('base_ms', '0'))
+    if 'all_mss' not in data:
+        data['all_mss'] = ManuscriptTranscription.objects.all().order_by('liste_id')
+
+    return render_to_response(url, data)
+
 def index(request):
     all_mss = ManuscriptTranscription.objects.all().order_by('liste_id')
     books = Book.objects.all().order_by('num')
@@ -18,8 +28,10 @@ def index(request):
     for book in books:
         book.chapters = Chapter.objects.filter(book=book).order_by('num')
 
-    return render_to_response('index.html', {'all_mss': all_mss,
-                                             'books': books})
+    return default_response(request,
+                            'index.html',
+                            {'all_mss': all_mss,
+                             'books': books})
 
 
 def manuscript(request):
@@ -52,10 +64,12 @@ def manuscript(request):
     # Set the verses to display
     chapter.verses = verses.filter(chapter=chapter).order_by('num')
 
-    return render_to_response('manuscript.html', {'ms': ms,
-                                                  'hands': [x.name for x in hands],
-                                                  'books': books,
-                                                  'chapter_to_show': chapter})
+    return default_response(request,
+                            'manuscript.html',
+                            {'ms': ms,
+                             'hands': [x.name for x in hands],
+                             'books': books,
+                             'chapter_to_show': chapter})
 
 
 def collation(request):
@@ -68,15 +82,29 @@ def collation(request):
     # TODO - get out of database
     collated_verses = []
 
-    return render_to_response('collation.html', {'book': book_obj,
-                                                 'chapter': chapter_obj,
-                                                 'verses': collated_verses})
+    return default_response(request,
+                            'collation.html',
+                            {'book': book_obj,
+                             'chapter': chapter_obj,
+                             'verses': collated_verses})
+
+
+def set_base_text(request):
+    """
+    Sets the base text to use, the returns to the HTTP REFERER
+    """
+    base_ms = get_object_or_404(ManuscriptTranscription, pk=request.GET.get('ms_id'))
+    referer = request.META.get('HTTP_REFERER', '/index.html')
+    ret = HttpResponseRedirect(referer)
+    ret.set_cookie('base_ms', value=base_ms.id, max_age=3600*24*365)
+    return ret
 
 
 def chapter(request):
     """
     View the text of a chapter in all manuscripts
     """
+    base_ms_id = int(request.COOKIES.get('base_ms', '0'))
     book_obj = Book.objects.filter(num=request.GET.get('bk'))[0]
     chapter_obj = Chapter.objects.filter(book=book_obj,
                                          num=request.GET.get('ch'))[0]
@@ -97,15 +125,30 @@ def chapter(request):
                 witnesses.append(wit)
                 readings[text] = witnesses
 
+        # Sort each group by ms id
         for i in readings:
             readings[i].sort(lambda a,b: cmp(a[0].liste_id, b[0].liste_id))
-        # FIXME - order the readings
-        # by ms_id first, and then by quantity??
-        grouped_verses.append((v, readings.items()))
+
+        # Now sort the groups so our base_ms is in the top one (if present)
+        all_readings = readings.items()
+        def sort_fn(a, b):
+            a_ids = [x[0].id for x in a[1]]
+            b_ids = [y[0].id for y in b[1]]
+            if base_ms_id in a_ids:
+                return -1
+            elif base_ms_id in b_ids:
+                return 1
+            else:
+                return 0
+
+        all_readings.sort(sort_fn)
+        grouped_verses.append((v, all_readings))
         
-    return render_to_response('chapter.html', {'book': book_obj,
-                                               'chapter': chapter_obj,
-                                               'verses': grouped_verses})
+    return default_response(request,
+                            'chapter.html',
+                            {'book': book_obj,
+                             'chapter': chapter_obj,
+                             'verses': grouped_verses})
         
 
 #~ def load(request):
@@ -138,6 +181,6 @@ def chapter(request):
         #~ ms.status = 'loaded'
         #~ ms.save()
 
-    return redirect('index.html')
+    #~ return redirect('index.html')
 
 
