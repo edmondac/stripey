@@ -19,7 +19,7 @@ class ManuscriptTranscription(models.Model):
     def load(self):
         """
         Load the XML, parse it, and create chapter, verse and hand objects.
-        """        
+        """
         if self.status == 'loaded':
             logger.debug("MS {} is already loaded - ignoring".format(self))
             return
@@ -37,7 +37,7 @@ class ManuscriptTranscription(models.Model):
                                                           self.tischendorf,
                                                           self.ga,
                                                           self.liste_id))
-        
+
         db_book = _get_book(obj.book, obj.num)
 
         for ch in obj.chapters.values():
@@ -70,7 +70,7 @@ class ManuscriptTranscription(models.Model):
         ref = []
         if self.ms_name:
             ref.append(self.ms_name)
-        
+
         if self.tischendorf:
             ref.append(self.tischendorf)
 
@@ -85,8 +85,13 @@ class ManuscriptTranscription(models.Model):
     def get_text(self, book_obj, chapter_obj):
         """
         Return the text of the relevant book, chapter (db objects)
-        in a list of tuples of tuples [(1,((hand, text), (hand2, text)),
-                                       (2,((hand, text)...]
+        in a list of tuples  [(1,[verse obj, verse obj, ...]),
+                              (2,[verse obj]),
+                              ...]
+
+        Multiple verse_objs are possible where there are multiple hands
+        at work and in commentary manuscripts that mention the verse
+        more than once.
         """
         v_d = {}
         for hand in Hand.objects.filter(manuscript=self):
@@ -97,7 +102,7 @@ class ManuscriptTranscription(models.Model):
                 if not me:
                     me = []
                     v_d[verse.num] = me
-                me.append((hand.name, verse.text))
+                me.append(verse)
 
         ret = []
         keys = v_d.keys()
@@ -129,6 +134,21 @@ class Verse(models.Model):
     num = models.IntegerField()
     item = models.IntegerField()  # for "duplicate" verses
     text = models.CharField(max_length=1000)
+
+    def __unicode__(self):
+        return "Verse: ms:{}, hand:{}, chapter:{}, v:{}-{}".format(
+            self.hand.manuscript.id,
+            self.hand.name,
+            self.chapter,
+            self.num,
+            self.item)
+
+
+class CollatedVerse(models.Model):
+    verse = models.ForeignKey(Verse)
+    variant = models.IntegerField()
+    text = models.CharField(max_length=1000)
+
 
 def _get_book(name, num):
     """
@@ -180,19 +200,26 @@ def _get_hand(ms, hand):
 def get_all_verses(book_obj, chapter_obj):
     """
     Return all verses in a particular chapter, in this form:
-    [(1, [(<ManuscriptTranscription: Manuscript 87 transcription (loaded)>,
-           [(u'firsthand', u'(greek text)'),
-            (u'secunda_manu', u'(greek text)')]),
-          (<ManuscriptTranscription...
-     (2, [(<ManuscriptTranscription: Manuscript 01 transcription (loaded)>,
-           [(u'firsthand', u'(greek text)')]),
-          (<ManuscriptTranscription: Manuscript 02 transcription (loaded)>,
-           [(u'firsthand', u'(greek text)')]), ...
+
+    [(1,
+      [(<ManuscriptTranscription: Manuscript 04_1424 transcription (loaded)>,
+       [<Verse: Verse: ms:46, hand:firsthand, chapter:Chapter object, v:1-0>]),
+      (<ManuscriptTranscription: Manuscript 04_579 transcription (loaded)>,
+       [<Verse: Verse: ms:47, hand:firsthand, chapter:Chapter object, v:1-0>,
+        <Verse: Verse: ms:47, hand:corrector, chapter:Chapter object, v:1-0>]),
+      (<ManuscriptTranscription: Manuscript 04_03 transcription (loaded)>,
+       [<Verse: Verse: ms:50, hand:firsthand, chapter:Chapter object, v:1-0>]),
+      ...],
+     (2,
+      [...]]
     """
     all_mss = ManuscriptTranscription.objects.all()
     vs_d = {}
     for ms in all_mss:
         verses = ms.get_text(book_obj, chapter_obj)
+        #  [(1,[verse obj, verse obj, ...]),
+        #   (2,[verse obj]),
+        #   ...]
         for v in verses:
             me = vs_d.get(v[0])
             if not me:

@@ -56,7 +56,7 @@ def manuscript(request):
 
     chapter_num = request.GET.get('ch')
     if chapter_num:
-        chapter = book.chapters.filter(num=chapter_num)[0]
+        chapter = book.chapters.get(num=chapter_num)
     else:
         # Show the first one
         chapter = book.chapters[0]
@@ -76,9 +76,9 @@ def collation(request):
     """
     Collate all manuscripts
     """
-    book_obj = Book.objects.filter(num=request.GET.get('bk'))[0]
-    chapter_obj = Chapter.objects.filter(book=book_obj,
-                                         num=request.GET.get('ch'))[0]
+    book_obj = Book.objects.get(num=request.GET.get('bk'))
+    chapter_obj = Chapter.objects.get(book=book_obj,
+                                      num=request.GET.get('ch'))
     # TODO - get out of database
     collated_verses = []
 
@@ -105,23 +105,29 @@ def chapter(request):
     View the text of a chapter in all manuscripts
     """
     base_ms_id = int(request.COOKIES.get('base_ms', '0'))
-    book_obj = Book.objects.filter(num=request.GET.get('bk'))[0]
-    chapter_obj = Chapter.objects.filter(book=book_obj,
-                                         num=request.GET.get('ch'))[0]
+    book_obj = Book.objects.get(num=request.GET.get('bk'))
+    chapter_obj = Chapter.objects.get(book=book_obj,
+                                      num=request.GET.get('ch'))
+
+    last_chapter = Chapter.objects.filter(book=book_obj).order_by('-num')[0]
+    is_last_chapter = False
+    if chapter_obj.num == last_chapter.num:
+        is_last_chapter = True
+
     all_verses = get_all_verses(book_obj, chapter_obj)
     # Group readings together... We want a list of readings for each verse, with a list of witnesses per reading.
     grouped_verses = []
     for v, mss in all_verses:
         readings = {}
-        for ms, hands in mss:
-            for hand, text in hands:
-                if len(hands) > 1:
-                    wit = (ms, hand)
+        for ms, verses in mss:
+            for verse in verses:
+                if len(verses) > 1:
+                    wit = (ms, verse.hand.name)
                 else:
                     wit = (ms, None)
-                witnesses = readings.get(text, [])
+                witnesses = readings.get(verse.text, [])
                 witnesses.append(wit)
-                readings[text] = witnesses
+                readings[verse.text] = witnesses
 
         # Sort each group by ms id
         for i in readings:
@@ -147,7 +153,8 @@ def chapter(request):
                             'chapter.html',
                             {'book': book_obj,
                              'chapter': chapter_obj,
-                             'verses': grouped_verses})
+                             'verses': grouped_verses,
+                             'is_last_chapter': is_last_chapter})
 
 
 #~ def load(request):
