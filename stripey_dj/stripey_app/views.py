@@ -82,9 +82,13 @@ def collation(request):
     chapter_obj = Chapter.objects.get(book=book_obj,
                                       num=request.GET.get('ch'))
     v = request.GET.get('v')
+    is_last_verse = None
     if v:
         verse_obj = Verse.objects.get(chapter=chapter_obj,
                                       num=v)
+        last_verse = Verse.objects.filter(chapter=chapter_obj).order_by('-num')[0]
+        if last_verse.num == verse_obj.num:
+            is_last_verse = True
     else:
         verse_obj = None
 
@@ -103,7 +107,8 @@ def collation(request):
                              'chapter': chapter_obj,
                              'v': v,
                              'collation': collation,
-                             'is_last_chapter': is_last_chapter})
+                             'is_last_chapter': is_last_chapter,
+                             'is_last_verse': is_last_verse})
 
 
 def set_base_text(request):

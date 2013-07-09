@@ -40,14 +40,14 @@ function toggleIdents() {
 
 {% block content %}
 
-<h2>{% if chapter.num > 1 %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num|add:'-1' }}">-1</a>{% endif %} Text of {{ book.name|title }} {{ chapter.num }} {% if not is_last_chapter %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num|add:'+1' }}">+1</a>{% endif %}</h2>
+<h2>{% if chapter.num > 1 %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num|add:'-1' }}&v=1">-1</a>{% endif %} Text of {{ book.name|title }} {{ chapter.num }} {% if not is_last_chapter %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num|add:'+1' }}&v=1">+1</a>{% endif %}</h2>
 
 <h3><a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num }}">View text</a></h3>
 
 {% for verse, stripes in collation %}
 <b>
     {% if v %}
-        {% if v > 1 %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v|add:'-1' }}">-1</a>{% endif %} Verse {{ verse.num }}{% if not is_last_chapter %} <a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v|add:'+1' }}">+1</a>{% endif %} <a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}">all</a>
+        {% if v > 1 %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v|add:'-1' }}">-1</a>{% endif %} Verse {{ verse.num }}{% if not is_last_verse %} <a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v|add:'+1' }}">+1</a>{% endif %} <a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}">all</a>
     {% else %}
         <a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ verse.num }}">Verse {{ verse.num }}</a>
     {% endif %}
