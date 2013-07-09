@@ -1,23 +1,71 @@
 {% extends "stripey_app/base.html" %}
 
+{% block head %}
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+<script>
+var toggle = 0;
+function toggleIdents() {
+    if (toggle) {
+        $('.greek').show();
+        $('.ident').hide();
+        toggle = 0;
+    } else {
+        $('.greek').hide();
+        $('.ident').show();
+        toggle = 1;
+    }
+ }
+
+ function highlightReadings(row_id) {
+    var row = $('#' + row_id);
+    row.addClass('high_tr');
+    $('td').removeClass('high_td');
+    var table = row.parent('table');
+    row.find('td').each(function() {
+        var h = $(this).text();
+        var i = $(this).attr('id');
+        $('td#'+i).each(function() {
+            if ($(this).text() == h) {
+                $(this).addClass('high_td');
+            }
+        });
+    });
+ }
+
+ function resetRow(row_id) {
+    $('#' + row_id).removeClass('high_tr');
+ }
+</script>
+{% endblock head %}
+
 {% block content %}
 
-<h2>{% if chapter.num > 1 %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num|add:"-1" }}">-1</a>{% endif %} Text of {{ book.name|title }} {{ chapter.num }} {% if not is_last_chapter %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num|add:"+1" }}">+1</a>{% endif %}</h2>
+<h2>{% if chapter.num > 1 %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num|add:'-1' }}">-1</a>{% endif %} Text of {{ book.name|title }} {{ chapter.num }} {% if not is_last_chapter %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num|add:'+1' }}">+1</a>{% endif %}</h2>
 
 <h3><a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num }}">View text</a></h3>
 
 {% for verse, stripes in collation %}
-<b>Verse {{ verse.num }}</b>
+<b>
+    {% if v %}
+        {% if v > 1 %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v|add:'-1' }}">-1</a>{% endif %} Verse {{ verse.num }}{% if not is_last_chapter %} <a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v|add:'+1' }}">+1</a>{% endif %} <a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}">all</a>
+    {% else %}
+        <a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ verse.num }}">Verse {{ verse.num }}</a>
+    {% endif %}
+</b> <button onclick="toggleIdents()">Toggle text/idents</button>
+
 <table>
     {% for stripe, ms_stripes in stripes %}
-        <tr>
+        <tr id="stripe{{ stripe.id }}" onmouseover="highlightReadings('stripe{{ stripe.id }}')" onmouseout="resetRow('stripe{{ stripe.id }}')">
             <th width="400px">
                 {% for m in ms_stripes %}
                     <a href="/manuscript.html?ms_id={{ m.ms_verse.hand.manuscript.id }}&bk={{ book.num }}&ch={{ chapter.num }}" title="{{ m.ms_verse.hand.manuscript.display_ref }}"><font {% if m.ms_verse.hand.manuscript.id == base_ms_id %}color="red"{% endif %}>{{ m.ms_verse.hand.manuscript.display_short }}{% if m.ms_verse.hand.name != 'firsthand' %}&nbsp;<i>{{ m.ms_verse.hand.name }}</i>{% endif %}</font></a>&nbsp;
                 {% endfor %}
             </th>
             {% for reading in stripe.readings.all %}
-                <td>{{ reading.text }}</td>
+                <td id="vr{{ reading.variant.id }}">
+                    <div class="greek">{{ reading.text }}</div>
+                    <div class="ident" style="display:none">{{ reading.display_label }}</div>
+                </td>
             {% endfor %}
         </tr>
     {% endfor %}

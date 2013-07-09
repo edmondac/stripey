@@ -5,7 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from stripey_lib import xmlmss
 from collections import OrderedDict
 from django.db.models import Max
-
+import string
 import logging
 logger = logging.getLogger('stripey_app.models')
 
@@ -178,6 +178,21 @@ class Variant(models.Model):
 class Reading(models.Model):
     variant = models.ForeignKey(Variant)
     text = models.CharField(max_length=1000)
+    label = models.IntegerField()
+    unique_together = (variant, text, label)
+
+    def save(self):
+        """
+        Save the object - setting a label if there's isn't one already
+        """
+        if not self.label:
+            max_label = Reading.objects.filter(variant=self.variant).aggregate(Max('label'))['label__max'] or 0
+            self.label = max_label + 1
+
+        super(Reading, self).save()
+
+    def display_label(self):
+        return string.lowercase[self.label - 1]
 
     def __unicode__(self):
         return u"Reading: {}:{}:{}".format(
@@ -192,19 +207,7 @@ class Stripe(models.Model):
     """
     verse = models.ForeignKey(Verse)
     readings = models.ManyToManyField(Reading)
-    label = models.IntegerField()
-    unique_together = (verse, label)
-
-    def save(self):
-        """
-        Save the object - setting a label if there's isn't one already
-        """
-        if not self.label:
-            max_label = Stripe.objects.filter(verse=self.verse).aggregate(Max('label'))['label__max'] or 0
-            self.label = max_label + 1
-
-        super(Stripe, self).save()
-
+    
     def __unicode__(self):
         return u"Stripe: verse {}, readings {}".format(self.verse,
                                                        self.readings)
@@ -323,79 +326,53 @@ def get_all_verses(book_obj, chapter_obj):
     return all_verses
 
 
-#~ class MappedCollation(object):
-    #~ """
-    #~ Create the collation for a particular chapter, in this form:
-#~
-    #~ {2: {(reading1, reading 2, ...): [mss1, mss2],}}
-#~
-    #~ """
-    #~ def __init__(self, book_obj, chapter_obj):
-        #~ # Get collated verses in order of (verse number)
-        #~ # then (verse item - I.e. a particular instance of a verse)
-        #~ # then (variant number).
-        #~ self.cvs = CollatedVerse.objects.filter(verse__chapter=chapter_obj).order_by(
-            #~ 'verse__num',
-            #~ 'verse__id')
-#~
-        #~ self.current_verse_obj = self.cvs[0].verse
-        #~ self.current_verse_num = self.cvs[0].verse.num
-        #~ self.my_stripe = OrderedDict()
-        #~ self.v_stripes = {}
-        #~ self.all_stripes = {}
-        #~ self._calculate_all_stripes()
-#~
-    #~ def _calculate_all_stripes(self):
-        #~ for cv in self.cvs:
-            #~ if cv.verse != self.current_verse_obj:
-                #~ # Finished this particular ms:hand:verse
-                #~ self._wrapup_verse_obj()
-                #~ self.current_verse_obj = cv.verse
-#~
-                #~ if cv.verse.num != self.current_verse_num:
-                    #~ # Finished one verse
-                    #~ self._wrapup_whole_verse()
-                    #~ self.current_verse_num = cv.verse.num
-#~
-            #~ # Add this reading to the stripe
-            #~ assert (cv.reading.variant.variant_num not in self.my_stripe), (self.my_stripe, cv.reading)
-            #~ self.my_stripe[cv.reading.variant.variant_num] = cv.reading
-#~
-        #~ self._wrapup_verse_obj()
-        #~ self._wrapup_whole_verse()
-#~
-    #~ def _wrapup_whole_verse(self):
-        #~ logger.debug("Finished collating verse {}".format(self.current_verse_num))
-        #~ assert self.current_verse_num not in self.all_stripes
-        #~ self.all_stripes[self.current_verse_num] = self.v_stripes
-        #~ self.v_stripes = {}
-#~
-    #~ def _wrapup_verse_obj(self):
-        #~ key = tuple(self.my_stripe.values())
-        #~ already = self.v_stripes.get(key, [])
-        #~ already.append(self.current_verse_obj)
-        #~ self.v_stripes[key] = already
-        #~ self.my_stripe = OrderedDict()
-#~
-    #~ def get_stripes(self, base_ms_id):
-        #~ """
-        #~ Get stripes, with the base_ms_id in the first set each time...
-        #~ [(1,
-          #~ [((<Reading: Reading: 1:1:0:εν αρχη>,
-             #~ <Reading: Reading: 1:1:1:ην ο λογος>,
-             #~ <Reading: Reading: 1:1:2:και>,
-             #~ <Reading: Reading: 1:1:3:ο λογος ην προς τον>,
-             #~ <Reading: Reading: 1:1:4:θν>,
-             #~ <Reading: Reading: 1:1:5:>,
-             #~ <Reading: Reading: 1:1:6:>),
-            #~ [<MsVerse: MsVerse: ms:45, hand:firsthand, chapter:Chapter object, v:1-4>, ...]),
-           #~ ((<Reading: Reading: 1:1:0:εν αρχηι>,
-             #~ <Reading: Reading: 1:1:1:ην ο λογος>,
-             #~ ...
-        #~ """
-        #~ ret = []
-        #~ for v in self.all_stripes:
-            #~ sorted_d = sorted(self.all_stripes[v].items(),
-                              #~ key=lambda t: base_ms_id not in [x.hand.manuscript.id for x in t[1]])
-            #~ ret.append((v, sorted_d))
-        #~ return ret
+class memoize(dict):
+    """
+    A memoize decorator from:
+     http://wiki.python.org/moin/PythonDecoratorLibrary#Memoize
+    """
+    def __init__(self, func):
+        self.func = func
+
+    def __call__(self, *args):
+        return self[args]
+
+    def __missing__(self, key):
+        result = self[key] = self.func(*key)
+        return result
+
+@memoize
+def collate(chapter_obj, verse_obj, base_ms_id):
+    """
+    @param verse_obj: This is optional - if set to None this function
+    will return all verses in the chaper.
+
+    Collect data verse by verse - like this:
+    [(<Verse: Verse john 1:1>,
+        [(<Stripe: Stripe: verse Verse john 1:1, readings...>,
+          [<MsStripe: MsStripe: hand Hand firsthand of Manuscript 013...>, ...]),
+         (<Stripe: Stripe: verse Verse john 1:1, readings...>,
+          [<MsStripe: MsStripe: hand Hand firsthand of Manuscript 013...>, ...])
+        ]),
+     (<Verse: Verse john 1:2>...
+    """
+    collation = []
+    if verse_obj:
+        verses = [verse_obj]
+    else:
+        verses = Verse.objects.filter(chapter=chapter_obj).order_by('num')
+
+    for verse in verses:
+        stripes = Stripe.objects.filter(verse=verse)
+        my_data = []
+        for st in stripes:
+            ms_stripes = MsStripe.objects.filter(stripe=st)
+            my_data.append((st, ms_stripes))
+
+        # Now sort it so that our base_ms_id appears in the first entry each time
+        collation.append((verse,
+                          sorted(my_data,
+                                 key=lambda x: base_ms_id not in
+                                               [y.ms_verse.hand.manuscript.id for y in x[1]])))
+
+    return collation

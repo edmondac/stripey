@@ -1,7 +1,7 @@
 from django.shortcuts import render_to_response, get_object_or_404
 from stripey_app.models import (ManuscriptTranscription, Book, Chapter,
                                 Hand, Verse, MsVerse, get_all_verses,
-                                Stripe, MsStripe)
+                                Stripe, MsStripe, collate)
 from django.http import HttpResponseRedirect
 
 import logging
@@ -81,39 +81,27 @@ def collation(request):
     book_obj = Book.objects.get(num=request.GET.get('bk'))
     chapter_obj = Chapter.objects.get(book=book_obj,
                                       num=request.GET.get('ch'))
+    v = request.GET.get('v')
+    if v:
+        verse_obj = Verse.objects.get(chapter=chapter_obj,
+                                      num=v)
+    else:
+        verse_obj = None
 
     last_chapter = Chapter.objects.filter(book=book_obj).order_by('-num')[0]
     is_last_chapter = False
     if chapter_obj.num == last_chapter.num:
         is_last_chapter = True
 
-    # Collect data verse by verse - like this:
-    #[(<Verse: Verse john 1:1>,
-    #    [(<Stripe: Stripe: verse Verse john 1:1, readings...>,
-    #      [<MsStripe: MsStripe: hand Hand firsthand of Manuscript 013...>, ...]),
-    #     (<Stripe: Stripe: verse Verse john 1:1, readings...>,
-    #      [<MsStripe: MsStripe: hand Hand firsthand of Manuscript 013...>, ...])
-    #    ]),
-    # (<Verse: Verse john 1:2>...
-    collation = []
-    for verse in Verse.objects.filter(chapter=chapter_obj).order_by('num'):
-        stripes = Stripe.objects.filter(verse=verse)
-        my_data = []
-        for st in stripes:
-            ms_stripes = MsStripe.objects.filter(stripe=st)
-            my_data.append((st, ms_stripes))
-
-        # Now sort it so that our base_ms_id appears in the first entry each time
-        collation.append((verse,
-                          sorted(my_data,
-                                 key=lambda x: base_ms_id not in
-                                               [y.ms_verse.hand.manuscript.id for y in x[1]])))
+    # Get our memoized collation data
+    collation = collate(chapter_obj, verse_obj, base_ms_id)
 
     #~ collation = MappedCollation(book_obj, chapter_obj).get_stripes(base_ms_id)
     return default_response(request,
                             'collation.html',
                             {'book': book_obj,
                              'chapter': chapter_obj,
+                             'v': v,
                              'collation': collation,
                              'is_last_chapter': is_last_chapter})
 

@@ -134,6 +134,18 @@ border-collapse:collapse;
 font-size: 80%;
 }
 
+tr.high_tr {
+ background-color: #dddddd;
+}
+
+td.high_td {
+ font-weight: bold;
+ color: red;
+}
+
+td.greek, div.greek, div.ident {
+ font-size: 120%;
+}
 
 #clear {
 clear:both;

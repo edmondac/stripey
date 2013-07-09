@@ -4,7 +4,10 @@
 
 <h1>Manuscript {{ ms.ms_ref }}</h1>
 
-<h2>{{ ms.display_ref }}</h2>
+<h2>{{ ms.display_ref }} :
+<a href="http://ntvmr.uni-muenster.de/en_GB/manuscript-workspace/?docid={{ ms.liste_id }}">NTVMR</a> |
+<a href="http://www.iohannes.com/XML/transcriptions/greek/{{ ms.ms_ref }}.xml">IGNTP</a>
+</h2>
 
 <p>Hands: {{ hands|join:', ' }}</p>
 
@@ -25,7 +28,7 @@
 {% for verse in chapter_to_show.verses %}
   <tr>
       <th>{{ verse.verse.num }}{% if verse.hand.name != 'firsthand' %} [<i>{{ verse.hand.name }}</i>]{% endif %}</th>
-      <td>{{ verse.text }}</td>
+      <td class="greek">{{ verse.text }}</td>
   </tr>
 {% endfor %}
 </table>

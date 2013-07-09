@@ -140,7 +140,6 @@ def collate_book(book_obj):
             stripes.delete()
             # 2. make the new collation
             collate_verse(chapter_obj, verse_obj, mss)
-        raise SystemExit
 
 
 def collate_all():
