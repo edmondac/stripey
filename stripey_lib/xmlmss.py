@@ -91,11 +91,8 @@ class Verse(object):
         Take some text and process it - e.g. rationalise out upper
         case letters, final nu, nomina sacra etc.
         """
-        # Case
-        ret = text.lower()
-
         # Final nu
-        ret = ret.replace(u'¯', u'ν')
+        ret = text.replace(u'¯', u'ν')
 
         # Nomia sacra
         # FIXME
@@ -136,8 +133,8 @@ class Verse(object):
         # right order
         ret = []
         for t in el.itertext():
-            t = t.strip()
-            if t == 'om':
+            t = t.strip().lower()
+            if t in ('om', 'omm'):
                 # Ignore 'om' and leave it blank
                 continue
             ret.append(t)

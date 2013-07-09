@@ -24,7 +24,7 @@
 <table>
 {% for verse in chapter_to_show.verses %}
   <tr>
-      <th>{{ verse.num }}{% if verse.hand.name != 'firsthand' %} [<i>{{ verse.hand.name }}</i>]{% endif %}</th>
+      <th>{{ verse.verse.num }}{% if verse.hand.name != 'firsthand' %} [<i>{{ verse.hand.name }}</i>]{% endif %}</th>
       <td>{{ verse.text }}</td>
   </tr>
 {% endfor %}

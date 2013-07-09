@@ -1,7 +1,7 @@
 from django.shortcuts import render_to_response, get_object_or_404
 from stripey_app.models import (ManuscriptTranscription, Book, Chapter,
-                                Hand, Verse, get_all_verses,
-                                MappedCollation)
+                                Hand, Verse, MsVerse, get_all_verses,
+                                Stripe, MsStripe)
 from django.http import HttpResponseRedirect
 
 import logging
@@ -38,8 +38,8 @@ def index(request):
 def manuscript(request):
     ms = get_object_or_404(ManuscriptTranscription, pk=request.GET.get('ms_id'))
     hands = Hand.objects.filter(manuscript=ms)
-    verses = Verse.objects.filter(hand__in=hands)
-    chapters = Chapter.objects.filter(id__in=list(set([v.chapter.id for v in verses]))).order_by('num')
+    verses = MsVerse.objects.filter(hand__in=hands)
+    chapters = Chapter.objects.filter(id__in=list(set([v.verse.chapter.id for v in verses]))).order_by('num')
 
     books = Book.objects.filter(id__in=list(set([c.book.id for c in chapters]))).order_by('num')
 
@@ -63,7 +63,7 @@ def manuscript(request):
         chapter = book.chapters[0]
 
     # Set the verses to display
-    chapter.verses = verses.filter(chapter=chapter).order_by('num')
+    chapter.verses = verses.filter(verse__chapter=chapter).order_by('verse__num')
 
     return default_response(request,
                             'manuscript.html',
@@ -87,7 +87,29 @@ def collation(request):
     if chapter_obj.num == last_chapter.num:
         is_last_chapter = True
 
-    collation = MappedCollation(book_obj, chapter_obj).get_stripes(base_ms_id)
+    # Collect data verse by verse - like this:
+    #[(<Verse: Verse john 1:1>,
+    #    [(<Stripe: Stripe: verse Verse john 1:1, readings...>,
+    #      [<MsStripe: MsStripe: hand Hand firsthand of Manuscript 013...>, ...]),
+    #     (<Stripe: Stripe: verse Verse john 1:1, readings...>,
+    #      [<MsStripe: MsStripe: hand Hand firsthand of Manuscript 013...>, ...])
+    #    ]),
+    # (<Verse: Verse john 1:2>...
+    collation = []
+    for verse in Verse.objects.filter(chapter=chapter_obj).order_by('num'):
+        stripes = Stripe.objects.filter(verse=verse)
+        my_data = []
+        for st in stripes:
+            ms_stripes = MsStripe.objects.filter(stripe=st)
+            my_data.append((st, ms_stripes))
+
+        # Now sort it so that our base_ms_id appears in the first entry each time
+        collation.append((verse,
+                          sorted(my_data,
+                                 key=lambda x: base_ms_id not in
+                                               [y.ms_verse.hand.manuscript.id for y in x[1]])))
+
+    #~ collation = MappedCollation(book_obj, chapter_obj).get_stripes(base_ms_id)
     return default_response(request,
                             'collation.html',
                             {'book': book_obj,
@@ -184,7 +206,7 @@ def chapter(request):
             #~ for vs in ch.verses.values():
                 #~ for i, hand in enumerate(vs.hands):
                     #~ db_hand = _get_hand(ms, hand)
-                    #~ db_verse = Verse()
+                    #~ db_verse = MsVerse()
                     #~ db_verse.chapter = db_chapter
                     #~ db_verse.hand = db_hand
                     #~ db_verse.num = vs.num
