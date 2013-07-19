@@ -3,13 +3,12 @@
 import os
 import time
 import sys
-#~ from django.utils.encoding import smart_unicode
 
 # Sort out the paths so we can import the django stuff
 sys.path.append('../stripey_dj/')
 os.environ['DJANGO_SETTINGS_MODULE'] = 'stripey_dj.settings'
 
-from stripey_app.models import (Book, Chapter, Verse, MsVerse, Hand,
+from stripey_app.models import (Book, Chapter, Verse, MsVerse,
                                 get_all_verses, Variant, Reading,
                                 Stripe, MsStripe)
 from django.db import transaction
@@ -46,7 +45,7 @@ def collate_verse(chapter_obj, verse_obj, mss):
 
     # Store the readings per ms_verse for later
     mv_readings = {}
-    
+
     for i, entry in enumerate(ap.entries):
         # entry = appararus entry = a variant unit
         variant = Variant()

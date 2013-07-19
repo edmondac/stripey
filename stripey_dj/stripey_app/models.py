@@ -3,7 +3,6 @@
 from django.db import models
 from django.core.exceptions import ObjectDoesNotExist
 from stripey_lib import xmlmss
-from collections import OrderedDict
 from django.db.models import Max
 import string
 import logging
@@ -207,7 +206,7 @@ class Stripe(models.Model):
     """
     verse = models.ForeignKey(Verse)
     readings = models.ManyToManyField(Reading)
-    
+
     def __unicode__(self):
         return u"Stripe: verse {}, readings {}".format(self.verse,
                                                        self.readings)
@@ -341,6 +340,7 @@ class memoize(dict):
         result = self[key] = self.func(*key)
         return result
 
+
 @memoize
 def collate(chapter_obj, verse_obj, base_ms_id):
     """
@@ -370,9 +370,7 @@ def collate(chapter_obj, verse_obj, base_ms_id):
             my_data.append((st, ms_stripes))
 
         # Now sort it so that our base_ms_id appears in the first entry each time
-        collation.append((verse,
-                          sorted(my_data,
-                                 key=lambda x: base_ms_id not in
-                                               [y.ms_verse.hand.manuscript.id for y in x[1]])))
+        collation.append((verse, sorted(my_data, key=lambda x: base_ms_id not in
+                                        [y.ms_verse.hand.manuscript.id for y in x[1]])))
 
     return collation

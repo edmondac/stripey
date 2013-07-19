@@ -8,7 +8,6 @@ sys.path.append('../stripey_dj/')
 os.environ['DJANGO_SETTINGS_MODULE'] = 'stripey_dj.settings'
 
 from stripey_app.models import ManuscriptTranscription
-from django.db.utils import IntegrityError
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 

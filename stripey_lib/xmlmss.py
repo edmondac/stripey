@@ -8,27 +8,25 @@ Notes:
 """
 
 import os
-import hashlib
 import string
 import logging
 logger = logging.getLogger('XmlMss')
 import xml.etree.ElementTree as ET
-from collections import OrderedDict
 idents = string.lowercase
 
 # What tags do we just ignore?
-ignore_tags = ['lb',    # Line break
-               'cb',    # Column break
-               'pb',    # Page break
-               'fw',    # Other text, e.g. running titles
-               'pc',    # Punctuation
-               'space', # White space
-               'gap',   # Lacuna, illegible etc.
-               'seg',   # Marginal text
-               'note',  # Notes
-               'num',   # (Mostly) paratextual numbners
-               'unclear', # TODO - should these be ignored?
-               'supplied', # for supplied tags outside words...
+ignore_tags = ['lb',     # Line break
+               'cb',     # Column break
+               'pb',     # Page break
+               'fw',     # Other text, e.g. running titles
+               'pc',     # Punctuation
+               'space',  # White space
+               'gap',    # Lacuna, illegible etc.
+               'seg',    # Marginal text
+               'note',   # Notes
+               'num',    # (Mostly) paratextual numbners
+               'unclear',  # TODO - should these be ignored?
+               'supplied',  # for supplied tags outside words...
                ]
 
 # What tags are ok inside words?
@@ -74,7 +72,7 @@ class Verse(object):
             hand = el.attrib.get('auto-%s'
                                  % (el.attrib['n'], ))
         return hand
-                
+
     def _find_hands(self):
         """
         Work out what different hands have been at work,
@@ -98,7 +96,7 @@ class Verse(object):
         # FIXME
 
         return ret
-                
+
     def _parse(self, element, hand=None):
         """
         Go through the element's children and extract the text for
@@ -106,7 +104,7 @@ class Verse(object):
 
         @param hand: the hand to look for in rdg tags (None implies no
         rdg tags will be found)
-        
+
         @returns: the text for this scribe
         """
         contents = []
@@ -201,14 +199,14 @@ class Manuscript(object):
     local copy if present) and parses it.
     """
     cache = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".mss")
-    
+
     def __init__(self, name, filepath):
         self.name = name
         self.filepath = filepath
         self.tree = None
         self.chapters = {}
         self.ms_desc = {}
-        
+
         # Book identification - FIXME, am I limited to one book per ms?
         self.book = None
         self.num = None
@@ -219,7 +217,7 @@ class Manuscript(object):
     def _load_xml(self):
         """
         Load the file from disk.
-        """        
+        """
         logger.info("Parsing {}".format(self.filepath))
         self.tree = ET.parse(self.filepath)
 
@@ -245,7 +243,7 @@ class Manuscript(object):
             elif title.attrib.get('type') == 'work':
                 # This is the book number
                 self.num = title.attrib.get('n')
-        
+
         for child in root.iter("{http://www.tei-c.org/ns/1.0}div"):
             if child.attrib.get('type') == 'chapter':
                 my_ch = child.attrib['n']
@@ -260,5 +258,3 @@ class Manuscript(object):
                     self.chapters[my_ch] = Chapter(child, my_ch)
 
         logger.debug("Finished parsing %s" % (self.name, ))
-    
-

@@ -1,16 +1,11 @@
 from django.shortcuts import render_to_response, get_object_or_404
 from stripey_app.models import (ManuscriptTranscription, Book, Chapter,
                                 Hand, Verse, MsVerse, get_all_verses,
-                                Stripe, MsStripe, collate)
+                                collate)
 from django.http import HttpResponseRedirect
 
 import logging
 logger = logging.getLogger('stripey_app.views')
-
-#~ from stripey_lib import collatex as _mod
-#~ os.environ['COLLATE_JAR_PATH'] = os.path.dirname(_mod.__file__)
-#~ logger.debug(os.environ['COLLATE_JAR_PATH'])
-#~ from stripey_lib.collatex import collatex
 
 
 def default_response(request, url, data):
@@ -177,36 +172,3 @@ def chapter(request):
                              'chapter': chapter_obj,
                              'verses': grouped_verses,
                              'is_last_chapter': is_last_chapter})
-
-
-#~ def load(request):
-    #~ all_mss = ManuscriptTranscription.objects.all()
-    #~ for ms in all_mss:
-        #~ if ms.status in ('loaded', 'collated'):
-            #~ logger.debug("MS {} is already loaded - ignoring".format(ms))
-            #~ continue
-#~
-        #~ logger.info("Loading MS {}".format(ms))
-        #~ obj = xmlmss.Manuscript(ms.ms_ref, ms.xml_url)
-        #~ if not obj.book:
-            #~ raise ValueError("Couldn't work out the book")
-#~
-        #~ db_book = _get_book(obj.book, obj.num)
-#~
-        #~ for ch in obj.chapters.values():
-            #~ db_chapter = _get_chapter(db_book, ch.num)
-#~
-            #~ for vs in ch.verses.values():
-                #~ for i, hand in enumerate(vs.hands):
-                    #~ db_hand = _get_hand(ms, hand)
-                    #~ db_verse = MsVerse()
-                    #~ db_verse.chapter = db_chapter
-                    #~ db_verse.hand = db_hand
-                    #~ db_verse.num = vs.num
-                    #~ db_verse.text = vs.texts[i]
-                    #~ db_verse.save()
-#~
-        #~ ms.status = 'loaded'
-        #~ ms.save()
-
-    #~ return redirect('index.html')
