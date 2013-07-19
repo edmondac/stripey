@@ -3,12 +3,18 @@
 import os
 import time
 import sys
+import subprocess
+import json
+import urllib2
+
+COLLATEX_SERVICE = "collatex-tools-1.3/bin/collatex-server"
+COLLATEX_PORT = 7369
 
 # Sort out the paths so we can import the django stuff
 sys.path.append('../stripey_dj/')
 os.environ['DJANGO_SETTINGS_MODULE'] = 'stripey_dj.settings'
 
-from stripey_app.models import (Book, Chapter, Verse, MsVerse,
+from stripey_app.models import (Chapter, Verse, MsVerse,
                                 get_all_verses, Variant, Reading,
                                 Stripe, MsStripe)
 from django.db import transaction
@@ -17,10 +23,10 @@ from django.core.exceptions import ObjectDoesNotExist
 import logging
 logger = logging.getLogger('collate_all.py')
 
-from stripey_lib import collatex as _mod
-os.environ['COLLATE_JAR_PATH'] = os.path.dirname(_mod.__file__)
-logger.debug(os.environ['COLLATE_JAR_PATH'])
-from stripey_lib.collatex import collatex
+#~ from stripey_lib import collatex as _mod
+#~ os.environ['COLLATE_JAR_PATH'] = os.path.dirname(_mod.__file__)
+#~ logger.debug(os.environ['COLLATE_JAR_PATH'])
+#~ from stripey_lib.collatex import collatex
 
 
 @transaction.commit_on_success
@@ -142,9 +148,49 @@ def collate_book(book_obj):
 
 
 def collate_all():
-    for book in Book.objects.all():
-        collate_book(book)
+    """
+    Launch the collatex service. We'll then connect to it
+    to collate everything, then stop the service at the end.
+    """
+    p = subprocess.Popen([COLLATEX_SERVICE, '-p', str(COLLATEX_PORT)])
+    try:
+        time.sleep(5)
+        print query([{'id': 'a', 'content': 'this is a test'},
+                     {'id': 'b', 'content': 'this is a banana'}])
+        #for book in Book.objects.all():
+        #    collate_book(book)
+    finally:
+        print "Closing server"
+        p.terminate()
 
+
+def query(witnesses, algorithm="dekker"):
+    """
+    Query the collatex service. Witnesses muyst be a list, as such:
+    "witnesses" : [
+        {
+            "id" : "A",
+            "content" : "A black cat in a black basket"
+        },
+        {
+            "id" : "B",
+            "content" : "A black cat in a black basket"
+        },
+    ]
+
+    See http://collatex.net/doc/
+    """
+    data = json.dumps(dict(witnesses=witnesses,
+                           algorithm=algorithm))
+    url = "http://localhost:{}/collate".format(COLLATEX_PORT)
+    headers = {'Content-Type': 'application/json',
+               'Accept': 'application/json'}
+    req = urllib2.Request(url, data, headers)
+    print req.get_method(), data
+    resp = urllib2.urlopen(req)
+    print "[{}] {}".format(resp.getcode(), url)
+    print resp.info()
+    return json.loads(resp.read())
 
 if __name__ == "__main__":
     logger.info("Collating everything...")
