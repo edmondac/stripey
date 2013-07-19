@@ -14,10 +14,10 @@ COLLATEX_PORT = 7369
 sys.path.append('../stripey_dj/')
 os.environ['DJANGO_SETTINGS_MODULE'] = 'stripey_dj.settings'
 
-from stripey_app.models import (Chapter, Verse, MsVerse,
+from stripey_app.models import (Chapter, Verse, MsVerse, Book,
                                 get_all_verses, Variant, Reading,
                                 Stripe, MsStripe)
-from django.db import transaction
+from django.db import transaction, connection
 from django.core.exceptions import ObjectDoesNotExist
 
 import logging
@@ -35,24 +35,24 @@ def collate_verse(chapter_obj, verse_obj, mss):
                                                    chapter_obj.num,
                                                    verse_obj.num))
     start = time.time()
-    collation = collatex.Collation()
-    assert not collation.get_apparatus().entries
+    witnesses = []
     for ms, verses in mss:
         for verse in verses:
-            collation.add_witness(str(verse.id), verse.text)
+            if verse.text:
+                witnesses.append({'id':str(verse.id), 'content':verse.text})
 
     # Get the apparatus from collatex - this is the clever bit...
-    ap = collation.get_apparatus()
-    logger.debug(" .. collatex produced {} entries for {} sigli".format(
-                 len(ap.entries),
-                 len(ap.sigli)))
+    collation = query(witnesses)
+    logger.debug(" .. collatex produced {} entries for {} witnesses".format(
+                 len(collation['table']),
+                 len(collation['witnesses'])))
 
     count = 0
 
     # Store the readings per ms_verse for later
     mv_readings = {}
 
-    for i, entry in enumerate(ap.entries):
+    for i, entry in enumerate(collation['table']):
         # entry = appararus entry = a variant unit
         variant = Variant()
         variant.chapter = chapter_obj
@@ -61,18 +61,10 @@ def collate_verse(chapter_obj, verse_obj, mss):
         variant.save()
         sys.stdout.write('v')
 
-        for sigil in ap.sigli:
+        for j, sigil in enumerate(collation['witnesses']):
             # sigil = a witness = a verse object's id
             ms_verse = MsVerse.objects.get(id=int(sigil))
-
-            try:
-                text = unicode(entry.get_phrase(sigil))
-            except Exception as e:
-                if "This ngram is empty!" in str(e):
-                    text = ""
-                else:
-                    logger.error("Error getting phrase for {}".format(ms_verse))
-                    raise
+            text = unicode(' '.join([x.strip() for x in entry[j]]))
 
             # Get the reading object, or make a new one
             try:
@@ -138,13 +130,22 @@ def collate_book(book_obj):
         all_verses = get_all_verses(book_obj, chapter_obj)
         for v, mss in all_verses:
             verse_obj = Verse.objects.get(chapter=chapter_obj, num=v)
-            # 1. delete the old (will cascade)
-            variants = Variant.objects.filter(verse=verse_obj)
-            variants.delete()
-            stripes = Stripe.objects.filter(verse=verse_obj)
-            stripes.delete()
+            # 1. check we've not already done this one
+            if Variant.objects.filter(verse=verse_obj):
+                continue
             # 2. make the new collation
             collate_verse(chapter_obj, verse_obj, mss)
+
+
+def drop_all():
+    """
+    Clear out all collation data from the db
+    """
+    print "Clearing out old data"
+    for tab in [MsStripe, Stripe, Reading, Variant]:
+        cursor = connection.cursor()
+        cursor.execute('DELETE FROM "{0}"'.format(tab._meta.db_table))
+    print "Done"
 
 
 def collate_all():
@@ -155,10 +156,8 @@ def collate_all():
     p = subprocess.Popen([COLLATEX_SERVICE, '-p', str(COLLATEX_PORT)])
     try:
         time.sleep(5)
-        print query([{'id': 'a', 'content': 'this is a test'},
-                     {'id': 'b', 'content': 'this is a banana'}])
-        #for book in Book.objects.all():
-        #    collate_book(book)
+        for book in Book.objects.all():
+            collate_book(book)
     finally:
         print "Closing server"
         p.terminate()
@@ -186,12 +185,14 @@ def query(witnesses, algorithm="dekker"):
     headers = {'Content-Type': 'application/json',
                'Accept': 'application/json'}
     req = urllib2.Request(url, data, headers)
-    print req.get_method(), data
+    #print req.get_method(), data
     resp = urllib2.urlopen(req)
     print "[{}] {}".format(resp.getcode(), url)
-    print resp.info()
+    #print resp.info()
     return json.loads(resp.read())
 
 if __name__ == "__main__":
     logger.info("Collating everything...")
+    if 'drop' in sys.argv:
+        drop_all()
     collate_all()
