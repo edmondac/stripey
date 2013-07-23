@@ -35,7 +35,14 @@ class ManuscriptTranscription(models.Model):
         self.ms_name = obj.ms_desc.get('ms_name', '')
         self.tischendorf = obj.ms_desc.get('Tischendorf', '')
         self.ga = obj.ms_desc.get('GA', '')
-        self.liste_id = obj.ms_desc.get('Liste', '')
+        liste_id = obj.ms_desc.get('Liste', '')
+        if liste_id in ('3NA27', '300TR'):
+            # Special case "manuscripts"
+            self.liste_id = -1
+            if not self.ms_name:
+                self.ms_name = self.ga
+        else:
+            self.liste_id = int(liste_id)
         self.save()
         logger.debug(u"Found info: {}, {}, {}, {}".format(self.ms_name,
                                                           self.tischendorf,
@@ -286,6 +293,23 @@ def _get_hand(ms, hand):
     return db_hand
 
 
+class memoize(dict):
+    """
+    A memoize decorator from:
+     http://wiki.python.org/moin/PythonDecoratorLibrary#Memoize
+    """
+    def __init__(self, func):
+        self.func = func
+
+    def __call__(self, *args):
+        return self[args]
+
+    def __missing__(self, key):
+        result = self[key] = self.func(*key)
+        return result
+
+
+@memoize
 def get_all_verses(book_obj, chapter_obj):
     """
     Return all verses in a particular chapter, in this form:
@@ -323,22 +347,6 @@ def get_all_verses(book_obj, chapter_obj):
         all_verses.append((k, vs_d[k]))
 
     return all_verses
-
-
-class memoize(dict):
-    """
-    A memoize decorator from:
-     http://wiki.python.org/moin/PythonDecoratorLibrary#Memoize
-    """
-    def __init__(self, func):
-        self.func = func
-
-    def __call__(self, *args):
-        return self[args]
-
-    def __missing__(self, key):
-        result = self[key] = self.func(*key)
-        return result
 
 
 @memoize
