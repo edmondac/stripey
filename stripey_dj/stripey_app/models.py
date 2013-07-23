@@ -333,7 +333,7 @@ class memoize(dict):
 
 
 @memoize
-def get_all_verses(book_obj, chapter_obj, base_ms_id):
+def get_all_verses(book_obj, chapter_obj, base_ms_id=None):
     """
     Return all verses in a particular chapter, in this form:
 
@@ -350,9 +350,10 @@ def get_all_verses(book_obj, chapter_obj, base_ms_id):
       [...]]
     """
     all_mss = ManuscriptTranscription.objects.all()
-    base_ms = ManuscriptTranscription.objects.get(id=base_ms_id)
-    base_texts = base_ms.get_text(book_obj, chapter_obj)
-    sorters = {x[0]: TextSorter([i.text for i in x[1] if i.hand.name == 'firsthand'][0]) for x in base_texts}
+    if base_ms_id is not None:
+        base_ms = ManuscriptTranscription.objects.get(id=base_ms_id)
+        base_texts = base_ms.get_text(book_obj, chapter_obj)
+        sorters = {x[0]: TextSorter([i.text for i in x[1] if i.hand.name == 'firsthand'][0]) for x in base_texts}
 
     vs_d = {}
     for ms in all_mss:
@@ -362,12 +363,13 @@ def get_all_verses(book_obj, chapter_obj, base_ms_id):
         #   ...]
         for v in verses:
             for ms_verse in v[1]:
-                my_sorter = sorters.get(v[0])
-                if my_sorter:
-                    ms_verse.similarity = my_sorter(ms_verse.text)
-                else:
-                    # The base text doesn't exist in this verse
-                    ms_verse.similarity = ''
+                if base_ms_id is not None:
+                    my_sorter = sorters.get(v[0])
+                    if my_sorter:
+                        ms_verse.similarity = my_sorter(ms_verse.text)
+                    else:
+                        # The base text doesn't exist in this verse
+                        ms_verse.similarity = ''
             me = vs_d.get(v[0])
             if not me:
                 me = []
