@@ -20,7 +20,7 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'stripey_dj.settings'
 from stripey_app.models import (Chapter, Verse, MsVerse, Book,
                                 get_all_verses, Variant, Reading,
                                 Stripe, MsStripe, Algorithm)
-from django.db import transaction
+from django.db import transaction, reset_queries
 from django.core.exceptions import ObjectDoesNotExist
 
 import logging
@@ -137,7 +137,8 @@ def collate_book(book_obj, algo):
                 continue
             # 2. make the new collation
             collate_verse(chapter_obj, verse_obj, mss, algo)
-        break
+            # 3. tidy up django's query list, to free up some memory
+            reset_queries()
 
 
 @transaction.commit_on_success
@@ -229,13 +230,16 @@ def query(witnesses, algorithm="dekker"):
     url = "http://localhost:{}/collate".format(COLLATEX_PORT)
     headers = {'Content-Type': 'application/json',
                'Accept': 'application/json'}
+    start = time.time()
     req = urllib2.Request(url, data, headers)
     #print req.get_method(), data
     resp = urllib2.urlopen(req)
     logger.info("[{}] {} ({})".format(resp.getcode(), url, algorithm))
     #print resp.info()
-    return json.loads(resp.read())
-
+    ret = json.loads(resp.read())
+    end = time.time()
+    logger.info("[{}] {} ({}) - {} secs".format(resp.getcode(), url, algorithm, end-start))
+    return ret
 
 def _arg(question, default=None):
     """
