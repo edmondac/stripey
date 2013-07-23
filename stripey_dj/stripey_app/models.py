@@ -4,7 +4,9 @@ from django.db import models
 from django.core.exceptions import ObjectDoesNotExist
 from stripey_lib import xmlmss
 from django.db.models import Max
+
 import string
+import Levenshtein
 import logging
 logger = logging.getLogger('stripey_app.models')
 
@@ -176,9 +178,21 @@ class MsVerse(models.Model):
             self.item)
 
 
+class Algorithm(models.Model):
+    """
+    A collation algorithm
+    """
+    name = models.CharField(max_length=30)
+
+    def __unicode__(self):
+        return "Algorithm: {}".format(self.name)
+
+
 class Variant(models.Model):
     verse = models.ForeignKey(Verse)
     variant_num = models.IntegerField()
+    algorithm = models.ForeignKey(Algorithm)
+    unique_together = (verse, variant_num, algorithm)
 
 
 class Reading(models.Model):
@@ -213,22 +227,31 @@ class Stripe(models.Model):
     """
     verse = models.ForeignKey(Verse)
     readings = models.ManyToManyField(Reading)
+    algorithm = models.ForeignKey(Algorithm)
 
-    def __unicode__(self):
-        return u"Stripe: verse {}, readings {}".format(self.verse,
-                                                       self.readings)
+    def save(self, *args):
+        """
+        Consistency check on algorithms. We expect the caller to deal with
+        the exception.
+        """
+        ret = super(Stripe, self).save(*args)
+        for reading in self.readings.all():
+            if reading.variant.algorithm.id != self.algorithm.id:
+                raise ValueError(u"Algorithm mismatch {} vs {}".format(self.algorithm,
+                                                                       reading.algorithm))
+        return ret
 
 
 class MsStripe(models.Model):
     """
-    A HandStripe is a many-to-many mapping of hands to stripes.
+    An MsStripe is a many-to-many mapping of hands to stripes.
     """
     stripe = models.ForeignKey(Stripe)
     ms_verse = models.ForeignKey(MsVerse)
 
     def __unicode__(self):
-        return u"HandStripe: ms_verse {}, stripe {}".format(self.ms_verse,
-                                                            self.stripe)
+        return u"MsStripe: ms_verse {}, stripe {}".format(self.ms_verse,
+                                                          self.stripe)
 
 
 def _get_book(name, num):
@@ -310,7 +333,7 @@ class memoize(dict):
 
 
 @memoize
-def get_all_verses(book_obj, chapter_obj):
+def get_all_verses(book_obj, chapter_obj, base_ms_id):
     """
     Return all verses in a particular chapter, in this form:
 
@@ -322,11 +345,15 @@ def get_all_verses(book_obj, chapter_obj):
         <MsVerse: MsVerse: ms:47, hand:corrector, chapter:Chapter object, v:1-0>]),
       (<ManuscriptTranscription: Manuscript 04_03 transcription (loaded)>,
        [<MsVerse: MsVerse: ms:50, hand:firsthand, chapter:Chapter object, v:1-0>]),
-      ...],
+      ...]),
      (2,
       [...]]
     """
     all_mss = ManuscriptTranscription.objects.all()
+    base_ms = ManuscriptTranscription.objects.get(id=base_ms_id)
+    base_texts = base_ms.get_text(book_obj, chapter_obj)
+    sorters = {x[0]: TextSorter([i.text for i in x[1] if i.hand.name == 'firsthand'][0]) for x in base_texts}
+
     vs_d = {}
     for ms in all_mss:
         verses = ms.get_text(book_obj, chapter_obj)
@@ -334,6 +361,13 @@ def get_all_verses(book_obj, chapter_obj):
         #   (2,[verse obj]),
         #   ...]
         for v in verses:
+            for ms_verse in v[1]:
+                my_sorter = sorters.get(v[0])
+                if my_sorter:
+                    ms_verse.similarity = my_sorter(ms_verse.text)
+                else:
+                    # The base text doesn't exist in this verse
+                    ms_verse.similarity = ''
             me = vs_d.get(v[0])
             if not me:
                 me = []
@@ -349,8 +383,44 @@ def get_all_verses(book_obj, chapter_obj):
     return all_verses
 
 
+class TextSorter(object):
+    """
+    An object for returning the Levenshtein distance between our base text
+    and any other text.
+    """
+    def __init__(self, base_text):
+        self.base_text = base_text
+
+    def __call__(self, text):
+        return Levenshtein.ratio(self.base_text, text) * 100.0
+
+
+class StripeSorter(TextSorter):
+    """
+    An object for returning the Levenshtein distance between our base text
+    and any other stripe.
+    """
+    def __init__(self, base_ms_id, stripe_data):
+        # If the verse doesn't exist in our base text, then just set it to blank
+        self.base_text = u""
+        for (stripe, ms_stripes) in stripe_data:
+            my_ms_stripe = [x for x in ms_stripes if
+                            (x.ms_verse.hand.manuscript.id == base_ms_id and
+                             x.ms_verse.hand.name == 'firsthand')]
+            if my_ms_stripe:
+                # This ms_stripe is our base text's firsthand
+                self.base_text = self._textify(my_ms_stripe[0].stripe.readings.all())
+
+    def _textify(self, readings):
+        return ' '.join([x.text for x in readings if x.text.strip()])
+
+    def __call__(self, stripe):
+        text = self._textify(stripe.readings.all())
+        return super(StripeSorter, self).__call__(text)
+
+
 @memoize
-def collate(chapter_obj, verse_obj, base_ms_id):
+def collate(chapter_obj, verse_obj, algorithm_obj, base_ms_id):
     """
     @param verse_obj: This is optional - if set to None this function
     will return all verses in the chaper.
@@ -371,14 +441,19 @@ def collate(chapter_obj, verse_obj, base_ms_id):
         verses = Verse.objects.filter(chapter=chapter_obj).order_by('num')
 
     for verse in verses:
-        stripes = Stripe.objects.filter(verse=verse)
+        stripes = Stripe.objects.filter(verse=verse, algorithm=algorithm_obj)
         my_data = []
         for st in stripes:
-            ms_stripes = MsStripe.objects.filter(stripe=st)
+            ms_stripes = sorted(MsStripe.objects.filter(stripe=st),
+                                key=lambda a: a.ms_verse.hand.manuscript.liste_id)
             my_data.append((st, ms_stripes))
 
-        # Now sort it so that our base_ms_id appears in the first entry each time
-        collation.append((verse, sorted(my_data, key=lambda x: base_ms_id not in
-                                        [y.ms_verse.hand.manuscript.id for y in x[1]])))
+        # Now sort it by similarity to our base ms's reading - and add the
+        # similarity to the object
+        sorter = StripeSorter(base_ms_id, my_data)
+        for st, ms_stripes in my_data:
+            st.similarity = sorter(st)
+        sorted_data = sorted(my_data, key=lambda a: a[0].similarity, reverse=True)
+        collation.append((verse, sorted_data))
 
     return collation

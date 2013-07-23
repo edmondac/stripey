@@ -40,16 +40,16 @@ function toggleIdents() {
 
 {% block content %}
 
-<h2>{% if chapter.num > 1 %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num|add:'-1' }}&v=1">-1</a>{% endif %} Text of {{ book.name|title }} {{ chapter.num }} {% if not is_last_chapter %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num|add:'+1' }}&v=1">+1</a>{% endif %}</h2>
+<h2>{% if chapter.num > 1 %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num|add:'-1' }}&v=1&al={{ algorithm.name }}">-1</a>{% endif %} Collation of {{ book.name|title }} {{ chapter.num }} ({{ algorithm.name }}) {% if not is_last_chapter %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num|add:'+1' }}&v=1&al={{ algorithm.name }}">+1</a>{% endif %} | Change algorithm: {% for alg in algorithms %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v }}&al={{ alg.name }}">{{ alg.name }}</a> {% endfor %}</h2>
 
 <h3><a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num }}">View text</a></h3>
 
 {% for verse, stripes in collation %}
 <b>
     {% if v %}
-        {% if v > 1 %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v|add:'-1' }}">-1</a>{% endif %} Verse {{ verse.num }}{% if not is_last_verse %} <a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v|add:'+1' }}">+1</a>{% endif %} <a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}">all</a>
+        {% if v > 1 %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v|add:'-1' }}&al={{ algorithm.name }}">-1</a>{% endif %} Verse {{ verse.num }}{% if not is_last_verse %} <a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v|add:'+1' }}&al={{ algorithm.name }}">+1</a>{% endif %} <a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&al={{ algorithm.name }}">all</a>
     {% else %}
-        <a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ verse.num }}">Verse {{ verse.num }}</a>
+        <a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ verse.num }}&al={{ algorithm.name }}">Verse {{ verse.num }}</a>
     {% endif %}
 </b> <button onclick="toggleIdents()">Toggle text/idents</button>
 
@@ -61,6 +61,7 @@ function toggleIdents() {
                     <a href="/manuscript.html?ms_id={{ m.ms_verse.hand.manuscript.id }}&bk={{ book.num }}&ch={{ chapter.num }}" title="{{ m.ms_verse.hand.manuscript.display_ref }}"><font {% if m.ms_verse.hand.manuscript.id == base_ms_id %}color="red"{% endif %}>{{ m.ms_verse.hand.manuscript.display_short }}{% if m.ms_verse.hand.name != 'firsthand' %}&nbsp;<i>{{ m.ms_verse.hand.name }}</i>{% endif %}</font></a>&nbsp;
                 {% endfor %}
             </th>
+            <td>{{ stripe.similarity|floatformat }}%</td>
             {% for reading in stripe.readings.all %}
                 <td id="vr{{ reading.variant.id }}">
                     <div class="greek">{{ reading.text }}</div>

@@ -1,7 +1,7 @@
 from django.shortcuts import render_to_response, get_object_or_404
 from stripey_app.models import (ManuscriptTranscription, Book, Chapter,
                                 Hand, Verse, MsVerse, get_all_verses,
-                                collate)
+                                collate, Algorithm)
 from django.http import HttpResponseRedirect
 
 import logging
@@ -74,11 +74,13 @@ def collation(request):
     """
     base_ms_id = int(request.COOKIES.get('base_ms', '0'))
     book_obj = Book.objects.get(num=request.GET.get('bk'))
+    algorithm_obj = Algorithm.objects.get(name=request.GET.get('al'))
     chapter_obj = Chapter.objects.get(book=book_obj,
                                       num=request.GET.get('ch'))
     v = request.GET.get('v')
     is_last_verse = None
     if v:
+        v = int(v)
         verse_obj = Verse.objects.get(chapter=chapter_obj,
                                       num=v)
         last_verse = Verse.objects.filter(chapter=chapter_obj).order_by('-num')[0]
@@ -93,9 +95,10 @@ def collation(request):
         is_last_chapter = True
 
     # Get our memoized collation data
-    collation = collate(chapter_obj, verse_obj, base_ms_id)
+    collation = collate(chapter_obj, verse_obj, algorithm_obj, base_ms_id)
 
-    #~ collation = MappedCollation(book_obj, chapter_obj).get_stripes(base_ms_id)
+    algos = Algorithm.objects.all()
+
     return default_response(request,
                             'collation.html',
                             {'book': book_obj,
@@ -103,7 +106,9 @@ def collation(request):
                              'v': v,
                              'collation': collation,
                              'is_last_chapter': is_last_chapter,
-                             'is_last_verse': is_last_verse})
+                             'is_last_verse': is_last_verse,
+                             'algorithm': algorithm_obj,
+                             'algorithms': algos})
 
 
 def set_base_text(request):
@@ -131,7 +136,7 @@ def chapter(request):
     if chapter_obj.num == last_chapter.num:
         is_last_chapter = True
 
-    all_verses = get_all_verses(book_obj, chapter_obj)
+    all_verses = get_all_verses(book_obj, chapter_obj, base_ms_id)
     # Group readings together... We want a list of readings for each verse, with a list of witnesses per reading.
     grouped_verses = []
     for v, mss in all_verses:
@@ -142,33 +147,25 @@ def chapter(request):
                     wit = (ms, verse.hand.name)
                 else:
                     wit = (ms, None)
-                witnesses = readings.get(verse.text, [])
-                witnesses.append(wit)
+                witnesses = readings.get(verse.text, ([], verse.similarity))
+                witnesses[0].append(wit)
                 readings[verse.text] = witnesses
 
-        # Sort each group by ms id
+        # Sort each group by liste id
         for i in readings:
-            readings[i].sort(lambda a, b: cmp(a[0].liste_id, b[0].liste_id))
+            readings[i][0].sort(key=lambda a: a[0].liste_id)
 
         # Now sort the groups so our base_ms is in the top one (if present)
-        all_readings = readings.items()
+        all_readings = sorted(readings.items(), key=lambda a: a[1][1], reverse=True)
 
-        def sort_fn(a, b):
-            a_ids = [x[0].id for x in a[1]]
-            b_ids = [y[0].id for y in b[1]]
-            if base_ms_id in a_ids:
-                return -1
-            elif base_ms_id in b_ids:
-                return 1
-            else:
-                return 0
-
-        all_readings.sort(sort_fn)
         grouped_verses.append((v, all_readings))
+
+    algos = Algorithm.objects.all()
 
     return default_response(request,
                             'chapter.html',
                             {'book': book_obj,
                              'chapter': chapter_obj,
                              'verses': grouped_verses,
-                             'is_last_chapter': is_last_chapter})
+                             'is_last_chapter': is_last_chapter,
+                             'algorithms': algos})
