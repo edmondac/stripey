@@ -7,7 +7,7 @@
  <div>
   <b>Book: {{ book.name|title }}</b>
   {% for chapter in book.chapters %}
-    <a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num }}">{{ chapter.num }}</a>
+    <a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num }}&v=1">{{ chapter.num }}</a>
   {% endfor %}
  </div>
 {% endfor %}

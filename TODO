@@ -9,10 +9,10 @@ TODO file
 - add database indexes!
 
 From Hugh&Cat (16/7/13)
-1. Try different algorithms in collatex
-2. Try fuzzy matching
-3. Get NA28 and/or TR as XML from Cat
-4. Can we get percentage agreements in this?
+1. Try different algorithms in collatex (DONE)
+2. Try fuzzy matching (DONE)
+3. Get NA28 and/or TR as XML from Cat (DONE)
+4. Can we get percentage agreements in this? (DONE)
 5. Look at the most variant parts (highest ident letters)
 6. Look at e.g. 5:7 in ms C - what do the correctors actually read here?
 7. In idents, absent should be an empty box, or a special character

@@ -8,44 +8,52 @@
 
   <body>
     <div id="page">
-      
+
     <div id="header">
      <div id="topbar"></div>
-     <div id="banner">
-      <b>Stripey</b>
-     </div>
-     <div id="menu">
-       <a href="index.html">Home</a>
-       <a href="{% url admin:index %}" target="admin">Manage</a>
-     <div id="basetext">
+     <div id="options">
+        <form action="set_accents.html">
+             <label for="show_accents">Show accents:</label>
+             <select name="show_accents" onchange="this.form.submit()">
+                 <option value="none" {% if show_accents == 'none' %}selected{% endif %}>None</option>
+                 <option value="diacritic" {% if show_accents == 'diacritic' %}selected{% endif %}>Diacritic only</option>
+                 <option value="all" {% if show_accents == 'all' %}selected{% endif %}>All</option>
+             </select>
+         </form>
          <form action="set_base_text.html">
              <label for="base_ms_id">Base Text:</label>
-             <select name="ms_id" onchange="this.form.submit()">
+             <select name="base_ms_id" onchange="this.form.submit()">
                  {% for ms in all_mss %}
                      <option value="{{ ms.id }}" {% if ms.id == base_ms_id %}selected{% endif %}>{{ ms.display_ref }}</option>
                  {% endfor %}
              </select>
          </form>
      </div>
+     <div id="banner">
+      <b>Stripey</b>
+     </div>
+     <div id="menu">
+       <a href="index.html">Home</a>
+       <a href="{% url admin:index %}" target="admin">Manage</a>
      </div>
     </div>
-      
+
     <div id="container">
-    
+
     <div id="content">
           {% block content %}{% endblock %}
     </div>
 
     <div id="clear"></div>
-    
+
       </div>
-      
+
       <div id="footer">
        Linux, Python, Django, SQLite3
       </div>
-      
+
     </div>
-    
+
   </body>
-  
+
 </html>

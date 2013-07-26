@@ -8,10 +8,13 @@ import json
 import urllib2
 from contextlib import contextmanager
 
+# Collatex settings:
 COLLATEX_SERVICE = "collatex-tools-1.3/bin/collatex-server"
 COLLATEX_PORT = 7369
-
 SUPPORTED_ALGORITHMS = ('dekker', 'needleman-wunsch', 'medite')
+# levenstein distance: the edit distance threshold for optional fuzzy matching
+#                      of tokens; the default is exact matching
+FUZZY_EDIT_DISTANCE = 3
 
 # Sort out the paths so we can import the django stuff
 sys.path.append('../stripey_dj/')
@@ -41,8 +44,16 @@ def collate_verse(chapter_obj, verse_obj, mss, algo):
                 witnesses.append({'id': str(verse.id),
                                   'content': verse.text})
 
-    # Get the apparatus from collatex - this is the clever bit...
-    collation = query(witnesses, algo.name)
+    try:
+        # Get the apparatus from collatex - this is the clever bit...
+        collation = query(witnesses, algo.name)
+    except urllib2.HTTPError as e:
+        # Collate failed
+        logger.error("Collate has failed us: {}".format(str(e)))
+        logger.debug("Waiting for 30s for it to sort its self out...")
+        time.sleep(30)
+        return
+
     logger.debug(" .. collatex produced {} entries for {} witnesses".format(
                  len(collation['table']),
                  len(collation['witnesses'])))
@@ -140,6 +151,8 @@ def collate_book(book_obj, algo):
             # 3. tidy up django's query list, to free up some memory
             reset_queries()
 
+        break
+
 
 @transaction.commit_on_success
 def drop_all(algo):
@@ -224,9 +237,13 @@ def query(witnesses, algorithm="dekker"):
     See http://collatex.net/doc/
     """
     assert algorithm in SUPPORTED_ALGORITHMS
+    input_d = dict(witnesses=witnesses,
+                   algorithm=algorithm)
+    if FUZZY_EDIT_DISTANCE:
+        input_d['tokenComparator'] = {"type": "levenshtein",
+                                      "distance": FUZZY_EDIT_DISTANCE}
+    data = json.dumps(input_d)
 
-    data = json.dumps(dict(witnesses=witnesses,
-                           algorithm=algorithm))
     url = "http://localhost:{}/collate".format(COLLATEX_PORT)
     headers = {'Content-Type': 'application/json',
                'Accept': 'application/json'}
@@ -238,8 +255,9 @@ def query(witnesses, algorithm="dekker"):
     #print resp.info()
     ret = json.loads(resp.read())
     end = time.time()
-    logger.info("[{}] {} ({}) - {} secs".format(resp.getcode(), url, algorithm, end-start))
+    logger.info("[{}] {} ({}) - {} secs".format(resp.getcode(), url, algorithm, end - start))
     return ret
+
 
 def _arg(question, default=None):
     """
@@ -281,7 +299,9 @@ if __name__ == "__main__":
         else:
             algos = [algo]
 
-        for a in algos:
-            if drop:
+        if drop:
+            for a in algos:
                 drop_all(a)
+
+        for a in algos:
             collate_all(a)

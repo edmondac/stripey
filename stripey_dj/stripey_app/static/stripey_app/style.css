@@ -67,7 +67,7 @@ color: #66999a;
 border: 1px solid white;
 }
 
-#basetext {
+#options {
 float: right;
 }
 
@@ -128,6 +128,22 @@ border: 1px solid green;
 padding: 1px 1px 1px 1px;
 }
 
+h3 {
+color: grey;
+font-size: 90%;
+border: 1px solid grey;
+padding: 1px 1px 1px 1px;
+}
+
+a {
+color: darkred;
+text-decoration: none;
+}
+
+a:hover {
+text-decoration: underline;
+}
+
 table, th, td {
 border: 1px solid #aaccce;
 border-collapse:collapse;
@@ -144,7 +160,7 @@ td.high_td {
 }
 
 td.greek, div.greek, div.ident {
- font-size: 120%;
+ font-size: 100%;
 }
 
 #clear {

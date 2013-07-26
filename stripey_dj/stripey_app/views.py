@@ -13,6 +13,8 @@ def default_response(request, url, data):
         data['base_ms_id'] = int(request.COOKIES.get('base_ms', '0'))
     if 'all_mss' not in data:
         data['all_mss'] = ManuscriptTranscription.objects.all().order_by('liste_id')
+    if 'show_accents' not in data:
+        data['show_accents'] = request.COOKIES.get('show_accents', 'none')
 
     return render_to_response(url, data)
 
@@ -79,7 +81,7 @@ def collation(request):
                                       num=request.GET.get('ch'))
     v = request.GET.get('v')
     is_last_verse = None
-    if v:
+    if (v is not None and v != 'None'):
         v = int(v)
         verse_obj = Verse.objects.get(chapter=chapter_obj,
                                       num=v)
@@ -113,12 +115,23 @@ def collation(request):
 
 def set_base_text(request):
     """
-    Sets the base text to use, the returns to the HTTP REFERER
+    Sets the base text to use and returns to the HTTP REFERER
     """
-    base_ms = get_object_or_404(ManuscriptTranscription, pk=request.GET.get('ms_id'))
+    base_ms = get_object_or_404(ManuscriptTranscription, pk=request.GET.get('base_ms_id'))
     referer = request.META.get('HTTP_REFERER', '/index.html')
     ret = HttpResponseRedirect(referer)
     ret.set_cookie('base_ms', value=base_ms.id, max_age=3600 * 24 * 365)
+    return ret
+
+
+def set_accents(request):
+    """
+    Sets the show_accents cookie and returns to the HTTP REFERER
+    """
+    show_accents = request.GET.get('show_accents', 'none')
+    referer = request.META.get('HTTP_REFERER', '/index.html')
+    ret = HttpResponseRedirect(referer)
+    ret.set_cookie('show_accents', value=show_accents, max_age=3600 * 24 * 365)
     return ret
 
 
@@ -136,7 +149,19 @@ def chapter(request):
     if chapter_obj.num == last_chapter.num:
         is_last_chapter = True
 
-    all_verses = get_all_verses(book_obj, chapter_obj, base_ms_id)
+    v = request.GET.get('v')
+    is_last_verse = None
+    if (v is not None and v != 'None'):
+        v = int(v)
+        verse_obj = Verse.objects.get(chapter=chapter_obj,
+                                      num=v)
+        last_verse = Verse.objects.filter(chapter=chapter_obj).order_by('-num')[0]
+        if last_verse.num == verse_obj.num:
+            is_last_verse = True
+    else:
+        verse_obj = None
+
+    all_verses = get_all_verses(book_obj, chapter_obj, base_ms_id, v)
     # Group readings together... We want a list of readings for each verse, with a list of witnesses per reading.
     grouped_verses = []
     for v, mss in all_verses:
@@ -166,6 +191,8 @@ def chapter(request):
                             'chapter.html',
                             {'book': book_obj,
                              'chapter': chapter_obj,
+                             'v': v,
                              'verses': grouped_verses,
                              'is_last_chapter': is_last_chapter,
+                             'is_last_verse': is_last_verse,
                              'algorithms': algos})

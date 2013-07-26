@@ -11,6 +11,13 @@ import logging
 logger = logging.getLogger('stripey_app.models')
 
 
+# Show/hide accents (dynamic on ms text but collation is fixed in time)
+# can be: 'none', 'diacritic', 'all'
+SHOW_ACCENTS = 'diacritic'
+
+# 'Normal' greek characters:
+ALPHABET = 'αβγδεζηθικλμνξοπρσςτυφχψω'
+
 class ManuscriptTranscription(models.Model):
     ms_ref = models.CharField(max_length=10, unique=True)
     xml_filename = models.CharField(max_length=200)
@@ -105,12 +112,16 @@ class ManuscriptTranscription(models.Model):
 
         return self.ms_ref
 
-    def get_text(self, book_obj, chapter_obj):
+    def get_text(self, book_obj, chapter_obj, verse_num=None):
         """
         Return the text of the relevant book, chapter (db objects)
         in a list of tuples  [(1,[verse obj, verse obj, ...]),
                               (2,[verse obj]),
                               ...]
+
+        @param book_obj: a book object
+        @param chapter_obj: a chapter object
+        @verse_num: (optional) restrict to a single verse with this number
 
         Multiple verse_objs are possible where there are multiple hands
         at work and in commentary manuscripts that mention the verse
@@ -118,9 +129,15 @@ class ManuscriptTranscription(models.Model):
         """
         v_d = {}
         for hand in Hand.objects.filter(manuscript=self):
-            for verse in MsVerse.objects.filter(verse__chapter=chapter_obj,
+            if verse_num is None:
+                verses = MsVerse.objects.filter(verse__chapter=chapter_obj,
                                                 hand=hand,
-                                                ).order_by('verse__num'):
+                                                ).order_by('verse__num')
+            else:
+                verses = MsVerse.objects.filter(verse__chapter=chapter_obj,
+                                                hand=hand,
+                                                verse__num=verse_num)
+            for verse in verses:
                 me = v_d.get(verse.verse.num)
                 if not me:
                     me = []
@@ -169,6 +186,22 @@ class MsVerse(models.Model):
     hand = models.ForeignKey(Hand)
     item = models.IntegerField()  # for "duplicate" verses
     text = models.CharField(max_length=1000)
+
+    @property
+    def get_text(self):
+        t = self.text
+        if SHOW_ACCENTS == 'diacritic':
+            # Strip out all accents but diacritic marks
+            keep = ALPHABET + DIACRITIC
+        elif SHOW_ACCENTS == 'none':
+            # Strip out anything that isn't a normal character
+            keep = ALPHABET
+        else:
+            return t
+
+        # Now remove what we don't want
+        new_t = [char in t if char in keep]
+        return ''.join(new_t)
 
     def __unicode__(self):
         return "MsVerse: ms:{}, hand:{}, verse:{} ({})".format(
@@ -333,9 +366,14 @@ class memoize(dict):
 
 
 @memoize
-def get_all_verses(book_obj, chapter_obj, base_ms_id=None):
+def get_all_verses(book_obj, chapter_obj, base_ms_id=None, verse_num=None):
     """
     Return all verses in a particular chapter, in this form:
+
+    @param book_obj: a book object
+    @param chapter_obj: a chapter object
+    @param base_ms_id: (optional) the db id of a manuscript
+    @param verse_num: (optional) return only a single verse with this number
 
     [(1,
       [(<ManuscriptTranscription: Manuscript 04_1424 transcription (loaded)>,
@@ -357,7 +395,8 @@ def get_all_verses(book_obj, chapter_obj, base_ms_id=None):
 
     vs_d = {}
     for ms in all_mss:
-        verses = ms.get_text(book_obj, chapter_obj)
+        # If verse_num == None, then this will get everything in the chapter
+        verses = ms.get_text(book_obj, chapter_obj, verse_num)
         #  [(1,[verse obj, verse obj, ...]),
         #   (2,[verse obj]),
         #   ...]
