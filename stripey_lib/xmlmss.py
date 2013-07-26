@@ -7,12 +7,9 @@ Notes:
 * I'm not handling gap tags very smartly
 """
 
-import os
-import string
 import logging
 logger = logging.getLogger('XmlMss')
 import xml.etree.ElementTree as ET
-idents = string.lowercase
 
 # What tags do we just ignore?
 ignore_tags = ['lb',     # Line break
@@ -48,7 +45,7 @@ class Verse(object):
         self.chapter = chapter
         self.num = number
 
-        # Note - we can have multiple different texts and idents if
+        # Note - we can have multiple different texts if
         # correctors have been at work
         self.hands = []
         self.texts = []
@@ -86,15 +83,11 @@ class Verse(object):
 
     def _post_process(self, text):
         """
-        Take some text and process it - e.g. rationalise out upper
-        case letters, final nu, nomina sacra etc.
+        Take some text and process it - e.g. rationalise out final nu.
+        TODO: should this do anything else? Nomina sacra for example?
         """
         # Final nu
         ret = text.replace(u'¯', u'ν')
-
-        # Nomia sacra
-        # FIXME
-
         return ret
 
     def _parse(self, element, hand=None):
@@ -195,11 +188,8 @@ class Chapter(object):
 
 class Manuscript(object):
     """
-    Fetches a manuscript from e.g. www.iohannes.co (or uses a
-    local copy if present) and parses it.
+    Fetches a manuscript from a file and parses it.
     """
-    cache = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".mss")
-
     def __init__(self, name, filepath):
         self.name = name
         self.filepath = filepath

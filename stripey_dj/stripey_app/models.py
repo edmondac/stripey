@@ -5,7 +5,6 @@ from django.core.exceptions import ObjectDoesNotExist
 from stripey_lib import xmlmss
 from django.db.models import Max
 
-import string
 import Levenshtein
 import unicodedata
 import logging
@@ -26,15 +25,18 @@ def strip_accents(inp):
     characters removed (e.g. ')
     """
     out = u''.join([c for c in unicodedata.normalize('NFD', inp)
-                    if (unicodedata.category(c) != 'Mn' and
+                    if (not unicodedata.combining(c) and
                         c not in IGNORE_CHARS)])
     #~ if inp != out:
         #~ logger.debug(u"Normalised greek input:\ninp: \t{}\nout: \t{}".format(inp, out))
     return out
 
-test_in =  u"οϋκ ην εκεινος το φως αλλ' ϊνα μαρτυρηση περι του φωτος"
+
+# Quick test for strip_accents...
+test_in = u"οϋκ ην εκεινος το φως αλλ' ϊνα μαρτυρηση περι του φωτος"
 test_out = u"ουκ ην εκεινος το φως αλλ ινα μαρτυρηση περι του φωτος"
 assert strip_accents(test_in) == test_out, u"ERROR: \n{}\n{}".format(test_in, test_out)
+
 
 class ManuscriptTranscription(models.Model):
     ms_ref = models.CharField(max_length=10, unique=True)
@@ -252,13 +254,13 @@ class Reading(models.Model):
         Save the object - setting a label if there's isn't one already
         """
         if not self.label:
-            max_label = Reading.objects.filter(variant=self.variant).aggregate(Max('label'))['label__max'] or 0
-            self.label = max_label + 1
+            if not self.text:
+                self.label = 0
+            else:
+                max_label = Reading.objects.filter(variant=self.variant).aggregate(Max('label'))['label__max'] or 0
+                self.label = max_label + 1
 
         super(Reading, self).save()
-
-    def display_label(self):
-        return string.lowercase[self.label - 1]
 
     def __unicode__(self):
         return u"Reading: {}:{}:{}".format(
@@ -507,6 +509,7 @@ def collate(chapter_obj, verse_obj, algorithm_obj, base_ms_id):
         sorter = StripeSorter(base_ms_id, my_data)
         for st, ms_stripes in my_data:
             st.similarity = sorter(st)
+
         sorted_data = sorted(my_data, key=lambda a: a[0].similarity, reverse=True)
         collation.append((verse, sorted_data))
 

@@ -3,38 +3,69 @@
 {% block head %}
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
 <script>
-var toggle = 0;
-function toggleIdents() {
-    if (toggle) {
-        $('.greek').show();
-        $('.ident').hide();
-        toggle = 0;
-    } else {
-        $('.greek').hide();
-        $('.ident').show();
-        toggle = 1;
-    }
- }
+    var toggle = 0;
+    function toggleIdents() {
+        if (toggle) {
+            $('.greek').show();
+            $('.ident').hide();
+            toggle = 0;
+        } else {
+            $('.greek').hide();
+            $('.ident').show();
+            toggle = 1;
+        }
+     }
 
- function highlightReadings(row_id) {
-    var row = $('#' + row_id);
-    row.addClass('high_tr');
-    $('td').removeClass('high_td');
-    var table = row.parent('table');
-    row.find('td').each(function() {
-        var h = $(this).text();
-        var i = $(this).attr('id');
-        $('td#'+i).each(function() {
-            if ($(this).text() == h) {
-                $(this).addClass('high_td');
-            }
+    function highlightReadings(row_id) {
+        var row = $('#' + row_id);
+        row.addClass('high_tr');
+        $('td').removeClass('high_td');
+        row.find('td').each(function() {
+            var h = $(this).text();
+            var i = $(this).attr('id');
+            $('td#'+i).each(function() {
+                if ($(this).text() == h) {
+                    $(this).addClass('high_td');
+                }
+            });
+        });
+    }
+
+    function resetRow(row_id) {
+        $('#' + row_id).removeClass('high_tr');
+    }
+
+    $(document).ready(function() {
+        // Convert the idents to letters
+        var idents = ' bcdefghijklmnopqrstuvwxzy';
+        console.log('Looking')
+
+        $('table').each(function() {
+            var other_rows = $(this).find('tr').slice(1);
+            var base_row = $(this).find('tr:first');
+            base_row.find('.ident').each(function() {
+                // Translate our ident into 'a' or ' '
+                var base_id = $(this).text();
+                if (base_id == 0) {
+                    var base_label = ' ';
+                } else {
+                    var base_label = 'a';
+                }
+                $(this).text(base_label);
+                var coll_id = $(this).parent().attr('id');
+
+                // Now set the idents on other rows
+                other_rows.each(function() {
+                    var div = $(this).children('td#'+coll_id).find('.ident');
+                    if (div.text() == base_id) {
+                        div.text(base_label);
+                    } else {
+                        div.text(idents[parseInt(div.text())]);
+                    }
+                });
+            });
         });
     });
- }
-
- function resetRow(row_id) {
-    $('#' + row_id).removeClass('high_tr');
- }
 </script>
 {% endblock head %}
 
@@ -50,7 +81,8 @@ function toggleIdents() {
             <a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ verse.num }}&al={{ algorithm.name }}">Verse {{ verse.num }}</a>
         {% endif %}
     <a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v }}">View text</a>
-    </h3> <button onclick="toggleIdents()">Toggle text/idents</button>
+    <button onclick="toggleIdents()">Toggle text/idents</button>
+    </h3>
 
     <table>
         {% for stripe, ms_stripes in stripes %}
@@ -64,7 +96,7 @@ function toggleIdents() {
                 {% for reading in stripe.readings.all %}
                     <td id="vr{{ reading.variant.id }}">
                         <div class="greek">{{ reading.text }}</div>
-                        <div class="ident" style="display:none">{{ reading.display_label }}</div>
+                        <div class="ident" style="display:none">{{ reading.label }}</div>
                     </td>
                 {% endfor %}
             </tr>
