@@ -40,7 +40,7 @@ def collate_verse(chapter_obj, verse_obj, mss, algo):
     witnesses = []
     for ms, verses in mss:
         for verse in verses:
-            if verse.text:
+            if verse.text():
                 witnesses.append({'id': str(verse.id),
                                   'content': verse.text})
 

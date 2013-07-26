@@ -7,9 +7,9 @@
 {% for verse in verses %}
     <h3>
         {% if v %}
-            {% if v > 1 %}<a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v|add:'-1' }}">-1</a>{% endif %} Verse {{ verse.num }}{% if not is_last_verse %} <a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v|add:'+1' }}">+1</a>{% endif %} <a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num }}">all</a>
+            {% if v > 1 %}<a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v|add:'-1' }}">-1</a>{% endif %} Verse {{ verse.0 }}{% if not is_last_verse %} <a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v|add:'+1' }}">+1</a>{% endif %} <a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num }}">all</a>
         {% else %}
-            <a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ verse.num }}">Verse {{ verse.num }}</a>
+            <a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ verse.0 }}">Verse {{ verse.0 }}</a>
         {% endif %}
         | View collation: {% for alg in algorithms %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ verse.0 }}&al={{ alg.name }}">{{ alg.name }}</a> {% endfor %}
     </h3>

@@ -12,14 +12,6 @@
     <div id="header">
      <div id="topbar"></div>
      <div id="options">
-        <form action="set_accents.html">
-             <label for="show_accents">Show accents:</label>
-             <select name="show_accents" onchange="this.form.submit()">
-                 <option value="none" {% if show_accents == 'none' %}selected{% endif %}>None</option>
-                 <option value="diacritic" {% if show_accents == 'diacritic' %}selected{% endif %}>Diacritic only</option>
-                 <option value="all" {% if show_accents == 'all' %}selected{% endif %}>All</option>
-             </select>
-         </form>
          <form action="set_base_text.html">
              <label for="base_ms_id">Base Text:</label>
              <select name="base_ms_id" onchange="this.form.submit()">

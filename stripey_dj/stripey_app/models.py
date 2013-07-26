@@ -7,16 +7,34 @@ from django.db.models import Max
 
 import string
 import Levenshtein
+import unicodedata
 import logging
 logger = logging.getLogger('stripey_app.models')
 
 
 # Show/hide accents (dynamic on ms text but collation is fixed in time)
-# can be: 'none', 'diacritic', 'all'
-SHOW_ACCENTS = 'diacritic'
+# can be: 'none', 'all'
+SHOW_ACCENTS = 'none'
+# If hiding accents, then also hide these characters:
+IGNORE_CHARS = u"'†"
 
-# 'Normal' greek characters:
-ALPHABET = 'αβγδεζηθικλμνξοπρσςτυφχψω'
+
+def strip_accents(inp):
+    """
+    Return a normalized version of the inp unicode string with accented
+    characters converted to their normal equivalent, and other non-alphabet
+    characters removed (e.g. ')
+    """
+    out = u''.join([c for c in unicodedata.normalize('NFD', inp)
+                    if (unicodedata.category(c) != 'Mn' and
+                        c not in IGNORE_CHARS)])
+    #~ if inp != out:
+        #~ logger.debug(u"Normalised greek input:\ninp: \t{}\nout: \t{}".format(inp, out))
+    return out
+
+test_in =  u"οϋκ ην εκεινος το φως αλλ' ϊνα μαρτυρηση περι του φωτος"
+test_out = u"ουκ ην εκεινος το φως αλλ ινα μαρτυρηση περι του φωτος"
+assert strip_accents(test_in) == test_out, u"ERROR: \n{}\n{}".format(test_in, test_out)
 
 class ManuscriptTranscription(models.Model):
     ms_ref = models.CharField(max_length=10, unique=True)
@@ -72,7 +90,7 @@ class ManuscriptTranscription(models.Model):
                         ms_verse.verse = db_verse
                         ms_verse.hand = db_hand
                         ms_verse.item = j
-                        ms_verse.text = vs.texts[i]
+                        ms_verse.raw_text = vs.texts[i]
                         ms_verse.save()
 
         self.status = 'loaded'
@@ -185,23 +203,18 @@ class MsVerse(models.Model):
     verse = models.ForeignKey(Verse)
     hand = models.ForeignKey(Hand)
     item = models.IntegerField()  # for "duplicate" verses
-    text = models.CharField(max_length=1000)
+    raw_text = models.CharField(max_length=1000)
 
     @property
-    def get_text(self):
-        t = self.text
-        if SHOW_ACCENTS == 'diacritic':
-            # Strip out all accents but diacritic marks
-            keep = ALPHABET + DIACRITIC
-        elif SHOW_ACCENTS == 'none':
+    def text(self):
+        """
+        Convert the raw text into whatever stripped form we want
+        """
+        if SHOW_ACCENTS == 'none':
             # Strip out anything that isn't a normal character
-            keep = ALPHABET
+            return strip_accents(self.raw_text)
         else:
-            return t
-
-        # Now remove what we don't want
-        new_t = [char in t if char in keep]
-        return ''.join(new_t)
+            return self.raw_text
 
     def __unicode__(self):
         return "MsVerse: ms:{}, hand:{}, verse:{} ({})".format(

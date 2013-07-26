@@ -124,17 +124,6 @@ def set_base_text(request):
     return ret
 
 
-def set_accents(request):
-    """
-    Sets the show_accents cookie and returns to the HTTP REFERER
-    """
-    show_accents = request.GET.get('show_accents', 'none')
-    referer = request.META.get('HTTP_REFERER', '/index.html')
-    ret = HttpResponseRedirect(referer)
-    ret.set_cookie('show_accents', value=show_accents, max_age=3600 * 24 * 365)
-    return ret
-
-
 def chapter(request):
     """
     View the text of a chapter in all manuscripts
@@ -150,8 +139,11 @@ def chapter(request):
         is_last_chapter = True
 
     v = request.GET.get('v')
+    if v == 'None':
+        #FIXME - needed???
+        v = None
     is_last_verse = None
-    if (v is not None and v != 'None'):
+    if v:
         v = int(v)
         verse_obj = Verse.objects.get(chapter=chapter_obj,
                                       num=v)
@@ -164,7 +156,7 @@ def chapter(request):
     all_verses = get_all_verses(book_obj, chapter_obj, base_ms_id, v)
     # Group readings together... We want a list of readings for each verse, with a list of witnesses per reading.
     grouped_verses = []
-    for v, mss in all_verses:
+    for vs, mss in all_verses:
         readings = {}
         for ms, verses in mss:
             for verse in verses:
@@ -183,7 +175,7 @@ def chapter(request):
         # Now sort the groups so our base_ms is in the top one (if present)
         all_readings = sorted(readings.items(), key=lambda a: a[1][1], reverse=True)
 
-        grouped_verses.append((v, all_readings))
+        grouped_verses.append((vs, all_readings))
 
     algos = Algorithm.objects.all()
 
