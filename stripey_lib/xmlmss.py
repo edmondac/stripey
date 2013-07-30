@@ -134,9 +134,8 @@ class Verse(object):
         tag = el.tag.split('}')[1]
         if tag == 'w' and not top:
             print "WARNING: nested <w> tags at {}:{}".format(self.chapter, self.num)
-        if tag in word_ignore_tags:
-            print "Ignoring tag {}".format(tag)
-        else:
+
+        if tag not in word_ignore_tags:
             if el.text is not None:
                 ret = el.text.strip().lower()
                 if ret == 'om':
@@ -151,80 +150,16 @@ class Verse(object):
             ret += el.tail.strip().lower()
 
         return ret
-#~
-            #~ ret2 = []
-        #~ # Just check that we've only got known tags...
-        #~ for l in el.iter():
-            #~ tag = l.tag.split('}')[1]
-            #~ print tag, l.text, l.tail
-            #~ bit = u''
-            #~ if tag in word_tags and l.text:
-                #~ # Only want text from specific tags
-                #~ bit = l.text.strip().lower()
-                #~ if bit == 'om':
-                    #~ bit = u''
-            #~ if l.tail:
-                #~ # The tail can be set on a subelement, when it should be on the
-                #~ # word tag. So we need it whatever... (elementtree at fault)
-                #~ bit += l.tail.strip().lower()
-            #~ if bit:
-                #~ ret2.append(bit)
-#~
-            #~ #if tag not in word_tags:
-            #~ #    print l, l.attrib, l.text, l.tail
-            #~ #    raise ValueError("Can't cope with %s tags in words"
-            #~ #                     % (tag, ))
-        #~ if el.tail:
-            #~ print "TAIL2", el.tail
-            #~ ret2.append(el.tail.strip())
-        #~ ret2_s = u''.join([a for a in ret2 if a])
 
     def _parse_w(self, el, hand):
-        # Word - just want the text - of this and children, in the
-        # right order
-        ret = []
-        for t in el.itertext():
-            t = t.strip().lower()
-            if t in ('om', 'omm'):
-                # Ignore 'om' and leave it blank
-                continue
-            ret.append(t)
-
-        ret2_s = self._word_reader(el, top=True)
+        """
+        Parse a <w> tag
+        """
+        ret = self._word_reader(el, top=True)
         if el.tail and el.tail.strip():
             print "WARNING: Word {} ({}:{}) has a tail".format(el.attrib.get('n'), self.chapter, self.num)
 
-        ret_s = u''.join([a for a in ret if a])
-
-        for c in (u'umlaut', u'>', u'†'):
-            ret_s = ret_s.replace(c, u'')
-        import re
-        re_ms306 = re.compile('current folio [0-9]+[a-z][a-z]?\.')
-
-        ret_s = re_ms306.sub(u'', ret_s)
-
-        if ret_s != ret2_s:
-            if ret_s not in (u'αυdefect in parchmentτον',
-                             u'εμα↓ (jn 19,1-7)στιγωσε',
-                             u'εφαγεcommcommται',
-                             u'κα',
-                             u'εgathering pϊωαννηνχων',
-                             u'οcurrent folio 117av.τι',
-                             u'καιροςρος',
-                             u'first fragment (jn 15:25-16:2)των',
-                             u'εγενε‾‾το',
-                             u'ουst. petersburgχ',
-                             u'επισfourth page, ↓ (jn 11:45-52)ρθτευσαν',
-                             u'αcurrent folio 117r.νος',
-                             u'αυcurrent folio 118v.του',
-                             u'εγεννηcurrent folio 117ar.θης',
-                             u'αναβαιcurrent folio 115ar.νων'):
-                print "REF", self.chapter, self.num
-                print el.attrib, el.text, el.__dict__, dir(el), el._children
-                print u"'{}'\n'{}'".format(ret_s, ret2_s)
-                raise ValueError
-
-        return ret2_s
+        return ret
 
     def _parse_app(self, el, hand):
         # This bit has been corrected - there will be more than one
