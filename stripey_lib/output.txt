@@ -1,65 +1,87 @@
--- Checking 1/128 : 04_P52.xml
--- Checking 2/128 : 04_019.xml
-ERROR: 04_019.xml : 16:20: Bad character at loc 99 of 'αμην αμην λεγω υμιν οτι κλαυσετε και θρηνησετε υμεις ο δε κοσμος χαρησεται υμεις δε λυπηθησεσθε αλ1λα η λυπη υμων εις χαραν γενησετε' - DIGIT ONE
-ERROR: 04_019.xml : 20:7: Bad character at loc 93 of 'και το σουδαριον ο ην επι της κεφαλης αυτου ου μετα των οθονιων κειμενον αλλα χωρις εντετυλι1γμενον εις ενα τοπον' - DIGIT ONE
-ERROR: 04_019.xml : 7:35: Bad character at loc 121 of 'ειπον ουν οι ιουδαιοι προς εαυτους που μελλει ουτος πορευεσθαι οτι ημεις ουχ ευρησομεν αυτον μη εις τιν διασποραν των ελ1ληνων μελλει πορευεσθαι και διδασκειν τους ελληνας' - DIGIT ONE
-ERROR: 04_019.xml : 7:41: Bad character at loc 69 of 'αλλοι ελεγον οτι ουτος εστιν ο χς οι δε ελεγον μη γαρ εκ της γαλιλαι.ας ο χς ερχεται' - FULL STOP
--- Checking 3/128 : 04_983.xml
-ERROR: 04_983.xml : 1:2: Bad character at loc 1 of 'oυτος ην εν αρχη προς τον θν' - LATIN SMALL LETTER O
--- Checking 4/128 : 04_NA27.xml
--- Checking 5/128 : 04_0268.xml
--- Checking 6/128 : 04_063.xml
--- Checking 7/128 : 04_017.xml
--- Checking 8/128 : 04_1093.xml
--- Checking 9/128 : 04_P39.xml
--- Checking 10/128 : 04_0218.xml
--- Checking 11/128 : 04_068.xml
--- Checking 12/128 : 04_1230.xml
--- Checking 13/128 : 04_0233.xml
--- Checking 14/128 : 04_032.xml
--- Checking 15/128 : 04_030.xml
--- Checking 16/128 : 04_P128.xml
--- Checking 17/128 : 04_0256.xml
--- Checking 18/128 : 04_892.xml
--- Checking 19/128 : 04_0299.xml
--- Checking 20/128 : 04_0109.xml
--- Checking 21/128 : 04_P80.xml
--- Checking 22/128 : 04_031.xml
--- Checking 23/128 : 04_P90.xml
--- Checking 24/128 : 04_02.xml
-ERROR: 04_02.xml : 16:27: Bad character at loc 29 of 'αυτος γαρ ο πηρ φιλει υμας 10 πεφιληκατε και πεπιστευκατε οτι εγω παρα θυ εξηλθον' - DIGIT ZERO
--- Checking 25/128 : 04_033.xml
-ERROR: 04_033.xml : 11:48: Bad character at loc 57 of 'εαν αφωμεν αυτον ουτως παντες πιστευσωσιν εις αυτον κ)αι) ελευσονται οι ρωμαιοι και αρουσιν ημων και τον τοπον και το εθνος' - RIGHT PARENTHESIS
--- Checking 26/128 : 04_138.xml
-ERROR: 04_138.xml : 18:12: Bad character at loc 18 of 'η ουν σπειρα και ọ χιλιαρχος και οι υπηρεται των ιουδαιων συνελαβον τον ιν και εδησαν αυτον' - LATIN SMALL LETTER O
--- Checking 27/128 : 04_168.xml
--- Checking 28/128 : 04_226.xml
--- Checking 29/128 : 04_022.xml
--- Checking 30/128 : 04_2718.xml
--- Checking 31/128 : 04_05S.xml
+-- Checking 1/158 : 04_P52.xml
+-- Checking 2/158 : 04_019.xml
+-- Checking 3/158 : 04_983.xml
+-- Checking 4/158 : 04_NA27.xml
+-- Checking 5/158 : 04_157.xml
+-- Checking 6/158 : 04_0268.xml
+-- Checking 7/158 : 04_063.xml
+-- Checking 8/158 : 04_2193.xml
+ERROR: 04_2193.xml : 11:31: Bad character at loc 139 of 'οι ουν ιουδαιοι οι οντες μετ αυτης εν τη οικια και παραμυθουμενοι αυτην ιδοντες την μαριαν οτι ταχεως ανεστη και εξηλθεν ηκολουθησαν αυτη 8 οτι υπαγει εις το μνημειον ινα κλαυση εκει' - DIGIT EIGHT
+ERROR: 04_2193.xml : 10:21: Bad character at loc 87 of 'αλλοι ελεγον ταυτα τα ρηματα ουκ δαιμονιζομενου μη δαιμονιον δυναται τυφλων οφθαλμους 7' - DIGIT SEVEN
+ERROR: 04_2193.xml : 10:26: Bad character at loc 24 of 'αλλ υμεις ου πιστευετε 4 εστε εκ των προβατων των εμων καθως ειπον υμιν' - DIGIT FOUR
+ERROR: 04_2193.xml : 12:40: Bad character at loc 37 of 'τετυφλωκεν αυτων τους οφθαλμους και 9 αυτων την καρδιαν ινα μη ιδωσι τοις οφθαλμοις και νοησωσιν τη καρδια και επιστεψωσι και ιασομαι αυτους' - DIGIT NINE
+ERROR: 04_2193.xml : 14:31: Bad character at loc 75 of 'αλλ ινα γνω ο κοσμος οτι αγαπω τον πρα και καθως ενετειλατο μοι ο πηρ ουτω1 ποιω εγειρεσθε αγωμεν εντευθεν' - DIGIT ONE
+ERROR: 04_2193.xml : 17:7: Bad character at loc 9 of 'νυν εγνω1αν οτι παντα οσα δεδωκας μοι παρα σου εστιν' - DIGIT ONE
+ERROR: 04_2193.xml : 17:12: Bad character at loc 69 of 'οτε ημην μετ αυτων εν τω κοσμω εγω ετηρουν αυτους εν τω ονοματι σου 1 δεδωκας μοι εφυλαξα και ουδεις εξ αυτων απωλετο ει μη ο υς της απωλειας ινα η γραφη πληρωθη' - DIGIT ONE
+ERROR: 04_2193.xml : 20:5: Bad character at loc 42 of 'και παρακυψας βλεπει κειμενα τα οθονια μο2 ου μεντοι εισηλθεν' - DIGIT TWO
+ERROR: 04_2193.xml : 3:25: Bad character at loc 13 of 'εγενετο ουν zητησις εκ των μαθητων ιωαννου μετα ιουδαιων περι καθαρισμου' - LATIN SMALL LETTER Z
+ERROR: 04_2193.xml : 7:34: Bad character at loc 1 of 'zητησετε με και ουχ ευρησεται και οπου ειμι εγω υμεις ου δυνασθε ελθειν' - LATIN SMALL LETTER Z
+ERROR: 04_2193.xml : 7:34: Bad character at loc 1 of 'zητησετε με και ουχ ευρησετε και οπου ειμι εγω υμεις ου δυνασθε ελθειν' - LATIN SMALL LETTER Z
+ERROR: 04_2193.xml : 6:17: Bad character at loc 85 of 'και εμβαντες εις το πλοιον ηρχοντο περαν της θαλασσης εις καπερναουμ και σκοτια ηδη 8 και ουκ εληλυθει προς αυτους ο ις' - DIGIT EIGHT
+ERROR: 04_2193.xml : 9:4: Bad character at loc 13 of 'εμε δει εργαzεσθε τα εργα του πεμψαντος με εως ημερα εστιν ερχεται νυξ οτε ουδεις δυναται εργαζεσθαι' - LATIN SMALL LETTER Z
+-- Checking 9/158 : 04_017.xml
+-- Checking 10/158 : 04_205.xml
+-- Checking 11/158 : 04_1093.xml
+-- Checking 12/158 : 04_P39.xml
+-- Checking 13/158 : 04_0218.xml
+-- Checking 14/158 : 04_068.xml
+-- Checking 15/158 : 04_1210.xml
+-- Checking 16/158 : 04_1230.xml
+-- Checking 17/158 : 04_0233.xml
+-- Checking 18/158 : 04_032.xml
+-- Checking 19/158 : 04_2713.xml
+ERROR: 04_2713.xml : 6:27: Bad character at loc 5 of 'εργαzεσθε μη την βρωσιν την απολλυμενην αλλα την βρωσιν την μενουσαν εις ζωην αιωνιον ην ο υιος του ανου δωσει υμιν τουτον γαρ ο πηρ εσφραγισεν ο θς' - LATIN SMALL LETTER Z
+ERROR: 04_2713.xml : 6:41: Bad character at loc 7 of 'εγογγυzον ουν οι ιουδαιοι περι αυτου οτι ειπεν εγω ειμι ο αρτος ο καταβας εκ του ουνου' - LATIN SMALL LETTER Z
+-- Checking 20/158 : 04_030.xml
+-- Checking 21/158 : 04_P128.xml
+-- Checking 22/158 : 04_0256.xml
+-- Checking 23/158 : 04_892.xml
+-- Checking 24/158 : 04_0299.xml
+-- Checking 25/158 : 04_0109.xml
+-- Checking 26/158 : 04_732.xml
+-- Checking 27/158 : 04_P80.xml
+-- Checking 28/158 : 04_031.xml
+-- Checking 29/158 : 04_P90.xml
+-- Checking 30/158 : 04_02.xml
+-- Checking 31/158 : 04_033.xml
+-- Checking 32/158 : 04_138.xml
+-- Checking 33/158 : 04_168.xml
+-- Checking 34/158 : 04_226.xml
+-- Checking 35/158 : 04_022.xml
+-- Checking 36/158 : 04_2718.xml
+-- Checking 37/158 : 04_05S.xml
 ERROR: 04_05S.xml : 18:20: Bad character at loc 22 of 'απεκριθη αυτω ις εγω pαρρησια ελαλησα τω κοσμω εγω παντοτε εδιδαξα εν συναγωγη και εν τω ϊερω οπου παντοτε οι ϊουδαηοι συνερχονται και ε κρυπτω ελαλησα ουδεν' - LATIN SMALL LETTER P
--- Checking 32/128 : 04_P63.xml
--- Checking 33/128 : 04_039.xml
+-- Checking 38/158 : 04_P63.xml
+-- Checking 39/158 : 04_884.xml
+ERROR: 04_884.xml : 20:15: Bad character at loc 2 of '69 λεγει αυτω κε ει συ εβαστασας αυτον ειπε μοι που εθηκας αυτον καγω αυτον αρω' - DIGIT NINE
+-- Checking 40/158 : 04_039.xml
 ERROR: 04_039.xml : 16:12: Bad character at loc 24 of 'ετι πολλα εχω λεγειν υμ1ν αλλ ου δυνασθε βασταζειν αρτι' - DIGIT ONE
--- Checking 34/128 : 04_P60.xml
--- Checking 35/128 : 04_1128S.xml
--- Checking 36/128 : 04_792.xml
--- Checking 37/128 : 04_P66.xml
--- Checking 38/128 : 04_0264.xml
--- Checking 39/128 : 04_060.xml
--- Checking 40/128 : 04_2223.xml
--- Checking 41/128 : 04_047.xml
--- Checking 42/128 : 04_038.xml
--- Checking 43/128 : 04_P55.xml
--- Checking 44/128 : 04_173.xml
--- Checking 45/128 : 04_091.xml
--- Checking 46/128 : 04_0217.xml
--- Checking 47/128 : 04_050.xml
--- Checking 48/128 : 04_1424.xml
--- Checking 49/128 : 04_579.xml
--- Checking 50/128 : 04_024.xml
--- Checking 51/128 : 04_P59.xml
--- Checking 52/128 : 04_03.xml
+-- Checking 41/158 : 04_P60.xml
+-- Checking 42/158 : 04_1128S.xml
+-- Checking 43/158 : 04_792.xml
+-- Checking 44/158 : 04_1582S.xml
+-- Checking 45/158 : 04_1319.xml
+ERROR: 04_1319.xml : 13:31: Bad character at loc 23 of 'οτε εξηλθε λεγει ο ις oυν νυν εδοξασθη ο υιος του ανου και ο θς εδοξασθη εν αυτω' - LATIN SMALL LETTER O
+-- Checking 46/158 : 04_P66.xml
+-- Checking 47/158 : 04_0264.xml
+-- Checking 48/158 : 04_060.xml
+-- Checking 49/158 : 04_2223.xml
+-- Checking 50/158 : 04_047.xml
+-- Checking 51/158 : 04_038.xml
+-- Checking 52/158 : 04_1192.xml
+ERROR: 04_1192.xml : 6:41: Bad character at loc 7 of 'εγογγυzον ουν οι ιουδαιοι περι αυτου οτι ειπεν εγω ειμι ο αρτος ο καταβας εκ του ουνου' - LATIN SMALL LETTER Z
+ERROR: 04_1192.xml : 6:48: Bad character at loc 22 of 'εγω ειμι ο αρτος της zωης' - LATIN SMALL LETTER Z
+-- Checking 53/158 : 04_P55.xml
+-- Checking 54/158 : 04_173.xml
+-- Checking 55/158 : 04_091.xml
+-- Checking 56/158 : 04_0217.xml
+-- Checking 57/158 : 04_1071.xml
+-- Checking 58/158 : 04_050.xml
+-- Checking 59/158 : 04_1424.xml
+-- Checking 60/158 : 04_579.xml
+-- Checking 61/158 : 04_024.xml
+-- Checking 62/158 : 04_P59.xml
+-- Checking 63/158 : 04_03.xml
 WARNING: nested <w> tags at 6:45
 WARNING: nested <w> tags at 9:14
 WARNING: nested <w> tags at 11:16
@@ -67,34 +89,52 @@ WARNING: nested <w> tags at 11:45
 WARNING: nested <w> tags at 12:40
 WARNING: nested <w> tags at 14:7
 WARNING: nested <w> tags at 16:27
--- Checking 53/128 : 04_2411.xml
--- Checking 54/128 : 04_086.xml
-WARNING: Word 6 (3:10) has a tail
-ERROR: 04_086.xml : 1:26: Bad character at loc 29 of 'ο ιωαννης λεγων εγω βαπτιζω 1εν υδατι' - DIGIT ONE
--- Checking 55/128 : 04_032S.xml
--- Checking 56/128 : 04_0238.xml
--- Checking 57/128 : 04_026.xml
--- Checking 58/128 : 04_1128.xml
--- Checking 59/128 : 04_P2.xml
--- Checking 60/128 : 04_P106.xml
--- Checking 61/128 : 04_TR.xml
--- Checking 62/128 : 04_044.xml
--- Checking 63/128 : 04_1788.xml
-ERROR: 04_1788.xml : 1:19: Bad character at loc 70 of 'και αυτη εστιν η μαρτυρια του ιωαννου οτε απεστειλαν προς αυτον οι ιouδαιοι εξ ιεροσολλημων ιερεις και λευιτας ινα ερωτησωσιν αυτον συ τις ει' - LATIN SMALL LETTER U
--- Checking 64/128 : 04_1079.xml
-ERROR: 04_1079.xml : 1:34: Bad character at loc 12 of 'καγω εωρακα_ και μεμαρτυρηκα οτι ουτος εστιν ο υιος του θυ' - LOW LINE
--- Checking 65/128 : 04_0105.xml
--- Checking 66/128 : 04_0210.xml
--- Checking 67/128 : 04_0101.xml
--- Checking 68/128 : 04_1014.xml
--- Checking 69/128 : 04_1344.xml
--- Checking 70/128 : 04_0290.xml
-ERROR: 04_0290.xml : 18:9: Bad character at loc 24 of 'ϊνα πληρωθη ο λογος o}n είπεν οτι ὁῦς δεδωκας μοι ουκ' απώλεσα εξ' αυτῶν ουδένα' - LATIN SMALL LETTER N
-ERROR: 04_0290.xml : 18:14: Bad character at loc 2 of 'h] ν δε καιαφας ο συμβουλεύσας τοις ιουδαιοις οτι συμφερει ενα ανον απολέσθαι ϋπερ του λαου' - RIGHT SQUARE BRACKET
-ERROR: 04_0290.xml : 18:28: Bad character at loc 59 of 'άγουσιν ὁῦν τον ιν απο του καϊαφα εις το πραιτώριον h] ν δὲ πρωϊ και αυτοῖ ουκ εισήλθον εις το πραιτώριον ϊνα μὴ μιανθῶσιν αλλα φάγωσιν το πάσχα' - RIGHT SQUARE BRACKET
-ERROR: 04_0290.xml : 18:39: Bad character at loc 36 of 'έστιν δε συνήθεια ϋμὶν ϊνα e{na απολύσω ϋμὶν εν τω πάσχα βούλεσθε απολύσω ϋμὶν τον βασιλέα των ϊουδαίων' - LATIN SMALL LETTER A
--- Checking 71/128 : 04_397.xml
--- Checking 72/128 : 04_01.xml
+-- Checking 64/158 : 04_2372.xml
+ERROR: 04_2372.xml : 7:32: Bad character at loc 37 of 'ηκουσαν οι φαρισαιοι του οχλου γογγυzοντος περι αυτου ταυτα και απεστειλαν υπηρετας οι φαρισαιοι και οι αρχιερεις ινα πιασωσιν αυτον' - LATIN SMALL LETTER Z
+-- Checking 65/158 : 04_377.xml
+ERROR: 04_377.xml : 7:52: Bad character at loc 144 of 'απεκριθησαν και ειπον αυτω μη και συ εκ της γαλιλαιας ει ερευνησον και ιδε οτι προφητης εκ της γαλιλαιας ουκ εγηγερται f 291v || l| f 292r || l|' - VERTICAL LINE
+-- Checking 66/158 : 04_2411.xml
+-- Checking 67/158 : 04_086.xml
+-- Checking 68/158 : 04_032S.xml
+-- Checking 69/158 : 04_0238.xml
+-- Checking 70/158 : 04_026.xml
+-- Checking 71/158 : 04_1128.xml
+-- Checking 72/158 : 04_P2.xml
+-- Checking 73/158 : 04_544.xml
+ERROR: 04_544.xml : 11:39: Bad character at loc 87 of 'λεγει ο ις αρατε τον λιθον τουτον λεγει αυτω η αδελφη του τεθνηκοτος μαρθα κε ηδη οζει] τεταρταιος γαρ εστιν' - RIGHT SQUARE BRACKET
+-- Checking 74/158 : 04_P106.xml
+-- Checking 75/158 : 04_TR.xml
+-- Checking 76/158 : 04_044.xml
+-- Checking 77/158 : 04_1788.xml
+ERROR: 04_1788.xml : 1:19: Bad character at loc 69 of 'και αυτη εστιν η μαρτυρια του ιωαννου οτε απεστειλαν προς αυτον οι ιoυδαιοι εξ ιεροσολλημων ιερεις και λευιτας ινα ερωτησωσιν αυτον συ τις ει' - LATIN SMALL LETTER O
+-- Checking 78/158 : 04_807.xml
+ERROR: 04_807.xml : 3:2: Bad character at loc 103 of 'ουτος ηλθε προς αυτον νυκτος και ειπεν αυτω ραββι οιδαμεν οτι απο θυ εληλυθας διδασκαλος ουδεις γαρ τoiαυτα σημεια δυναται ποιειν α συ ποιεις εαν μη η ο θς μετ αυτου' - LATIN SMALL LETTER I
+ERROR: 04_807.xml : 3:8: Bad character at loc 98 of 'το πνα οπου θελει πνει και την φωνην αυτου ακουεις αλλ ουκ οιδας ποθεν ερχεται και που υπαγει ουτoς εστι πας ο γεγεννημενος εκ του πνς' - LATIN SMALL LETTER O
+ERROR: 04_807.xml : 5:29: Bad character at loc 109 of 'και εκπορευσονται οι τα αγαθα ποιησαντες εις αναστασιν ζωης οι δε τα φαυλα πραξαντες εις αναστασιν κρισεως l|' - VERTICAL LINE
+-- Checking 79/158 : 04_1079.xml
+-- Checking 80/158 : 04_0105.xml
+-- Checking 81/158 : 04_1278.xml
+ERROR: 04_1278.xml : 11:42: Bad character at loc 10 of 'εγω δε ηδ] ν οτι παντοτε μου ακουεις αλλα δια τον οχλον τον περιεστωτα ειπον ινα πιστευσωσιν οτι συ με απεστειλας' - RIGHT SQUARE BRACKET
+ERROR: 04_1278.xml : 12:35: Bad character at loc 146 of 'ειπεν ουν αυτοις ο ις ετι μικρον χρονον το φως μεθ υμων εστι περιπατειτε εως το φως εχετε ινα μη σκοτια υμας καταλαβη και ο περιπατων εν τη σκοτι] α ουκ οιδεν που υπαγει' - RIGHT SQUARE BRACKET
+ERROR: 04_1278.xml : 14:5: Bad character at loc 18 of 'λεγει αυτω θωμας ] δαμεν που υπαγεις και πως δυναμεθα την οδον ειδεναι' - RIGHT SQUARE BRACKET
+ERROR: 04_1278.xml : 14:7: Bad character at loc 30 of 'ει εγνωκειτε με και τον πρα μ] τε αν και απ αρτι γινωσκετε αυτον και εωρακατε αυτον' - RIGHT SQUARE BRACKET
+ERROR: 04_1278.xml : 18:13: Bad character at loc 46 of 'και απηγαγον αυτον προς ανναν πρωτον ην ill] 2 πενθερος του καιαφα ος ην αρχιερευς του ενιαυτου εκεινου' - DIGIT TWO
+ERROR: 04_1278.xml : 18:22: Bad character at loc 53 of 'ταυτα δε αυτου ειποντος εις των υπηρετων παρεστηκως ] δωκε ραπισμα τω ιυ ειπων ουτως αποκρινη τω αρχιερει' - RIGHT SQUARE BRACKET
+ERROR: 04_1278.xml : 18:23: Bad character at loc 82 of 'απεκριθη αυτω ο ις ει κακως ελαλησα μαρτυρησον περι του κακου ει δε καλως τι με δ] ρεις' - RIGHT SQUARE BRACKET
+ERROR: 04_1278.xml : 20:5: Bad character at loc 10 of 'και παρακ] ψας βλεπει κειμενα τα οθονια ου μεντοι εισηλθεν' - RIGHT SQUARE BRACKET
+ERROR: 04_1278.xml : 20:11: Bad character at loc 59 of 'μαρια δε ειστηκει προς το μνημειον κλαιουσα εξω ως ουν εκλ] ε παρεκυψεν εις το μνημειον' - RIGHT SQUARE BRACKET
+ERROR: 04_1278.xml : 20:23: Bad character at loc 31 of 'αν τινων αφητε τας αμαρτιας αφ] νται αυτοις αν τινων κρατητε κεκρατηνται' - RIGHT SQUARE BRACKET
+ERROR: 04_1278.xml : 5:7: Bad character at loc 25 of 'απεκριθη αυτω ο ασθενων 3 κε ανον ουκ εχω ινα οταν ταραχθη το υδωρ βαλη με εις την κολυμβηθραν εν ω δε ερχομαι εγω αλλος προ εμου καταβαινει' - DIGIT THREE
+ERROR: 04_1278.xml : 5:7: Bad character at loc 25 of 'απεκριθη αυτω ο ασθενων 3 κε ανον ουκ εχω ινα οταν ταραχθη το υδωρ βαλη με εις την κολυμβηθραν εν ω δε ερχομαι εγω αλλος προ εμου καταβαινει' - DIGIT THREE
+ERROR: 04_1278.xml : 6:27: Bad character at loc 33 of 'εργαζεσθε μη την βρωσιν την απολ1ιμενην αλλα την βρωσιν την μενουσαν εις ζωην αιωνιον ην ο υιος του ανου υμιν δωσει τουτον γαρ ο πηρ εσφραγισεν ο θς' - DIGIT ONE
+ERROR: 04_1278.xml : 21:4: Bad character at loc 64 of 'πρωιας δε ηδη γενομενης εστη ο ις εις τον αιγιαλον ου μεντοι ηδ] σαν οι μαθηται οτι ις εστιν' - RIGHT SQUARE BRACKET
+-- Checking 82/158 : 04_0210.xml
+-- Checking 83/158 : 04_0101.xml
+-- Checking 84/158 : 04_1014.xml
+-- Checking 85/158 : 04_1344.xml
+-- Checking 86/158 : 04_0290.xml
+-- Checking 87/158 : 04_397.xml
+-- Checking 88/158 : 04_01.xml
 WARNING: nested <w> tags at 2:17
 WARNING: nested <w> tags at 12:6
 WARNING: nested <w> tags at 14:16
@@ -102,79 +142,87 @@ WARNING: nested <w> tags at 14:16
 WARNING: nested <w> tags at 15:16
 WARNING: nested <w> tags at 15:16
 WARNING: nested <w> tags at 21:1
-ERROR: 04_01.xml : 5:6: Bad character at loc 83 of 'τουτον ϊδων ο ις ανακειμενον και γνους οτι πολυν χρονον εχει λεγει αυτω θελις χ 1⁄ υγιης γενεσθαι' - FRACTION SLASH
-ERROR: 04_01.xml : 5:6: Bad character at loc 84 of 'τουτον ϊδων ο ις κατακειμενον και γνους οτι πολυν χρονον εχει λεγει αυτω θελις χ 1⁄ υγιης γενεσθαι' - FRACTION SLASH
--- Checking 73/128 : 04_070.xml
-ERROR: 04_070.xml : 12:50: Bad character at loc 24 of 'και οιδα ο͂τι ῆ entolh\ αυτου ζωη αιῶνιος εστιν α ουν ε͂γω λαλω καθως ειρηκεν μοι ο͂ πηρ ουτως λαλω' - REVERSE SOLIDUS
-ERROR: 04_070.xml : 9:34: Bad character at loc 91 of 'απεκριθησαν και ειπον αυτω εν ᾶμαρτιαις συ εγεννηθης ολος και συ διδασκεις ημας και εξεβα1ον αυτον εξω' - DIGIT ONE
--- Checking 74/128 : 04_045.xml
--- Checking 75/128 : 04_05.xml
-ERROR: 04_05.xml : 5:38: Bad character at loc 62 of 'και τον λογον αυτου ουκ εχετε μενοντα εν ϋμειν οτι ον απεστα1κεν εκεινος τουτω ϋμεις ου πιστευετε' - DIGIT ONE
--- Checking 76/128 : 04_037.xml
-ERROR: 04_037.xml : 6:24: Bad character at loc 26 of 'οτε ουν ειδεν ο οχλος \oti ις ουκ εστιν εκει ουδε οι μαθηται αυτου ενεβησαν αυτοι εις τα πλοια και ηλθον εις καπερναουμ ζητουντες τον ιν' - LATIN SMALL LETTER I
-ERROR: 04_037.xml : 8:55: Bad character at loc 45 of 'και ουκ εγνωκατε αυτον εγω δε οιδα αυτον \kai εαν ειπω οτι ουκ οιδα εσομαι ομοιος υμων ψευστης αλλ οιδα αυτον και τον λογον αυτου τηρω' - LATIN SMALL LETTER I
--- Checking 77/128 : 04_P109.xml
--- Checking 78/128 : 04_0309.xml
--- Checking 79/128 : 04_0306.xml
--- Checking 80/128 : 04_034.xml
--- Checking 81/128 : 04_P6.xml
-ERROR: 04_P6.xml : 11:2: Bad character at loc 11 of 'ην δε μαριϩαμ ἡ αλειψασα τον κν μυρωι και εκμαξασα τους ποδας αυτου ται θριξιν αυτης ης ο αδελφος λαζαρος ησθενει' - COPTIC SMALL LETTER HORI
--- Checking 82/128 : 04_P45.xml
--- Checking 83/128 : 04_788.xml
--- Checking 84/128 : 04_065.xml
--- Checking 85/128 : 04_1293.xml
-ERROR: 04_1293.xml : 2:8: Bad character at loc 49 of 'και λεγει αυτοις  αντλησατε νυν και φερετε τω αρ- χιτρικλινω οι δε ηνεγκαν' - HYPHEN-MINUS
-ERROR: 04_1293.xml : 2:8: Bad character at loc 49 of 'και λεγει αυτοις  αντλησατε νυν και φερετε τω αρ- χιτρικλινω οι δε ηνεγκαν' - HYPHEN-MINUS
-ERROR: 04_1293.xml : 2:9: Bad character at loc 73 of 'ως δε εγευσατο ο αρχιτρικλινος το υδωρ οινον γεγενημενον και ουκ ηδει πο- θεν εστιν οι δε διακονοι ηδεισαν οι ηντληκοτες το υδωρ φωνει τον νυμφιον ο αρχιτρικλινος' - HYPHEN-MINUS
--- Checking 86/128 : 04_036.xml
--- Checking 87/128 : 04_1253.xml
-ERROR: 04_1253.xml : 1:23: Bad character at loc 16 of 'εφη εγω φωνη βοoντος εν τη ερημω ευθυνατε την οδον καθως ειπεν ησαιας ο προφητης' - LATIN SMALL LETTER O
--- Checking 88/128 : 04_054.xml
--- Checking 89/128 : 04_P75.xml
--- Checking 90/128 : 04_078.xml
--- Checking 91/128 : 04_P84.xml
--- Checking 92/128 : 04_265.xml
+-- Checking 89/158 : 04_1321.xml
+-- Checking 90/158 : 04_070.xml
+-- Checking 91/158 : 04_565.xml
+-- Checking 92/158 : 04_045.xml
+-- Checking 93/158 : 04_05.xml
+-- Checking 94/158 : 04_037.xml
+-- Checking 95/158 : 04_P109.xml
+-- Checking 96/158 : 04_2193S.xml
+-- Checking 97/158 : 04_0309.xml
+-- Checking 98/158 : 04_0306.xml
+-- Checking 99/158 : 04_034.xml
+-- Checking 100/158 : 04_565S.xml
+-- Checking 101/158 : 04_2886.xml
+-- Checking 102/158 : 04_P6.xml
+ERROR: 04_P6.xml : 11:2: Bad character at loc 11 of 'ην δε μαριϩαμ η αλειψασα τον κν μυρωι και εκμαξασα τους ποδας αυτου ται θριξιν αυτης ης ο αδελφος λαζαρος ησθενει' - COPTIC SMALL LETTER HORI
+-- Checking 103/158 : 04_P45.xml
+-- Checking 104/158 : 04_788.xml
+-- Checking 105/158 : 04_065.xml
+-- Checking 106/158 : 04_1293.xml
+-- Checking 107/158 : 04_036.xml
+-- Checking 108/158 : 04_1253.xml
+-- Checking 109/158 : 04_054.xml
+-- Checking 110/158 : 04_209.xml
+-- Checking 111/158 : 04_P75.xml
+-- Checking 112/158 : 04_078.xml
+-- Checking 113/158 : 04_P84.xml
+-- Checking 114/158 : 04_265.xml
 ERROR: 04_265.xml : 8:7: Bad character at loc 107 of 'ως δε επεμενον ερωτωντες αυτον ανακυψας ειπεν προς αυτους ο αναμαρτητος υμων πρωτος επ αυτην τον λιθον βαλ0 λετω' - DIGIT ZERO
--- Checking 93/128 : 04_087.xml
--- Checking 94/128 : 04_028.xml
-ERROR: 04_028.xml : 6:49: Bad character at loc 9 of 'οι πρες 3 εφαγον το μαννα εν τη ερημω και απεθανον' - DIGIT THREE
--- Checking 95/128 : 04_P36.xml
--- Checking 96/128 : 04_P76.xml
--- Checking 97/128 : 04_992.xml
--- Checking 98/128 : 04_P93.xml
--- Checking 99/128 : 04_0162.xml
--- Checking 100/128 : 04_011.xml
--- Checking 101/128 : 04_P5.xml
--- Checking 102/128 : 04_2106.xml
-ERROR: 04_2106.xml : 1:9: Bad character at loc 23 of 'ην το φως το αληθινον o φωτιζει κς παντα ανον ερχομενον εις τον κοσμον' - LATIN SMALL LETTER O
-ERROR: 04_2106.xml : 4:1: Bad character at loc 88 of 'ως ουν εγνω ο κς οτι ηκουσαν οι φαρισαιοι οτι ις πλειονας μαθητας ποιει και βαπτιζει η o ιωαννης' - LATIN SMALL LETTER O
--- Checking 103/128 : 04_0286.xml
--- Checking 104/128 : 04_0127.xml
--- Checking 105/128 : 04_P107.xml
--- Checking 106/128 : 04_041.xml
--- Checking 107/128 : 04_249.xml
+-- Checking 115/158 : 04_087.xml
+-- Checking 116/158 : 04_118S.xml
+-- Checking 117/158 : 04_028.xml
+ERROR mismatched tag: line 1469, column 256
+-- Checking 118/158 : 04_P36.xml
+-- Checking 119/158 : 04_P76.xml
+-- Checking 120/158 : 04_22.xml
+ERROR: 04_22.xml : 14:19: Bad character at loc 84 of 'ετι μικρον και ο κοσμος με ουκετι θεωρει υμεις δε θεωρειτε με οτι εγω ζω και υμεις zησεσθε' - LATIN SMALL LETTER Z
+-- Checking 121/158 : 04_992.xml
+-- Checking 122/158 : 04_P93.xml
+-- Checking 123/158 : 04_0162.xml
+-- Checking 124/158 : 04_011.xml
+-- Checking 125/158 : 04_1.xml
+ERROR: 04_1.xml : 6:67: Bad character at loc 7 of 'ειπεν 2 ουν ο ις τοις δωδεκα μη και υμεις θελετε υπαγειν' - DIGIT TWO
+-- Checking 126/158 : 04_P5.xml
+-- Checking 127/158 : 04_2106.xml
+-- Checking 128/158 : 04_109.xml
+ERROR: 04_109.xml : 15:20: Bad character at loc 46 of 'μνημονευετε του λογου  ου εγω ειπον υμιν 15-16 κυριου αυτου ει εμε εδιωξαν και υμας διωξουσιν ει τον λογον μου ετηρησαν και τον ημετερον τηρησουσιν' - DIGIT SIX
+ERROR: 04_109.xml : 1:13: Bad character at loc 19 of 'οι ουκ εξ αιματων oυδε εκ θεληματος σαρκος αλλ εκ θυ εγεννηθησαν' - LATIN SMALL LETTER O
+ERROR: 04_109.xml : 6:35: Bad character at loc 119 of 'ειπεν δε αυτοις ο ις εγω ειμι ο αρτος της ζωης ο ερχομενος προς με ου μη πεινασει και πιστευων εις εμε ου μη διψησει πoποτε' - LATIN SMALL LETTER O
+-- Checking 129/158 : 04_0286.xml
+-- Checking 130/158 : 04_0127.xml
+-- Checking 131/158 : 04_P107.xml
+-- Checking 132/158 : 04_041.xml
+-- Checking 133/158 : 04_249.xml
 ERROR: 04_249.xml : 10:7: Bad character at loc 76 of 'ειπεν ουν αυτοις ο ις παλιν εγω ειμι η θυρα των προβατων |f 431xr| |f 431xv|' - VERTICAL LINE
-ERROR: 04_249.xml : 7:27: Bad character at loc 100 of 'αλλα τουτον οιδαμεν ποθεν εστιν ο δε χς οταν ερχηται ουδεις γινωσκει ποθεν εστιν |f 297xr| |f 297xv|' - VERTICAL LINE
--- Checking 108/128 : 04_0260.xml
--- Checking 109/128 : 04_0234.xml
--- Checking 110/128 : 04_0302.xml
--- Checking 111/128 : 04_P108.xml
--- Checking 112/128 : 04_07.xml
--- Checking 113/128 : 04_P22.xml
--- Checking 114/128 : 04_0216.xml
--- Checking 115/128 : 04_09.xml
--- Checking 116/128 : 04_029.xml
--- Checking 117/128 : 04_083.xml
--- Checking 118/128 : 04_1219.xml
--- Checking 119/128 : 04_865.xml
--- Checking 120/128 : 04_0301.xml
--- Checking 121/128 : 04_0211.xml
+-- Checking 134/158 : 04_0260.xml
+-- Checking 135/158 : 04_0234.xml
+-- Checking 136/158 : 04_0302.xml
+-- Checking 137/158 : 04_P108.xml
+-- Checking 138/158 : 04_07.xml
+-- Checking 139/158 : 04_P22.xml
+-- Checking 140/158 : 04_0216.xml
+-- Checking 141/158 : 04_09.xml
+-- Checking 142/158 : 04_029.xml
+-- Checking 143/158 : 04_083.xml
+-- Checking 144/158 : 04_1219.xml
+-- Checking 145/158 : 04_1546.xml
+-- Checking 146/158 : 04_865.xml
+-- Checking 147/158 : 04_0301.xml
+-- Checking 148/158 : 04_0211.xml
 ERROR: 04_0211.xml : 6:54: Bad character at loc 65 of 'ο τρωγον μου την σαρκα και πινον μου το αιμα αιχει ζωην αιωνι)ον) καγω αναστησω αυτον εν τη εσχατη ημερα' - RIGHT PARENTHESIS
--- Checking 122/128 : 04_P44.xml
--- Checking 123/128 : 04_04.xml
--- Checking 124/128 : 04_0145.xml
--- Checking 125/128 : 04_021.xml
--- Checking 126/128 : 04_013.xml
+-- Checking 149/158 : 04_357.xml
+ERROR: 04_357.xml : 12:27: Bad character at loc 46 of 'νυν η ψυχη μου τεταρακται και τι ειπω περ σωσoν με εκ της ωρας ταυτης αλλα δια τουτο ηλθον εις την ωραν ταυτην' - LATIN SMALL LETTER O
+-- Checking 150/158 : 04_1582.xml
+-- Checking 151/158 : 04_P44.xml
+-- Checking 152/158 : 04_04.xml
+-- Checking 153/158 : 04_118.xml
+ERROR: 04_118.xml : 5:35: Bad character at loc 71 of 'εκεινος ην ο λυχνος ο καιομενος και φαινων υμεις δε ηθελησατε αγαλλια[/θηναι προς ωραν εν τω φωτι αυτου' - SOLIDUS
+ERROR: 04_118.xml : 7:14: Bad character at loc 23 of 'ηδη δε της εορτης μεσαzουσης ανεβη ο ις εις το ιερον και εδιδασκεν' - LATIN SMALL LETTER Z
+-- Checking 154/158 : 04_0145.xml
+-- Checking 155/158 : 04_021.xml
+-- Checking 156/158 : 04_013.xml
 ERROR: 04_013.xml : 12:16: Bad character at loc 124 of 'ταυτα δε ουκ εγνωσαν οι μαθηται αυτου το πρωτον αλλ οτε εδοξασθη ο ις τοτε εμνησθησαν οτι ταυτα ην επ αυτω γεγραμμενα και τ1 εποιησαν αυτω' - DIGIT ONE
--- Checking 127/128 : 04_P28.xml
--- Checking 128/128 : 04_P95.xml
+-- Checking 157/158 : 04_P28.xml
+-- Checking 158/158 : 04_P95.xml

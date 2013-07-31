@@ -6,6 +6,7 @@ import sys
 import unicodedata
 import codecs
 
+print "See file 'output'"
 sys.stdout = codecs.open('output', 'w', encoding='utf-8')
 
 sys.path.append('../stripey_dj/')
@@ -26,7 +27,10 @@ def check(folder):
     for i, f in enumerate(files):
         print "-- Checking {}/{} : {}".format(i+1, len(files), f)
         path = os.path.join(folder, f)
-        obj = xmlmss.Manuscript(f, path)
+        try:
+            obj = xmlmss.Manuscript(f, path)
+        except Exception as e:
+            print "ERROR", e
 
         for ch in obj.chapters.values():
             for verse_list in ch.verses.values():
