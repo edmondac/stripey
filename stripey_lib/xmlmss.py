@@ -26,17 +26,7 @@ ignore_tags = ['lb',     # Line break
                'supplied',  # for supplied tags outside words...
                ]
 
-#~ # What tags are ok inside words?
-#~ word_tags = ['supplied',
-             #~ 'unclear',
-             #~ 'abbr',
-             #~ 'hi',
-             #~ 'w',
-             #~ 'ex',
-             #~ 'lb',
-             #~ ]
-
-word_ignore_tags = ['note', 'pc']
+word_ignore_tags = ['note', 'pc', 'seg']
 
 
 class Verse(object):
@@ -133,13 +123,20 @@ class Verse(object):
         ret = u''
         tag = el.tag.split('}')[1]
         if tag == 'w' and not top:
-            print "WARNING: nested <w> tags at {}:{}".format(self.chapter, self.num)
+            # nested word tags without numbers should be ignored
+            if el.attrib.get('n'):
+                print "WARNING: nested <w> tags at {}:{}".format(self.chapter, self.num)
+            return ret
 
         if tag not in word_ignore_tags:
             if el.text is not None:
                 ret = el.text.strip().lower()
                 if ret == 'om':
                     ret = u''
+
+            if tag == 'gap':
+                # Gap tags matter - put in a space for now
+                ret = u' '
 
             for c in el._children:
                 ret += self._word_reader(c)

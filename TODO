@@ -19,3 +19,8 @@ From Hugh&Cat (16/7/13)
 8. It would be nice if the chosen base text was all 'a' (DONE)
 9. Think about using the post-regularised data from ITSEE (talk to Cat)
 10. Strip out diacritic marks (DONE)
+
+From Cat (30/7/13)
+* Gap tags in words matter (DONE)
+* Nested w tags without numbers should be ignored (DONE)
+* seg tags should be ignored in words (DONE)
