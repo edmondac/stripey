@@ -403,7 +403,8 @@ def get_all_verses(book_obj, chapter_obj, base_ms_id=None, verse_num=None):
       [...]]
     """
     all_mss = ManuscriptTranscription.objects.all()
-    if base_ms_id is not None:
+    base_ms = None
+    if base_ms_id:
         base_ms = ManuscriptTranscription.objects.get(id=base_ms_id)
         base_texts = base_ms.get_text(book_obj, chapter_obj)
         sorters = {x[0]: TextSorter([i.text for i in x[1] if i.hand.name == 'firsthand'][0]) for x in base_texts}
@@ -417,7 +418,7 @@ def get_all_verses(book_obj, chapter_obj, base_ms_id=None, verse_num=None):
         #   ...]
         for v in verses:
             for ms_verse in v[1]:
-                if base_ms_id is not None:
+                if base_ms is not None:
                     my_sorter = sorters.get(v[0])
                     if my_sorter:
                         ms_verse.similarity = my_sorter(ms_verse.text)
