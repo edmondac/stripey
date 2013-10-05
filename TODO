@@ -24,3 +24,7 @@ From Cat (30/7/13)
 * Gap tags in words matter (DONE)
 * Nested w tags without numbers should be ignored (DONE)
 * seg tags should be ignored in words (DONE)
+
+From me (5/10/13):
+* Try using D3 etc. to display correctors' activity for a given manuscript
+
