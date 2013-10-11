@@ -42,9 +42,10 @@ class Snippet(object):
         assert not self._snippets, self
         if [x for x in self._readings
             if (x[1], x[2]) == (hand_name, hand_type)]:
-            print 1, self
-            print 2, text, hand_name, hand_type
-            assert False
+            hand_type += ":dup"
+            if [x for x in self._readings
+                if (x[1], x[2]) == (hand_name, hand_type)]:
+                raise ValueError("Need more dupes")
         self._readings.append((text, hand_name, hand_type))
 
     def add_snippet(self, snippet):
@@ -148,8 +149,8 @@ class Verse(object):  # flake8: noqa
             if n == 'firsthand':
                 if t == 'orig':
                     hand = n
-                elif t == 'corr':
-                    hand = "firsthand(corr)"
+                else:
+                    hand = "firsthand({})".format(t)
             elif n == t == None:
                 hand = "firsthand"
             else:
