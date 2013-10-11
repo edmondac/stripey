@@ -93,7 +93,7 @@ class Snippet(object):
                     r.append(bit[(n, t)])
                 else:
                     r.append(bit.get((None, None), ''))
-            self._readings.append((' '.join([a for a in r if a]), n, t))
+            self._readings.append((''.join([a for a in r if a]), n, t))
 
         #self._post_process(
         self._flat = True
@@ -145,7 +145,15 @@ class Verse(object):  # flake8: noqa
         Return the texts in a list of (text, hand)
         """
         ret = []
-        for n, t in self.snippet.get_hands():
+        hands = self.snippet.get_hands()
+
+
+        # FIXME - if there are multiple variant units within a verse, with different correctors, then this method might go pop...
+        # This might explain why I see an extra firsthand appearing everywhere there's a correction,
+        # but without anything for the app tag.
+
+
+        for n, t in hands:
             if n == 'firsthand':
                 if t == 'orig':
                     hand = n
@@ -156,7 +164,14 @@ class Verse(object):  # flake8: noqa
             else:
                 hand = n
             assert hand
-            ret.append((self.snippet.get_text(n, t), hand))
+            reading = self.snippet.get_text(n, t)
+            if reading:
+                ret.append((reading, hand))
+
+        if len(ret) > 1:
+            print self.snippet
+            print ret
+            raise ValueError
         return ret
 
     def _parse(self, element):
@@ -229,6 +244,11 @@ class Verse(object):  # flake8: noqa
             s.add_reading(el.tail.strip().lower())
             ret.add_snippet(s)
 
+        # Add a space after every word
+        space = Snippet()
+        space.add_reading(" ")
+        ret.add_snippet(space)
+
         #print "Word parser got:", ret
         return ret
 
@@ -261,6 +281,7 @@ class Verse(object):  # flake8: noqa
             ret.add_reading(ch_snippet.get_text(),
                             ch.attrib.get('hand'),
                             ch.attrib.get('type'))
+
         return ret
 
 
