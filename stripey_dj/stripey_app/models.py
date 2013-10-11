@@ -86,13 +86,13 @@ class ManuscriptTranscription(models.Model):
             for verse_list in ch.verses.values():
                 for j, vs in enumerate(verse_list):
                     db_verse = _get_verse(db_chapter, vs.num)
-                    for i, hand in enumerate(vs.hands):
+                    for text, hand in vs.get_texts():
                         db_hand = _get_hand(self, hand)
                         ms_verse = MsVerse()
                         ms_verse.verse = db_verse
                         ms_verse.hand = db_hand
                         ms_verse.item = j
-                        ms_verse.raw_text = vs.texts[i]
+                        ms_verse.raw_text = text
                         ms_verse.save()
 
         self.status = 'loaded'

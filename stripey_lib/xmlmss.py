@@ -26,10 +26,107 @@ ignore_tags = ['lb',     # Line break
                'supplied',  # for supplied tags outside words...
                ]
 
+class Snippet(object):
+    """
+    An object representing a text snippet, either a verse or a sub-part of
+    a verse. This will contain the text and associated hand name/type
+    for all hands active in this snippet.
+    """
+    def __init__(self):
+        self._readings = []
+        self._snippets = []
+        self._flat = False
+
+    def add_reading(self, text, hand_name=None, hand_type=None):
+        assert self._flat is False, self
+        assert not self._snippets, self
+        if [x for x in self._readings
+            if (x[1], x[2]) == (hand_name, hand_type)]:
+            print 1, self
+            print 2, text, hand_name, hand_type
+            assert False
+        self._readings.append((text, hand_name, hand_type))
+
+    def add_snippet(self, snippet):
+        assert self._flat is False, self
+        assert not self._readings, self
+        self._snippets.append(snippet)
+
+    def _post_process(self, text):
+        """
+        Take some text and process it - e.g. rationalise out final nu.
+        TODO: should this do anything else? Nomina sacra for example?
+
+        XXX: Is this a good idea at all? It's standard...
+        """
+        # Final nu
+        ret = text.replace(u'¯', u'ν')
+        return ret
+
+    def _flatten(self):
+        """
+        Flatten any snippets into readings.
+        """
+        if self._flat is True:
+            # Already done it
+            return
+
+        if not self._snippets:
+            # Nothing to do
+            return
+
+        assert self._readings == [], self
+
+        bits = []
+        all_hands = {}  # We don't care about the values, just the keys here
+        for s in self._snippets:
+            r = {(h, t):s.get_text(h, t) for (h, t) in s.get_hands()}
+            bits.append(r)
+            all_hands.update(r)
+
+        for (n, t) in all_hands:
+            r = []
+            for bit in bits:
+                if (n, t) in bit:
+                    # Specific reading for this hand exists
+                    r.append(bit[(n, t)])
+                else:
+                    r.append(bit.get((None, None), ''))
+            self._readings.append((' '.join([a for a in r if a]), n, t))
+
+        #self._post_process(
+        self._flat = True
+
+    def get_hands(self):
+        """
+        Return a list of (name, type) tuples of hands
+        """
+        self._flatten()
+        return [(x[1], x[2]) for x in self._readings]
+
+    def get_text(self, hand_name=None, hand_type=None):
+        """
+        Return the text of a particular hand
+        """
+        self._flatten()
+        if not self._readings:
+            # Empty snippet - return empty string
+            return ""
+
+        wanted = [x[0] for x in self._readings
+                  if (x[1], x[2]) == (hand_name, hand_type)]
+        assert len(wanted) == 1, self
+        return wanted[0]
+
+    def __repr__(self):
+        return "<Snippet: {} | {}>".format(self._snippets, self._readings)
+
+    def is_empty(self):
+        return True if (self._readings or self._snippets) else False
+
+
 word_ignore_tags = ['note', 'pc', 'seg']
-
-
-class Verse(object):
+class Verse(object):  # flake8: noqa
     """
     Takes an ElementTree element representing a verse and parses it.
     """
@@ -38,79 +135,54 @@ class Verse(object):
         self.chapter = chapter
         self.num = number
 
-        # Note - we can have multiple different texts if
-        # correctors have been at work
-        self.hands = []
-        self.texts = []
+        # Note - we can have multiple different texts if correctors have been at
+        # work.
+        self.snippet = self._parse(self.element)
 
-        self._find_hands()
-        if not self.hands:
-            # Only one scribe at work here
-            self.hands = [None]
-
-        for hand in self.hands:
-            text = self._parse(self.element, hand)
-            text = self._post_process(text)
-            self.texts.append(text)
-
-    def _rdg_hand(self, el):
+    def get_texts(self):
         """
-        Return the designator for the scribe
+        Return the texts in a list of (text, hand)
         """
-        hand = el.attrib.get('hand')
-        if not hand:
-            hand = el.attrib.get('auto-%s'
-                                 % (el.attrib['n'], ))
-        return hand
-
-    def _find_hands(self):
-        """
-        Work out what different hands have been at work,
-        e.g. firsthand, correctors etc.
-        """
-        for i in self.element.iter():
-            if i.tag.endswith('rdg'):
-                hand = self._rdg_hand(i)
-                if hand not in self.hands:
-                    self.hands.append(hand)
-
-    def _post_process(self, text):
-        """
-        Take some text and process it - e.g. rationalise out final nu.
-        TODO: should this do anything else? Nomina sacra for example?
-        """
-        # Final nu
-        ret = text.replace(u'¯', u'ν')
+        ret = []
+        for n, t in self.snippet.get_hands():
+            if n == 'firsthand':
+                if t == 'orig':
+                    hand = n
+                elif t == 'corr':
+                    hand = "firsthand(corr)"
+            elif n == t == None:
+                hand = "firsthand"
+            else:
+                hand = n
+            assert hand
+            ret.append((self.snippet.get_text(n, t), hand))
         return ret
 
-    def _parse(self, element, hand=None):
+    def _parse(self, element):
         """
-        Go through the element's children and extract the text for
-        this verse
+        Parse this element, and recursively call myself on its children.
 
-        @param hand: the hand to look for in rdg tags (None implies no
-        rdg tags will be found)
-
-        @returns: the text for this scribe
+        @returns: a Snippet object
         """
-        contents = []
-        for i in element.getchildren():
-            tag = i.tag.split('}')[1]
-            if tag in ignore_tags:
-                continue
+        tag = element.tag.split('}')[1]
+        if tag in ignore_tags:
+            return Snippet()
 
-            parser = getattr(self, '_parse_%s' % (tag, ), None)
-            if not parser:
-                print i, i.attrib, i.text
-                raise NameError("Don't know how to deal with %s tags"
-                                % (tag, ))
-                continue
+        parser = getattr(self, '_parse_%s' % (tag, ), None)
+        if parser:
+            #print "Using parser:", parser
+            my_snippet = parser(element)
+        else:
+            #print element, element.attrib, element.text
+            #print "Don't know how to deal with %s tags - will recurse" % (tag, )
+            my_snippet = Snippet()
+            for i in element.getchildren():
+                my_snippet.add_snippet(self._parse(i))
 
-            x = parser(i, hand)
-            if x is not None:
-                contents.append(x.strip())
+        #~ if my_snippet.is_empty():
+            #~ print "EMPTY", element.attrib, element.getchildren(), element.text
 
-        return ' '.join(contents)
+        return my_snippet
 
     def _word_reader(self, el, top=False):
         """
@@ -119,8 +191,10 @@ class Verse(object):
 
         @param el: the element in question
         @param top: (bool) is this the top <w> tag?
+
+        @returns: a Snippet object or None
         """
-        ret = u''
+        ret = Snippet()
         tag = el.tag.split('}')[1]
         if tag == 'w' and not top:
             # nested word tags without numbers should be ignored
@@ -130,25 +204,34 @@ class Verse(object):
 
         if tag not in word_ignore_tags:
             if el.text is not None:
-                ret = el.text.strip().lower()
-                if ret == 'om':
-                    ret = u''
+                t = el.text.strip().lower()
+                s = Snippet()
+                if t != 'om':
+                    s.add_reading(t)
+                else:
+                    s.add_reading('')
+                ret.add_snippet(s)
 
             if tag == 'gap':
                 # Gap tags matter - put in a space for now
-                ret = u' '
+                gap = Snippet()
+                gap.add_reading(" ")
+                ret.add_snippet(gap)
 
             for c in el._children:
-                ret += self._word_reader(c)
+                ret.add_snippet(self._word_reader(c))
 
         # We always want the tail, because of the way elementtree puts it on
         # the end of a closing tag, rather than in the containing tag...
         if el.tail is not None:
-            ret += el.tail.strip().lower()
+            s = Snippet()
+            s.add_reading(el.tail.strip().lower())
+            ret.add_snippet(s)
 
+        #print "Word parser got:", ret
         return ret
 
-    def _parse_w(self, el, hand):
+    def _parse_w(self, el):
         """
         Parse a <w> tag
         """
@@ -158,9 +241,12 @@ class Verse(object):
 
         return ret
 
-    def _parse_app(self, el, hand):
-        # This bit has been corrected - there will be more than one
-        # version. Look for the specified hand.
+    def _parse_app(self, el):
+        """
+        This bit has been corrected - there will be more than one
+        reading.
+        """
+        ret = Snippet()
         for ch in el.getchildren():
             tag = ch.tag.split('}')[1]
             if tag in ignore_tags:
@@ -168,9 +254,13 @@ class Verse(object):
             if not ch.tag.endswith("}rdg"):
                 print ch, ch.attrib, ch.text
                 raise ValueError("I only want rdg tags in an app")
-            if self._rdg_hand(ch) == hand:
-                # This is the bit we want
-                return self._parse(ch, None)
+
+            # Now parse the rdg tag to get its text
+            ch_snippet = self._parse(ch)
+            ret.add_reading(ch_snippet.get_text(),
+                            ch.attrib.get('hand'),
+                            ch.attrib.get('type'))
+        return ret
 
 
 class Chapter(object):
