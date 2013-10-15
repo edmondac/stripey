@@ -26,30 +26,32 @@ ignore_tags = ['lb',     # Line break
                'supplied',  # for supplied tags outside words...
                ]
 
+
 class Snippet(object):
     """
     An object representing a text snippet, either a verse or a sub-part of
     a verse. This will contain the text and associated hand name/type
     for all hands active in this snippet.
     """
-    def __init__(self):
-        self._readings = []
+    def __init__(self, word_sep=True):
+        self._readings = {}  # {('hand_name', 'hand_type'): text, ...}
         self._snippets = []
-        self._flat = False
+        self._word_sep = word_sep
 
-    def add_reading(self, text, hand_name=None, hand_type=None):
-        assert self._flat is False, self
+    def add_reading(self, text, hand_name='firsthand', hand_type='orig'):
         assert not self._snippets, self
-        if [x for x in self._readings
-            if (x[1], x[2]) == (hand_name, hand_type)]:
-            hand_type += ":dup"
-            if [x for x in self._readings
-                if (x[1], x[2]) == (hand_name, hand_type)]:
-                raise ValueError("Need more dupes")
-        self._readings.append((text, hand_name, hand_type))
+        assert hand_name
+        assert hand_type
+        #print "Adding reading for {}.{}".format(hand_name, hand_type)
+
+        key = (hand_name, hand_type)
+        if key in self._readings:
+            # Duplicate hand discovered - recurse adding ":dup"
+            return self.add_reading(text, hand_name, "{}:dup".format(hand_type))
+
+        self._readings[key] = text
 
     def add_snippet(self, snippet):
-        assert self._flat is False, self
         assert not self._readings, self
         self._snippets.append(snippet)
 
@@ -64,60 +66,104 @@ class Snippet(object):
         ret = text.replace(u'¯', u'ν')
         return ret
 
-    def _flatten(self):
-        """
-        Flatten any snippets into readings.
-        """
-        if self._flat is True:
-            # Already done it
-            return
-
-        if not self._snippets:
-            # Nothing to do
-            return
-
-        assert self._readings == [], self
-
-        bits = []
-        all_hands = {}  # We don't care about the values, just the keys here
-        for s in self._snippets:
-            r = {(h, t):s.get_text(h, t) for (h, t) in s.get_hands()}
-            bits.append(r)
-            all_hands.update(r)
-
-        for (n, t) in all_hands:
-            r = []
-            for bit in bits:
-                if (n, t) in bit:
-                    # Specific reading for this hand exists
-                    r.append(bit[(n, t)])
-                else:
-                    r.append(bit.get((None, None), ''))
-            self._readings.append((''.join([a for a in r if a]), n, t))
-
-        #self._post_process(
-        self._flat = True
+    #~ def flatten(self):
+        #~ """
+        #~ Flatten any snippets into readings.
+        #~ """
+        #~ if self._flat is True:
+            #~ # Already done it
+            #~ return
+#~
+        #~ if not self._snippets:
+            #~ # Nothing to do
+            #~ return
+#~
+        #~ assert self._readings == [], self
+#~
+        #~ bits = []
+        #~ all_hands = self.get_hands()
+        #~ for s in self._snippets:
+            #~ # First flatten the sub-snippet (and so on, recursively)
+            #~ s.flatten()
+            #~ r = {(h, t):s.get_text(h, t) for (h, t) in s.get_hands()}
+            #~ bits.append(r)
+            #~ all_hands.add(r)
+#~
+        #~ for (n, t) in all_hands:
+            #~ r = []
+            #~ for bit in bits:
+                #~ print bit
+                #~ if (n, t) in bit:
+                    #~ # Specific reading for this hand exists
+                    #~ r.append(bit[(n, t)])
+                #~ else:
+                    #~ r.append(bit.get((None, None), ''))
+            #~ self._readings.append((''.join([a for a in r if a]), n, t))
+#~
+        #~ #self._post_process(
+        #~ self._flat = True
 
     def get_hands(self):
         """
-        Return a list of (name, type) tuples of hands
+        Return a list of (name, type) tuples of all hands found recursively
         """
-        self._flatten()
-        return [(x[1], x[2]) for x in self._readings]
+        all_hands = set()
+        for s in self._snippets:
+            all_hands.update(s.get_hands())
+        for (hand_name, hand_type) in self._readings.keys():
+            all_hands.add((hand_name, hand_type))
+        return all_hands
 
-    def get_text(self, hand_name=None, hand_type=None):
+    #~ def has_hand(self, hand_name, hand_type):
+        #~ """
+        #~ Does this snippet contain a reading in the specified hand?
+        #~ """
+        #~ return (hand_name, hand_type) in self.get_hands()
+
+    def get_text(self, hand_name='firsthand', hand_type='orig'):
         """
-        Return the text of a particular hand
+        Return the text of a particular hand. If the hand isn't present in this
+        place, then the firsthand:orig reading is returned.
+
+        I know this isn't perfect - but without an encoded order of correctors
+        it's the best we can do at this stage...
         """
-        self._flatten()
-        if not self._readings:
+        if self._snippets:
+            # Find our text recursively
+            ret = []
+            for s in self._snippets:
+                ret.append(s.get_text(hand_name, hand_type))
+            return ''.join(ret)
+
+        elif not self._readings:
             # Empty snippet - return empty string
             return ""
 
-        wanted = [x[0] for x in self._readings
-                  if (x[1], x[2]) == (hand_name, hand_type)]
-        assert len(wanted) == 1, self
-        return wanted[0]
+        else:
+            # Return the required reading's text
+            key = (hand_name, hand_type)
+            if key in self._readings:
+                ret = self._readings[key]
+            else:
+                fh_key = ('firsthand', 'orig')
+                if fh_key in self._readings:
+                    ret = self._readings[fh_key]
+                else:
+                    print self
+                    raise ValueError("Couldn't find reading for {} or {}".format(key, fh_key))
+
+            # Run any required post processing on the text
+            ret = self._post_process(ret)
+
+            if self._word_sep is True:
+                # If this is a new word, then add a space
+                ret = u" " + ret
+
+            # Trim out double spaces
+            while '  ' in ret:
+                ret = ret.replace('  ', ' ')
+            #print u"Returning reading for {}:{}: {}".format(hand_name, hand_type, ret)
+            return ret
 
     def __repr__(self):
         return "<Snippet: {} | {}>".format(self._snippets, self._readings)
@@ -146,21 +192,12 @@ class Verse(object):  # flake8: noqa
         """
         ret = []
         hands = self.snippet.get_hands()
-
-
-        # FIXME - if there are multiple variant units within a verse, with different correctors, then this method might go pop...
-        # This might explain why I see an extra firsthand appearing everywhere there's a correction,
-        # but without anything for the app tag.
-
-
         for n, t in hands:
             if n == 'firsthand':
                 if t == 'orig':
                     hand = n
                 else:
                     hand = "firsthand({})".format(t)
-            elif n == t == None:
-                hand = "firsthand"
             else:
                 hand = n
             assert hand
@@ -168,10 +205,11 @@ class Verse(object):  # flake8: noqa
             if reading:
                 ret.append((reading, hand))
 
-        if len(ret) > 1:
-            print self.snippet
-            print ret
-            raise ValueError
+        #~ if len(ret) > 1:
+            #~ #print self.snippet
+            #~ for t, h in ret:
+                #~ print u"{}: {}".format(h, t)
+            #~ raise ValueError
         return ret
 
     def _parse(self, element):
@@ -222,10 +260,10 @@ class Verse(object):  # flake8: noqa
             if el.text is not None:
                 t = el.text.strip().lower()
                 s = Snippet()
-                if t != 'om':
-                    s.add_reading(t)
-                else:
+                if t == 'om':
                     s.add_reading('')
+                else:
+                    s.add_reading(t)
                 ret.add_snippet(s)
 
             if tag == 'gap':
@@ -240,7 +278,7 @@ class Verse(object):  # flake8: noqa
         # We always want the tail, because of the way elementtree puts it on
         # the end of a closing tag, rather than in the containing tag...
         if el.tail is not None:
-            s = Snippet()
+            s = Snippet(word_sep=False)
             s.add_reading(el.tail.strip().lower())
             ret.add_snippet(s)
 
