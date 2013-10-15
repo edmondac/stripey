@@ -60,7 +60,8 @@ def manuscript(request):
         chapter = book.chapters[0]
 
     # Set the verses to display
-    chapter.verses = verses.filter(verse__chapter=chapter).order_by('verse__num')
+    chapter.verses = verses.filter(verse__chapter=chapter).order_by('verse__num',
+                                                                    'hand__id')
 
     return default_response(request,
                             'manuscript.html',

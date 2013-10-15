@@ -40,8 +40,8 @@ class Snippet(object):
 
     def add_reading(self, text, hand_name='firsthand', hand_type='orig'):
         assert not self._snippets, self
-        assert hand_name
-        assert hand_type
+        assert hand_name, hand_name
+        assert hand_type, hand_type
         #print "Adding reading for {}.{}".format(hand_name, hand_type)
 
         key = (hand_name, hand_type)
@@ -149,7 +149,6 @@ class Snippet(object):
                 if fh_key in self._readings:
                     ret = self._readings[fh_key]
                 else:
-                    print self
                     raise ValueError("Couldn't find reading for {} or {}".format(key, fh_key))
 
             # Run any required post processing on the text
@@ -241,25 +240,27 @@ class Verse(object):  # flake8: noqa
     def _word_reader(self, el, top=False):
         """
         This calls itself recursively to extract the text from a word element
-        in the right order.
+        in the right order. We don't want any spaces in here, so we will
+        pass word_sep=False into snippets.
 
         @param el: the element in question
         @param top: (bool) is this the top <w> tag?
 
         @returns: a Snippet object or None
         """
-        ret = Snippet()
+        ret = Snippet(word_sep=top)
         tag = el.tag.split('}')[1]
         if tag == 'w' and not top:
             # nested word tags without numbers should be ignored
             if el.attrib.get('n'):
-                print "WARNING: nested <w> tags at {}:{}".format(self.chapter, self.num)
+                logger.warning("Nested <w> tags at {}:{}".format(
+                    self.chapter, self.num))
             return ret
 
         if tag not in word_ignore_tags:
             if el.text is not None:
                 t = el.text.strip().lower()
-                s = Snippet()
+                s = Snippet(word_sep=False)
                 if t == 'om':
                     s.add_reading('')
                 else:
@@ -282,10 +283,11 @@ class Verse(object):  # flake8: noqa
             s.add_reading(el.tail.strip().lower())
             ret.add_snippet(s)
 
-        # Add a space after every word
-        space = Snippet()
-        space.add_reading(" ")
-        ret.add_snippet(space)
+        if top is True:
+            # Add a space after every word
+            space = Snippet()
+            space.add_reading(" ")
+            ret.add_snippet(space)
 
         #print "Word parser got:", ret
         return ret
@@ -316,9 +318,14 @@ class Verse(object):  # flake8: noqa
 
             # Now parse the rdg tag to get its text
             ch_snippet = self._parse(ch)
-            ret.add_reading(ch_snippet.get_text(),
-                            ch.attrib.get('hand'),
-                            ch.attrib.get('type'))
+            hand = ch.attrib.get('hand')
+            typ = ch.attrib.get('type')
+            text = ch_snippet.get_text()
+            if text == "" and hand == typ == None:
+                print "WARNING: Empty rdg tag"
+            else:
+                #print u"Adding reading {} for {}:{}".format(text, hand, typ)
+                ret.add_reading(text, hand, typ)
 
         return ret
 

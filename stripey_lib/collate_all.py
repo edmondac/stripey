@@ -151,8 +151,7 @@ def collate_book(book_obj, algo):
             # 3. tidy up django's query list, to free up some memory
             reset_queries()
 
-        print "That's chapter 1 folks"
-        break
+            raise ValueError("That's chapter 1 verse 1 folks")
 
 @transaction.commit_on_success
 def drop_all(algo):
