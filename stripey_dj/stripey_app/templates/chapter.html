@@ -1,5 +1,17 @@
 {% extends "stripey_app/base.html" %}
 
+{% block head %}
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+<script>
+    function highlightManuscript(ms_cls) {
+        $('.'+ms_cls).addClass('highlight_ms');
+    }
+    function resetManuscript(ms_cls) {
+        $('.'+ms_cls).removeClass('highlight_ms');
+    }
+</script>
+{% endblock head %}
+
 {% block content %}
 
 <h2>{% if chapter.num > 1 %}<a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num|add:'-1' }}&v=1">-1</a>{% endif %} Text of {{ book.name|title }} {{ chapter.num }} {% if not is_last_chapter %}<a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num|add:'+1' }}&v=1">+1</a>{% endif %}</h2>
@@ -18,7 +30,10 @@
             <tr>
                 <th width="30%">
                     {% for ms in text.1.0 %}
-                        <a href="/manuscript.html?ms_id={{ ms.0.id }}&bk={{ book.num }}&ch={{ chapter.num }}" title="{{ ms.0.display_ref }}"><font {% if ms.0.id == base_ms_id %}color="red"{% endif %}>{{ ms.0.display_short }}{% if ms.1 %} <i>{{ ms.1 }}</i>{% endif %}</font></a>&nbsp;
+                        <a href="/manuscript.html?ms_id={{ ms.0.id }}&bk={{ book.num }}&ch={{ chapter.num }}" title="{{ ms.0.display_ref }}">
+                        <font class="{% if ms.0.id == base_ms_id %}base_ms{% endif %} ms_{{ ms.0.id }}" onmouseover="highlightManuscript('ms_{{ ms.0.id }}')" onmouseout="resetManuscript('ms_{{ ms.0.id }}')">
+                            {{ ms.0.display_short }} {% if ms.1 != 'firsthand' %}<i>{{ ms.1 }}</i>{% endif %}
+                        </font></a>&nbsp;
                     {% endfor %}
                 </th>
                 <td>{{ text.1.1|floatformat }}%</td>

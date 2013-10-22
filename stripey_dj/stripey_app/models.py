@@ -449,7 +449,10 @@ class TextSorter(object):
         self.base_text = base_text
 
     def __call__(self, text):
-        return Levenshtein.ratio(self.base_text, text) * 100.0
+        lev = Levenshtein.ratio(self.base_text, text) * 100.0
+        #~ if lev != 100.0:
+            #~ logger.warning(u"|{}|{}|{}".format(self.base_text, text, lev))
+        return lev
 
 
 class StripeSorter(TextSorter):

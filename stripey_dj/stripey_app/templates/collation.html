@@ -66,6 +66,12 @@
             });
         });
     });
+    function highlightManuscript(ms_cls) {
+        $('.'+ms_cls).addClass('highlight_ms');
+    }
+    function resetManuscript(ms_cls) {
+        $('.'+ms_cls).removeClass('highlight_ms');
+    }
 </script>
 {% endblock head %}
 
@@ -89,7 +95,10 @@
             <tr id="stripe{{ stripe.id }}" onmouseover="highlightReadings('stripe{{ stripe.id }}')" onmouseout="resetRow('stripe{{ stripe.id }}')">
                 <th width="400px">
                     {% for m in ms_stripes %}
-                        <a href="/manuscript.html?ms_id={{ m.ms_verse.hand.manuscript.id }}&bk={{ book.num }}&ch={{ chapter.num }}" title="{{ m.ms_verse.hand.manuscript.display_ref }}"><font {% if m.ms_verse.hand.manuscript.id == base_ms_id %}color="red"{% endif %}>{{ m.ms_verse.hand.manuscript.display_short }}{% if m.ms_verse.hand.name != 'firsthand' %}&nbsp;<i>{{ m.ms_verse.hand.name }}</i>{% endif %}</font></a>&nbsp;
+                        <a href="/manuscript.html?ms_id={{ m.ms_verse.hand.manuscript.id }}&bk={{ book.num }}&ch={{ chapter.num }}" title="{{ m.ms_verse.hand.manuscript.display_ref }}">
+                        <font class="{% if m.ms_verse.hand.manuscript.id == base_ms_id %}base_ms{% endif %} ms_{{ m.ms_verse.hand.manuscript.id }}" onmouseover="highlightManuscript('ms_{{ m.ms_verse.hand.manuscript.id }}')" onmouseout="resetManuscript('ms_{{ m.ms_verse.hand.manuscript.id }}')">
+                            {{ m.ms_verse.hand.manuscript.display_short }}{% if m.ms_verse.hand.name != 'firsthand' %}&nbsp;<i>{{ m.ms_verse.hand.name }}</i>{% endif %}
+                        </font></a>&nbsp;
                     {% endfor %}
                 </th>
                 <td>{{ stripe.similarity|floatformat }}%</td>

@@ -161,13 +161,9 @@ def chapter(request):
         readings = {}
         for ms, verses in mss:
             for verse in verses:
-                if len(verses) > 1:
-                    wit = (ms, verse.hand.name)
-                else:
-                    wit = (ms, None)
-                witnesses = readings.get(verse.text, ([], verse.similarity))
-                witnesses[0].append(wit)
-                readings[verse.text] = witnesses
+                witnesses = readings.setdefault(verse.text,
+                                                ([], verse.similarity))[0]
+                witnesses.append((ms, verse.hand.name))
 
         # Sort each group by liste id
         for i in readings:

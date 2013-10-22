@@ -200,7 +200,7 @@ class Verse(object):  # flake8: noqa
             else:
                 hand = n
             assert hand
-            reading = self.snippet.get_text(n, t)
+            reading = self.snippet.get_text(n, t).strip()
             if reading:
                 ret.append((reading, hand))
 

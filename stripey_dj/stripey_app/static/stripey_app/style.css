@@ -167,3 +167,12 @@ td.greek, div.greek, div.ident {
 clear:both;
 height:1px;
 }
+
+.base_ms {
+ color: red;
+}
+
+.highlight_ms {
+ color: white;
+ background: green;
+}
