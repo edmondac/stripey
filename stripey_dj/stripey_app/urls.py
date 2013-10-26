@@ -7,4 +7,5 @@ urlpatterns = patterns('stripey_app.views',
     url(r'collation.html', 'collation'),
     url(r'set_base_text.html', 'set_base_text'),
     url(r'manuscript.html', 'manuscript'),
+    url(r'correctors.json', 'correctors_json'),
 )

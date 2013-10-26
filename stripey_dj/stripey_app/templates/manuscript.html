@@ -1,5 +1,10 @@
 {% extends "stripey_app/base.html" %}
 
+{% block head %}
+    {% load static from staticfiles %}
+    <script type="text/javascript" src="{% static 'stripey_app/d3.v3.min.js' %}"></script>
+{% endblock head %}
+
 {% block content %}
 
 <h1>Manuscript {{ ms.ms_ref }}</h1>
@@ -24,6 +29,109 @@
 
 <b>{{ chapter_to_show.book.name|title }} {{ chapter_to_show.num }}</b>
 (<a href="chapter.html?bk={{ chapter_to_show.book.num }}&ch={{ chapter_to_show.num }}&v=1">View in all manuscripts</a>)
+
+<div id="graph"></div>
+<script>
+    // Based on http://bl.ocks.org/mbostock/3886208
+    var margin = {top: 5, right: 5, bottom: 5, left: 5},
+        width = 400 - margin.left - margin.right,
+        height = 200 - margin.top - margin.bottom;
+
+    var x = d3.scale.ordinal()
+        .rangeRoundBands([0, width], .1);
+
+    var y = d3.scale.linear()
+        .rangeRound([height, 0]);
+
+    var color = d3.scale.ordinal()
+        .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
+
+    var xAxis = d3.svg.axis()
+        .scale(x)
+        .orient("bottom");
+
+    var yAxis = d3.svg.axis()
+        .scale(y)
+        .orient("left")
+        .tickFormat(d3.format(".2s"));
+
+    var svg = d3.select("#graph").append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    d3.json("correctors.json?ms_id={{ ms.id }}&bk={{ chapter_to_show.book.num }}&ch={{ chapter_to_show.num }}", function(error, data) {
+        color.domain(d3.keys(data['hands']));
+
+        data['verses'].forEach(function(d) {
+            var y0 = 0;
+            d.correctors = color.domain().map(function(name) { return {name: name, y0: y0, y1: y0 += 1}; });
+            d.total = d.correctors.length;
+        });
+
+        //data.sort(function(a, b) { return b.total - a.total; });
+
+        x.domain(data['verses'].map(function(d) { return d[0]; }));
+        y.domain([0, d3.max(data['verses'], function(d) { return d[1].length; })]);
+
+        svg.append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(0," + height + ")")
+            .call(xAxis);
+
+        svg.append("g")
+            .attr("class", "y axis")
+            .call(yAxis)
+            .append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 6)
+            .attr("dy", ".71em")
+            .style("text-anchor", "end")
+            .text("Correctors");
+
+        var verse = svg.selectAll(".verse")
+            .data(data)
+            .enter().append("g")
+            .attr("class", "g")
+            .attr("transform", function(d) { return "translate(" + x(d['verse'][0]) + ",0)"; });
+
+        verse.selectAll("rect")
+            .data(function(d) { return d.correctors; })
+            .enter().append("rect")
+            .attr("width", x.rangeBand())
+            .attr("y", function(d) { return y(d.y1); })
+            .attr("height", function(d) { return y(d.y0) - y(d.y1); })
+            .style("fill", function(d) { return color(d.name); });
+
+        var legend = svg.selectAll(".legend")
+            .data(color.domain().slice().reverse())
+            .enter().append("g")
+            .attr("class", "legend")
+            .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+
+        legend.append("rect")
+            .attr("x", width - 18)
+            .attr("width", 18)
+            .attr("height", 18)
+            .style("fill", color);
+
+        legend.append("text")
+            .attr("x", width - 24)
+            .attr("y", 9)
+            .attr("dy", ".35em")
+            .style("text-anchor", "end")
+            .text(function(d) { return d; });
+
+        //Draw the Rectangle
+        //~ var rectangle = svg.append("rect")
+                                            //~ .attr("x", 10)
+                                            //~ .attr("y", 10)
+                                            //~ .attr("width", 50)
+                                            //~ .attr("height", 100);
+    });
+</script>
+
 <table>
 {% for verse in chapter_to_show.verses %}
   <tr>

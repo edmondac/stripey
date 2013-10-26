@@ -4,6 +4,7 @@ from django.db import models
 from django.core.exceptions import ObjectDoesNotExist
 from stripey_lib import xmlmss
 from django.db.models import Max
+from memoize import memoize
 
 import Levenshtein
 import unicodedata
@@ -364,22 +365,6 @@ def _get_hand(ms, hand):
     return db_hand
 
 
-class memoize(dict):
-    """
-    A memoize decorator from:
-     http://wiki.python.org/moin/PythonDecoratorLibrary#Memoize
-    """
-    def __init__(self, func):
-        self.func = func
-
-    def __call__(self, *args):
-        return self[args]
-
-    def __missing__(self, key):
-        result = self[key] = self.func(*key)
-        return result
-
-
 @memoize
 def get_all_verses(book_obj, chapter_obj, base_ms_id=None, verse_num=None):
     """
@@ -406,8 +391,12 @@ def get_all_verses(book_obj, chapter_obj, base_ms_id=None, verse_num=None):
     base_ms = None
     if base_ms_id:
         base_ms = ManuscriptTranscription.objects.get(id=base_ms_id)
-        base_texts = base_ms.get_text(book_obj, chapter_obj)
-        sorters = {x[0]: TextSorter([i.text for i in x[1] if i.hand.name == 'firsthand'][0]) for x in base_texts}
+    else:
+        # We still need one - so pick the first we get...
+        base_ms = ManuscriptTranscription.objects.all()[0]
+
+    base_texts = base_ms.get_text(book_obj, chapter_obj)
+    sorters = {x[0]: TextSorter([i.text for i in x[1] if i.hand.name == 'firsthand'][0]) for x in base_texts}
 
     vs_d = {}
     for ms in all_mss:

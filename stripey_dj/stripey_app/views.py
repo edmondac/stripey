@@ -2,8 +2,9 @@ from django.shortcuts import render_to_response, get_object_or_404
 from stripey_app.models import (ManuscriptTranscription, Book, Chapter,
                                 Hand, Verse, MsVerse, get_all_verses,
                                 collate, Algorithm)
-from django.http import HttpResponseRedirect
-
+from django.http import HttpResponseRedirect, HttpResponse
+import json
+from memoize import memoize
 import logging
 logger = logging.getLogger('stripey_app.views')
 
@@ -32,7 +33,12 @@ def index(request):
                              'books': books})
 
 
-def manuscript(request):
+@memoize
+def _manuscript_data(request):
+    """
+    Parse the request and return the data required to make the manuscript page
+    and also the correctors json blob
+    """
     ms = get_object_or_404(ManuscriptTranscription, pk=request.GET.get('ms_id'))
     hands = Hand.objects.filter(manuscript=ms)
     verses = MsVerse.objects.filter(hand__in=hands)
@@ -62,13 +68,33 @@ def manuscript(request):
     # Set the verses to display
     chapter.verses = verses.filter(verse__chapter=chapter).order_by('verse__num',
                                                                     'hand__id')
+    return (ms, hands, books, chapter)
 
+
+def manuscript(request):
+    """
+    Show the text for this manuscript (of the specified book/chapter or just
+    the first one we find.
+    """
+    (ms, hands, books, chapter) = _manuscript_data(request)
     return default_response(request,
                             'manuscript.html',
                             {'ms': ms,
                              'hands': [x.name for x in hands],
                              'books': books,
                              'chapter_to_show': chapter})
+
+
+def correctors_json(request):
+    """
+    Return the JSON blob to draw the correctors graph
+    """
+    (ms, hands, books, chapter) = _manuscript_data(request)
+    # We care about hands and chapter.verses here
+    ret = {'hands': ['a', 'v'],
+           'verses': [(1, ['a']),
+                      (2, ['a', 'v'])]}
+    return HttpResponse(json.dumps(ret), mimetype='application/json')
 
 
 def collation(request):
