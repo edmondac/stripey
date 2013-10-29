@@ -5,6 +5,7 @@ from stripey_app.models import (ManuscriptTranscription, Book, Chapter,
 from django.http import HttpResponseRedirect, HttpResponse
 import json
 from memoize import memoize
+from collections import defaultdict
 import logging
 logger = logging.getLogger('stripey_app.views')
 
@@ -34,12 +35,12 @@ def index(request):
 
 
 @memoize
-def _manuscript_data(request):
+def _manuscript_data(ms_id, book_num=None, chapter_num=None):
     """
     Parse the request and return the data required to make the manuscript page
     and also the correctors json blob
     """
-    ms = get_object_or_404(ManuscriptTranscription, pk=request.GET.get('ms_id'))
+    ms = get_object_or_404(ManuscriptTranscription, pk=ms_id)
     hands = Hand.objects.filter(manuscript=ms)
     verses = MsVerse.objects.filter(hand__in=hands)
     chapters = Chapter.objects.filter(id__in=list(set([v.verse.chapter.id for v in verses]))).order_by('num')
@@ -51,14 +52,12 @@ def _manuscript_data(request):
         book.chapters = chapters.filter(book=book)
 
     # Are we showing any particular text?
-    book_num = request.GET.get('bk')
     if book_num:
         book = [x for x in books if x.num == int(book_num)][0]
     else:
         # Show the first one
         book = books[0]
 
-    chapter_num = request.GET.get('ch')
     if chapter_num:
         chapter = book.chapters.get(num=chapter_num)
     else:
@@ -76,7 +75,9 @@ def manuscript(request):
     Show the text for this manuscript (of the specified book/chapter or just
     the first one we find.
     """
-    (ms, hands, books, chapter) = _manuscript_data(request)
+    (ms, hands, books, chapter) = _manuscript_data(request.GET.get('ms_id'),
+                                                   request.GET.get('bk'),
+                                                   request.GET.get('ch'))
     return default_response(request,
                             'manuscript.html',
                             {'ms': ms,
@@ -89,11 +90,28 @@ def correctors_json(request):
     """
     Return the JSON blob to draw the correctors graph
     """
-    (ms, hands, books, chapter) = _manuscript_data(request)
     # We care about hands and chapter.verses here
-    ret = {'hands': ['a', 'v'],
-           'verses': [(1, ['a']),
-                      (2, ['a', 'v'])]}
+    #~ ret = {'hands': ['a', 'b', 'v'],
+           #~ 'verses': [(1, ['a']),
+                      #~ (2, ['b']),
+                      #~ (3, ['a', 'v'])]}
+    (ms, hands, books, chapter) = _manuscript_data(request.GET.get('ms_id'),
+                                                   request.GET.get('bk'),
+                                                   request.GET.get('ch'))
+    verses = defaultdict(list)
+    for v in chapter.verses:
+        if v.hand.name == 'firsthand':
+            # initialise the empty list
+            verses[v.verse.num]
+        else:
+            verses[v.verse.num].append(v.hand.name)
+    verses_l = []
+    for k in sorted(verses.keys()):
+        verses_l.append((k, verses[k]))
+    ret = {'hands': [x.name for x in hands if x.name != 'firsthand'],
+           'verses': verses_l}
+           #~ 'verses': [(v.verse.num, [x.name for x in v.hand])
+                      #~ for v in chapter.verses]}
     return HttpResponse(json.dumps(ret), mimetype='application/json')
 
 
