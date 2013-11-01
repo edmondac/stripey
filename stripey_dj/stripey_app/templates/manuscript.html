@@ -6,10 +6,17 @@
 {% endblock head %}
 
 {% block rightbar %}
+    {% if book_to_show %}
+        <a href="chapter.html?bk={{ book_to_show.num }}{% if chapter_to_show %}&ch={{ chapter_to_show.num }}{% else %}&ch=1{% endif %}&v=1">View {{ book_to_show.name|title }} {{ chapter_to_show.num }} in all manuscripts</a>
+        {% if chapter_to_show %}
+            | <a href="?ms_id={{ ms.id }}&bk={{ book_to_show.num }}">Overview for {{ book_to_show.name|title }}</a>
+        {% endif %}
+    {% endif %}
+    <p></p>
     Select chapter:
     {% for book in books %}
      <div>
-      <b>{{ book.name|title }}: </b>
+      <b><a href="?ms_id={{ ms.id }}&bk={{ book.num }}">{{ book.name|title }}</a>: </b>
       {% for chapter in book.chapters %}
         <a href="?ms_id={{ ms.id }}&bk={{ book.num }}&ch={{ chapter.num }}">{{ chapter.num }}</a>
       {% endfor %}
@@ -27,9 +34,7 @@
 
     <div class="block">
         {% if chapter_to_show %}
-            <h2>{{ chapter_to_show.book.name|title }} {{ chapter_to_show.num }}:
-            (<a href="chapter.html?bk={{ chapter_to_show.book.num }}&ch={{ chapter_to_show.num }}&v=1">View in all manuscripts</a>)
-            </h2>
+            <h2>{{ book_to_show.name|title }} {{ chapter_to_show.num }}</h2>
 
             <div id="graph"></div>
             <script>
