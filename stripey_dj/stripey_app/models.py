@@ -51,7 +51,8 @@ class ManuscriptTranscription(models.Model):
 
     def load(self):
         """
-        Load the XML, parse it, and create chapter, verse and hand objects.
+        Load the XML, parse it, and create mschapter, chapter,
+        verse, msverse and hand objects.
         """
         if self.status == 'loaded':
             logger.debug("MS {} is already loaded - ignoring".format(self))
@@ -62,6 +63,7 @@ class ManuscriptTranscription(models.Model):
         if not obj.book:
             raise ValueError("Couldn't work out the book")
 
+        # Metadata
         self.ms_name = obj.ms_desc.get('ms_name', '')
         self.tischendorf = obj.ms_desc.get('Tischendorf', '')
         self.ga = obj.ms_desc.get('GA', '')
@@ -73,6 +75,8 @@ class ManuscriptTranscription(models.Model):
                 self.ms_name = self.ga
         else:
             self.liste_id = int(liste_id)
+
+        # Save myself so that other objects can reference me
         self.save()
         logger.debug(u"Found info: {}, {}, {}, {}".format(self.ms_name,
                                                           self.tischendorf,
@@ -84,6 +88,13 @@ class ManuscriptTranscription(models.Model):
         for ch in obj.chapters.values():
             db_chapter = _get_chapter(db_book, ch.num)
 
+            # First create the MsChapter
+            ms_chapter = MsChapter()
+            ms_chapter.chapter = db_chapter
+            ms_chapter.manuscript = self
+            ms_chapter.save()
+
+            # Now get the verses
             for verse_list in ch.verses.values():
                 for j, vs in enumerate(verse_list):
                     db_verse = _get_verse(db_chapter, vs.num)
@@ -190,6 +201,11 @@ class Book(models.Model):
 class Chapter(models.Model):
     book = models.ForeignKey(Book)
     num = models.IntegerField()
+
+
+class MsChapter(models.Model):
+    chapter = models.ForeignKey(Chapter)
+    manuscript = models.ForeignKey(ManuscriptTranscription)
 
 
 class Verse(models.Model):

@@ -1,7 +1,7 @@
 from django.shortcuts import render_to_response, get_object_or_404
 from stripey_app.models import (ManuscriptTranscription, Book, Chapter,
                                 Hand, Verse, MsVerse, get_all_verses,
-                                collate, Algorithm)
+                                collate, Algorithm, MsChapter)
 from django.http import HttpResponseRedirect, HttpResponse
 import json
 from memoize import memoize
@@ -15,8 +15,6 @@ def default_response(request, url, data):
         data['base_ms_id'] = int(request.COOKIES.get('base_ms', '0'))
     if 'all_mss' not in data:
         data['all_mss'] = ManuscriptTranscription.objects.all().order_by('liste_id')
-    if 'show_accents' not in data:
-        data['show_accents'] = request.COOKIES.get('show_accents', 'none')
 
     return render_to_response(url, data)
 
@@ -34,70 +32,126 @@ def index(request):
                              'books': books})
 
 
+def manuscript(request):
+    """
+    Display info about this manuscript
+    """
+    ms_id = request.GET.get('ms_id')
+    ms = get_object_or_404(ManuscriptTranscription, pk=ms_id)
+
+    # Needed for all situations
+    my_books = []
+    all_books = Book.objects.all().order_by('num')
+    for book in all_books:
+        chapters = [x.chapter for x in
+                    MsChapter.objects.filter(manuscript=ms,
+                                             chapter__book=book).order_by('chapter__num')]
+        if chapters:
+            # Record this book, and add its chapters to it
+            my_books.append(book)
+            book.chapters = chapters
+
+    # Needed if we've got a book specified
+    book_to_show = None
+    bk_id = request.GET.get('bk')
+    if bk_id:
+        book_to_show = [x for x in my_books if x.num == int(bk_id)][0]
+
+    # Needed if we've got a chapter specified
+    chapter_to_show = None
+    ch_id = request.GET.get('ch')
+    if ch_id:
+        assert book_to_show, "Should have a book to show"
+        hands, chapter_to_show = _manuscript_chapter_data(ms_id, bk_id, ch_id)
+    else:
+        hands = Hand.objects.filter(manuscript=ms)
+
+    return default_response(request,
+                            'manuscript.html',
+                            {'ms': ms,
+                             'hands': [x.name for x in hands],
+                             'books': my_books,
+                             'book_to_show': book_to_show,
+                             'chapter_to_show': chapter_to_show})
+
+
+#~ def manuscript_book(request):
+    #~ """
+    #~ Display info about the specified book in this manuscript
+    #~ """
+    #~ ms, book, chapters = _manuscript_book_data(ms_id, book_num)
+    #~ return default_response(request,
+                            #~ 'manuscript_book.html',
+                            #~ {'ms': ms,
+                             #~ 'book': book,
+                             #~ 'chapters': chapters})
+#~
+
+#~ def _manuscript_book_data(request):
+    #~ """
+    #~ Display info about the specified book in this manuscript
+    #~ """
+    #~ ms = get_object_or_404(ManuscriptTranscription, pk=request.GET.get('ms_id'))
+    #~ hands = Hand.objects.filter(manuscript=ms)
+    #~ book = get_object_or_404(Book, num=request.GET.get('bk'))
+    #~ chapters = [x.chapter for x in
+                #~ MsChapter.objects.filter(chapter__book=book,
+                                         #~ manuscript=ms).order_by('chapter__num')]
+    #~ return (ms, hands, book, chapters)
+
+
 @memoize
-def _manuscript_data(ms_id, book_num=None, chapter_num=None):
+def _manuscript_chapter_data(ms_id, bk, ch):
     """
     Parse the request and return the data required to make the manuscript page
     and also the correctors json blob
     """
     ms = get_object_or_404(ManuscriptTranscription, pk=ms_id)
+    my_chapter = get_object_or_404(Chapter, num=ch, book__num=bk)
     hands = Hand.objects.filter(manuscript=ms)
-    verses = MsVerse.objects.filter(hand__in=hands)
-    chapters = Chapter.objects.filter(id__in=list(set([v.verse.chapter.id for v in verses]))).order_by('num')
-
-    books = Book.objects.filter(id__in=list(set([c.book.id for c in chapters]))).order_by('num')
-
-    # We want a list of chapters - per book.
-    for book in books:
-        book.chapters = chapters.filter(book=book)
-
-    # Are we showing any particular text?
-    if book_num:
-        book = [x for x in books if x.num == int(book_num)][0]
-    else:
-        # Show the first one
-        book = books[0]
-
-    if chapter_num:
-        chapter = book.chapters.get(num=chapter_num)
-    else:
-        # Show the first one
-        chapter = book.chapters[0]
 
     # Set the verses to display
-    chapter.verses = verses.filter(verse__chapter=chapter).order_by('verse__num',
-                                                                    'hand__id')
-    return (ms, hands, books, chapter)
+    verses = MsVerse.objects.filter(hand__in=hands)
+    my_chapter.verses = verses.filter(verse__chapter__num=ch).order_by('verse__num',
+                                                                       'hand__id')
+    return hands, my_chapter
 
 
-def manuscript(request):
+#~ def manuscript_chapter(request):
+    #~ """
+    #~ Show the text for this manuscript (of the specified book/chapter or just
+    #~ the first one we find.
+    #~ """
+    #~ (ms, hands, books, chapter) = _manuscript_chapter_data(request.GET.get('ms_id'),
+                                                           #~ request.GET.get('bk'),
+                                                           #~ request.GET.get('ch'))
+    #~ return default_response(request,
+                            #~ 'manuscript.html',
+                            #~ {'ms': ms,
+                             #~ 'hands': [x.name for x in hands],
+                             #~ 'books': books,
+                             #~ 'chapter_to_show': chapter})
+
+
+def book_correctors_json(request):
     """
-    Show the text for this manuscript (of the specified book/chapter or just
-    the first one we find.
+    Return the JSON blob to draw the correctors graph for this book
     """
-    (ms, hands, books, chapter) = _manuscript_data(request.GET.get('ms_id'),
-                                                   request.GET.get('bk'),
-                                                   request.GET.get('ch'))
-    return default_response(request,
-                            'manuscript.html',
-                            {'ms': ms,
-                             'hands': [x.name for x in hands],
-                             'books': books,
-                             'chapter_to_show': chapter})
+    raise IOError
 
 
-def correctors_json(request):
+def chapter_correctors_json(request):
     """
-    Return the JSON blob to draw the correctors graph
+    Return the JSON blob to draw the correctors graph for this chapter
     """
     # We care about hands and chapter.verses here
     #~ ret = {'hands': ['a', 'b', 'v'],
            #~ 'verses': [(1, ['a']),
                       #~ (2, ['b']),
                       #~ (3, ['a', 'v'])]}
-    (ms, hands, books, chapter) = _manuscript_data(request.GET.get('ms_id'),
-                                                   request.GET.get('bk'),
-                                                   request.GET.get('ch'))
+    hands, chapter = _manuscript_chapter_data(request.GET.get('ms_id'),
+                                              request.GET.get('bk'),
+                                              request.GET.get('ch'))
     verses = defaultdict(list)
     for v in chapter.verses:
         if v.hand.name == 'firsthand':
@@ -177,26 +231,17 @@ def chapter(request):
     book_obj = Book.objects.get(num=request.GET.get('bk'))
     chapter_obj = Chapter.objects.get(book=book_obj,
                                       num=request.GET.get('ch'))
-
     last_chapter = Chapter.objects.filter(book=book_obj).order_by('-num')[0]
     is_last_chapter = False
     if chapter_obj.num == last_chapter.num:
         is_last_chapter = True
 
     v = request.GET.get('v')
-    if v == 'None':
-        #FIXME - needed???
-        v = None
+    v = int(v)
+    last_verse = Verse.objects.filter(chapter=chapter_obj).order_by('-num')[0]
     is_last_verse = None
-    if v:
-        v = int(v)
-        verse_obj = Verse.objects.get(chapter=chapter_obj,
-                                      num=v)
-        last_verse = Verse.objects.filter(chapter=chapter_obj).order_by('-num')[0]
-        if last_verse.num == verse_obj.num:
-            is_last_verse = True
-    else:
-        verse_obj = None
+    if last_verse.num == v:
+        is_last_verse = True
 
     all_verses = get_all_verses(book_obj, chapter_obj, base_ms_id, v)
     # Group readings together... We want a list of readings for each verse, with a list of witnesses per reading.
@@ -218,6 +263,8 @@ def chapter(request):
 
         grouped_verses.append((vs, all_readings))
 
+    assert len(grouped_verses) == 1, grouped_verses
+
     algos = Algorithm.objects.all()
 
     return default_response(request,
@@ -225,7 +272,7 @@ def chapter(request):
                             {'book': book_obj,
                              'chapter': chapter_obj,
                              'v': v,
-                             'verses': grouped_verses,
+                             'verse': grouped_verses[0],
                              'is_last_chapter': is_last_chapter,
                              'is_last_verse': is_last_verse,
                              'algorithms': algos})

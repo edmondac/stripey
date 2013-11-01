@@ -97,10 +97,31 @@ background-color: white;
 border: 1px solid ;
 }
 
-#content {
+#content, #fullcontent {
 background-color: white;
 position: relative;
-margin: 5px 30px 5px 30px;
+margin: 5px;
+padding: 5px;
+-moz-box-shadow: 0 0 5px black;
+-webkit-box-shadow: 0 0 5px black;
+box-shadow: 0 0 5px black;
+}
+
+#content {
+width: 67%;
+}
+
+#rightbar {
+border: 1px solid blue;
+background-color: #eeeeff;
+margin: 5px;
+padding: 5px;
+float: right;
+width: 30%;
+font-size: 75%;
+-moz-box-shadow: 0 0 5px black;
+-webkit-box-shadow: 0 0 5px black;
+box-shadow: 0 0 5px black;
 }
 
 #filters {
@@ -115,17 +136,21 @@ font-size: 100%;
 }
 
 h1 {
-color: #66999a;
+color: white;
 font-size: 110%;
-border: 1px solid #bbeeef;
+border: 1px solid #336667;
+background-color: #66999a;
 padding: 1px 1px 1px 1px;
+margin: 0px 0px 5px 0px;
 }
 
 h2 {
 color: garkgreen;
 font-size: 100%;
-border: 1px solid green;
+border: 1px solid darkgreen;
+background-color: #eeffee;
 padding: 1px 1px 1px 1px;
+margin: 0px 0px 5px 0px;
 }
 
 h3 {
@@ -133,6 +158,7 @@ color: grey;
 font-size: 90%;
 border: 1px solid grey;
 padding: 1px 1px 1px 1px;
+margin: 0px 0px 5px 0px;
 }
 
 a {
@@ -163,7 +189,7 @@ td.greek, div.greek, div.ident {
  font-size: 100%;
 }
 
-#clear {
+.clear {
 clear:both;
 height:1px;
 }
@@ -176,3 +202,4 @@ height:1px;
  color: white;
  background: green;
 }
+

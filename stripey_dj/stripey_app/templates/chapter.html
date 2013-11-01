@@ -13,18 +13,23 @@
 {% endblock head %}
 
 {% block content %}
-
-<h2>{% if chapter.num > 1 %}<a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num|add:'-1' }}&v=1">-1</a>{% endif %} Text of {{ book.name|title }} {{ chapter.num }} {% if not is_last_chapter %}<a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num|add:'+1' }}&v=1">+1</a>{% endif %}</h2>
-
-{% for verse in verses %}
-    <h3>
+    <h1>{% if chapter.num > 1 %}<a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num|add:'-1' }}&v=1">-1</a>{% endif %} Text of {{ book.name|title }} {{ chapter.num }} {% if not is_last_chapter %}<a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num|add:'+1' }}&v=1">+1</a>{% endif %}
+    </h1>
+    <h2>
         {% if v %}
             {% if v > 1 %}<a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v|add:'-1' }}">-1</a>{% endif %} Verse {{ verse.0 }}{% if not is_last_verse %} <a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v|add:'+1' }}">+1</a>{% endif %} <a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num }}">all</a>
         {% else %}
             <a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ verse.0 }}">Verse {{ verse.0 }}</a>
         {% endif %}
-        | View collation: {% for alg in algorithms %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ verse.0 }}&al={{ alg.name }}">{{ alg.name }}</a> {% endfor %}
-    </h3>
+    </h2>
+{% endblock content %}
+
+{% block rightbar %}
+    View collation: {% for alg in algorithms %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ verse.0 }}&al={{ alg.name }}">{{ alg.name }}</a> {% endfor %}
+{% endblock rightbar %}
+
+{% block fullcontent %}
+
     <table>
         {% for text in verse.1 %}
             <tr>
@@ -41,7 +46,6 @@
             </tr>
         {% endfor %}
     </table><br/>
-{% endfor %}
 
 
-{% endblock content %}
+{% endblock fullcontent %}

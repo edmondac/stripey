@@ -5,154 +5,165 @@
     <script type="text/javascript" src="{% static 'stripey_app/d3.v3.min.js' %}"></script>
 {% endblock head %}
 
+{% block rightbar %}
+    Select chapter:
+    {% for book in books %}
+     <div>
+      <b>{{ book.name|title }}: </b>
+      {% for chapter in book.chapters %}
+        <a href="?ms_id={{ ms.id }}&bk={{ book.num }}&ch={{ chapter.num }}">{{ chapter.num }}</a>
+      {% endfor %}
+     </div>
+    {% endfor %}
+    <p></p>
+    View {{ ms.display_ref }} in:
+    <a href="http://ntvmr.uni-muenster.de/en_GB/manuscript-workspace/?docid={{ ms.liste_id }}">NTVMR</a> |
+    <a href="http://www.iohannes.com/XML/transcriptions/greek/{{ ms.ms_ref }}.xml">IGNTP</a>
+{% endblock rightbar %}
+
 {% block content %}
 
-<h1>Manuscript {{ ms.ms_ref }}</h1>
+    <h1>{{ ms.display_ref }}</h1>
 
-<h2>{{ ms.display_ref }} :
-<a href="http://ntvmr.uni-muenster.de/en_GB/manuscript-workspace/?docid={{ ms.liste_id }}">NTVMR</a> |
-<a href="http://www.iohannes.com/XML/transcriptions/greek/{{ ms.ms_ref }}.xml">IGNTP</a>
-</h2>
+    <div class="block">
+        {% if chapter_to_show %}
+            <h2>{{ chapter_to_show.book.name|title }} {{ chapter_to_show.num }}:
+            (<a href="chapter.html?bk={{ chapter_to_show.book.num }}&ch={{ chapter_to_show.num }}&v=1">View in all manuscripts</a>)
+            </h2>
 
-<p>Hands: {{ hands|join:', ' }}</p>
+            <div id="graph"></div>
+            <script>
+                // Based on http://bl.ocks.org/mbostock/3886208
+                var margin = {top: 5, right: 5, bottom: 30, left: 5},
+                    width = 800 - margin.left - margin.right,
+                    height = 200 - margin.top - margin.bottom;
 
-{% for book in books %}
- <div>
-  <b>Book: {{ book.name|title }}</b>
-  {% for chapter in book.chapters %}
-    <a href="?ms_id={{ ms.id }}&bk={{ book.num }}&ch={{ chapter.num }}">{{ chapter.num }}</a>
-  {% endfor %}
- </div>
-{% endfor %}
+                var x = d3.scale.ordinal()
+                    .rangeRoundBands([0, width], .1);
 
-<br/>
+                var y = d3.scale.linear()
+                    .rangeRound([height, 0]);
 
-<b>{{ chapter_to_show.book.name|title }} {{ chapter_to_show.num }}</b>
-(<a href="chapter.html?bk={{ chapter_to_show.book.num }}&ch={{ chapter_to_show.num }}&v=1">View in all manuscripts</a>)
+                var color = d3.scale.ordinal()
+                    .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
 
-<div id="graph"></div>
-<script>
-    // Based on http://bl.ocks.org/mbostock/3886208
-    var margin = {top: 5, right: 5, bottom: 30, left: 5},
-        width = 800 - margin.left - margin.right,
-        height = 200 - margin.top - margin.bottom;
+                var xAxis = d3.svg.axis()
+                    .scale(x)
+                    .orient("bottom")
+                    .tickFormat("");
 
-    var x = d3.scale.ordinal()
-        .rangeRoundBands([0, width], .1);
+                var yAxis = d3.svg.axis()
+                    .scale(y)
+                    .orient("left")
+                    .tickFormat("");
 
-    var y = d3.scale.linear()
-        .rangeRound([height, 0]);
+                var svg = d3.select("#graph").append("svg")
+                    .attr("width", width + margin.left + margin.right)
+                    .attr("height", height + margin.top + margin.bottom)
+                    .append("g")
+                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-    var color = d3.scale.ordinal()
-        .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
+                d3.json("chapter_correctors.json?ms_id={{ ms.id }}&bk={{ chapter_to_show.book.num }}&ch={{ chapter_to_show.num }}", function(error, data) {
+                    color.domain(data['hands']);
 
-    var xAxis = d3.svg.axis()
-        .scale(x)
-        .orient("bottom")
-        .tickFormat("");
+                    x.domain(data['verses'].map(function(d) { return d[0]; }));
+                    y.domain([0, d3.max(data['verses'], function(d) { return d[1].length; })]);
 
-    var yAxis = d3.svg.axis()
-        .scale(y)
-        .orient("left")
-        .tickFormat("");
+                    svg.append("g")
+                        .attr("class", "x axis")
+                        .attr("transform", "translate(0," + height + ")")
+                        .call(xAxis);
 
-    var svg = d3.select("#graph").append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-        .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+                    svg.append("g")
+                        .attr("class", "y axis")
+                        .call(yAxis)
+                        .append("text")
+                        .attr("transform", "rotate(-90)")
+                        .attr("y", 6)
+                        .attr("dy", ".71em")
+                        .style("text-anchor", "end")
+                        .text("Correctors");
 
-    d3.json("correctors.json?ms_id={{ ms.id }}&bk={{ chapter_to_show.book.num }}&ch={{ chapter_to_show.num }}", function(error, data) {
-        color.domain(data['hands']);
+                    var x0 = 0;
+                    data['verses'].forEach(function(d) {
+                        var y0 = 0;
+                        c = d[1].map(function(name) { return {name: name, y0: y0, y1: y0 += 1}; });
+                        var vs = d[0];
+                        var g = svg.append("g")
+                            .attr("class", "g")
+                            .attr("transform", function(d) { return "translate(" + x0 + ",0)"; });
 
-        x.domain(data['verses'].map(function(d) { return d[0]; }));
-        y.domain([0, d3.max(data['verses'], function(d) { return d[1].length; })]);
+                        c.forEach(function(d) {
+                            g.append("rect")
+                                .attr("width", x.rangeBand())
+                                .attr("y", y(d.y1))
+                                .attr("height", y(d.y0) - y(d.y1))
+                                .style("fill", color(d.name))
+                                .append("svg:title")
+                                .text('Vs '+vs+' : ' +d.name);
+                        });
+                        x0 += x.rangeBand();
+                    });
 
-        svg.append("g")
-            .attr("class", "x axis")
-            .attr("transform", "translate(0," + height + ")")
-            .call(xAxis);
+                    var verse = svg.selectAll(".verse")
+                        .data(data)
+                        .enter().append("g")
+                        .attr("class", "g")
+                        .attr("transform", function(d) { return "translate(" + x(d['verse'][0]) + ",0)"; });
 
-        svg.append("g")
-            .attr("class", "y axis")
-            .call(yAxis)
-            .append("text")
-            .attr("transform", "rotate(-90)")
-            .attr("y", 6)
-            .attr("dy", ".71em")
-            .style("text-anchor", "end")
-            .text("Correctors");
+                    verse.selectAll("rect")
+                        .data(data, function(d) { return d.correctors; })
+                        .enter().append("rect")
+                        .attr("width", x.rangeBand())
+                        .attr("y", function(d) { return y(d.y1); })
+                        .attr("height", function(d) { return y(d.y0) - y(d.y1); })
+                        .style("fill", function(d) { return color(d.name); });
 
-        var x0 = 0;
-        data['verses'].forEach(function(d) {
-            var y0 = 0;
-            c = d[1].map(function(name) { return {name: name, y0: y0, y1: y0 += 1}; });
-            var vs = d[0];
-            var g = svg.append("g")
-                .attr("class", "g")
-                .attr("transform", function(d) { return "translate(" + x0 + ",0)"; });
+                    var legend = svg.selectAll(".legend")
+                        .data(color.domain().slice().reverse())
+                        .enter().append("g")
+                        .attr("class", "legend")
+                        .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
 
-            c.forEach(function(d) {
-                g.append("rect")
-                    .attr("width", x.rangeBand())
-                    .attr("y", y(d.y1))
-                    .attr("height", y(d.y0) - y(d.y1))
-                    .style("fill", color(d.name))
-                    .append("svg:title")
-                    .text('Vs '+vs+' : ' +d.name);
-            });
-            x0 += x.rangeBand();
-        });
+                    legend.append("rect")
+                        .attr("x", width - 18)
+                        .attr("width", 18)
+                        .attr("height", 18)
+                        .style("fill", color);
 
-        var verse = svg.selectAll(".verse")
-            .data(data)
-            .enter().append("g")
-            .attr("class", "g")
-            .attr("transform", function(d) { return "translate(" + x(d['verse'][0]) + ",0)"; });
+                    legend.append("text")
+                        .attr("x", width - 24)
+                        .attr("y", 9)
+                        .attr("dy", ".35em")
+                        .style("text-anchor", "end")
+                        .text(function(d) { return d; });
 
-        verse.selectAll("rect")
-            .data(data, function(d) { return d.correctors; })
-            .enter().append("rect")
-            .attr("width", x.rangeBand())
-            .attr("y", function(d) { return y(d.y1); })
-            .attr("height", function(d) { return y(d.y0) - y(d.y1); })
-            .style("fill", function(d) { return color(d.name); });
+                    //Draw the Rectangle
+                    //~ var rectangle = svg.append("rect")
+                                                        //~ .attr("x", 10)
+                                                        //~ .attr("y", 10)
+                                                        //~ .attr("width", 50)
+                                                        //~ .attr("height", 100);
+                });
+            </script>
 
-        var legend = svg.selectAll(".legend")
-            .data(color.domain().slice().reverse())
-            .enter().append("g")
-            .attr("class", "legend")
-            .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+            <table>
+            {% for verse in chapter_to_show.verses %}
+              <tr>
+                  <th>{{ verse.verse.num }}{% if verse.hand.name != 'firsthand' %} [<i>{{ verse.hand.name }}</i>]{% endif %}</th>
+                  <td class="greek">{{ verse.text }}</td>
+              </tr>
+            {% endfor %}
+            </table>
+        {% else %}
+            {% if book_to_show %}
+                BOOK
+            {% endif %}
+        {% endif %}
 
-        legend.append("rect")
-            .attr("x", width - 18)
-            .attr("width", 18)
-            .attr("height", 18)
-            .style("fill", color);
+    <p>Hands: {{ hands|join:', ' }}</p>
 
-        legend.append("text")
-            .attr("x", width - 24)
-            .attr("y", 9)
-            .attr("dy", ".35em")
-            .style("text-anchor", "end")
-            .text(function(d) { return d; });
-
-        //Draw the Rectangle
-        //~ var rectangle = svg.append("rect")
-                                            //~ .attr("x", 10)
-                                            //~ .attr("y", 10)
-                                            //~ .attr("width", 50)
-                                            //~ .attr("height", 100);
-    });
-</script>
-
-<table>
-{% for verse in chapter_to_show.verses %}
-  <tr>
-      <th>{{ verse.verse.num }}{% if verse.hand.name != 'firsthand' %} [<i>{{ verse.hand.name }}</i>]{% endif %}</th>
-      <td class="greek">{{ verse.text }}</td>
-  </tr>
-{% endfor %}
-</table>
+    </div>
+    <br/>
 
 {% endblock content %}

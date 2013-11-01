@@ -33,12 +33,23 @@
 
     <div id="container">
 
-    <div id="content">
-          {% block content %}{% endblock %}
-          <i>* Note on corrections: The text displayed for a corrector is the firsthand(orig) reading with any specific changes made by the corrector as it is not possible from the XML to know the order in which correctors acted. Unfortunately, this means it is possible that the text as it left that corrector's hand is not accurately displayed.</i>
+    <div class="clear"></div>
+
+    <div id="rightbar" class="rightbar">
+        {% block rightbar %}{% endblock %}
     </div>
 
-    <div id="clear"></div>
+    <div id="content" class="content">
+          {% block content %}{% endblock %}
+    </div>
+
+    <div id="fullcontent" class="fullcontent">
+          {% block fullcontent %}{% endblock %}
+    </div>
+
+    <div class="clear"></div>
+
+    <i>* Note on corrections: The text displayed for a corrector is the firsthand(orig) reading with any specific changes made by the corrector as it is not possible from the XML to know the order in which correctors acted. Unfortunately, this means it is possible that the text as it left that corrector's hand is not accurately displayed.</i>
 
       </div>
 

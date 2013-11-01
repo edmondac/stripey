@@ -1,26 +1,28 @@
 {% extends "stripey_app/base.html" %}
 
-{% block content %}
-
-<h1>Books</h1>
-{% for book in books %}
- <div>
-  <b>Book: {{ book.name|title }}</b>
-  {% for chapter in book.chapters %}
-    <a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num }}&v=1">{{ chapter.num }}</a>
-  {% endfor %}
- </div>
-{% endfor %}
-
-<h1>Manuscript transcriptions</h1>
-{% if all_mss %}
-    <ul>
-    {% for ms in all_mss %}
-        <li><a href="manuscript.html?ms_id={{ ms.id }}">{{ ms.display_ref }}</a></li>
+{% block rightbar %}
+    <h1>Books</h1>
+    {% for book in books %}
+     <div>
+      <b>{{ book.name|title }}:</b>
+      {% for chapter in book.chapters %}
+        <a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num }}&v=1">{{ chapter.num }}</a>
+      {% endfor %}
+     </div>
     {% endfor %}
-    </ul>
-{% else %}
-    <p>No mss are available.</p>
-{% endif %}
+{% endblock rightbar %}
 
+{% block content %}
+    <div class="block">
+        <h1>Manuscript transcriptions</h1>
+        {% if all_mss %}
+            <ul>
+            {% for ms in all_mss %}
+                <li><a href="manuscript.html?ms_id={{ ms.id }}">{{ ms.display_ref }}</a></li>
+            {% endfor %}
+            </ul>
+        {% else %}
+            <p>No mss are available.</p>
+        {% endif %}
+    </div>
 {% endblock content %}
