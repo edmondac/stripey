@@ -137,7 +137,37 @@ def book_correctors_json(request):
     """
     Return the JSON blob to draw the correctors graph for this book
     """
-    raise IOError
+    ms = get_object_or_404(ManuscriptTranscription, pk=request.GET.get('ms_id'))
+    bk_id = request.GET.get('bk')
+    hands = [x for x in Hand.objects.filter(manuscript=ms) if x.name != 'firsthand']
+    chapters = Chapter.objects.filter(book__num=bk_id).order_by('num')
+
+    matrix = []
+    for h in hands:
+        # No hand refers to itself
+        row = [0 for i in hands]
+        for chapter in chapters:
+            refs = MsVerse.objects.filter(hand=h, verse__chapter=chapter).count()
+            # For now, just say every hand refers to every chapter
+            row.append(refs)
+        matrix.append(row)
+
+    # We don't need to calculate it all again - just look up the relevant value
+    # in the matrix and put a 1 in place, to make it look pretty.
+    tot_h = len(hands)
+    for i, c in enumerate(chapters):
+        row = []
+        for j in range(tot_h):
+            ref = 1 if matrix[j][tot_h+i] else 0
+            row.append(ref)
+        # No chapter refers to itself
+        row.extend([0 for i in chapters])
+        matrix.append(row)
+
+    ret = {'packageNames': [h.name for h in hands] + ["Ch {}".format(c.num) for c in chapters],
+           'matrix': matrix}
+
+    return HttpResponse(json.dumps(ret), mimetype='application/json')
 
 
 def chapter_correctors_json(request):
