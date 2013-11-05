@@ -31,7 +31,11 @@
     <a href="http://ntvmr.uni-muenster.de/en_GB/manuscript-workspace/?docid={{ ms.liste_id }}">NTVMR</a> |
     <a href="http://www.iohannes.com/XML/transcriptions/greek/{{ ms.ms_ref }}.xml">IGNTP</a>
     <p></p>
-    All hands in manuscript: {{ hands|join:", " }}
+    All hands in manuscript:
+        {% for h in hands %}
+            <a href="/hand.html?ms_id={{ ms.id }}&hand={{ h }}">{{ h }}</a>
+            {% if not forloop.last %}, {% endif %}
+        {% endfor %}
 {% endblock rightbar %}
 
 {% block content %}
@@ -50,7 +54,7 @@
             <table>
             {% for verse in chapter_to_show.verses %}
               <tr>
-                  <th>{{ verse.verse.num }}{% if verse.hand.name != 'firsthand' %} [<i>{{ verse.hand.name }}</i>]{% endif %}</th>
+                  <th>{{ verse.verse.num }}{% if verse.hand.name != 'firsthand' %} <a href="/hand.html?ms_id={{ ms.id }}&hand={{ verse.hand.name }}">{{ verse.hand.name }}</a>{% endif %}</th>
                   <td class="greek">{{ verse.text }}</td>
               </tr>
             {% endfor %}
