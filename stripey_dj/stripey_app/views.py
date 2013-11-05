@@ -32,6 +32,33 @@ def index(request):
                              'books': books})
 
 
+def hand(request):
+    """
+    Display info about this manuscript hand
+    """
+    ms_id = request.GET.get('ms_id')
+    hand_name = request.GET.get('hand')
+    ms = get_object_or_404(ManuscriptTranscription, pk=ms_id)
+    all_hands = Hand.objects.filter(manuscript=ms)
+    hand = all_hands.filter(name=hand_name)[0]
+
+    # Per-chapter list of refs
+    chapter_refs = []
+    for ch in MsChapter.objects.filter(manuscript=ms).order_by('chapter__book__num', 'chapter__num'):
+        verses = MsVerse.objects.filter(hand=hand, verse__chapter=ch.chapter).count()
+        if verses:
+            chapter_refs.append((ch.chapter, verses))
+
+    total_corrections = sum([x[1] for x in chapter_refs])
+
+    return default_response(request,
+                            'hand.html',
+                            {'hand': hand_name,
+                             'other_hands': [x.name for x in all_hands if x != hand],
+                             'chapter_refs': chapter_refs,
+                             'total_corrections': total_corrections,
+                             'ms': ms})
+
 def manuscript(request):
     """
     Display info about this manuscript
@@ -66,13 +93,13 @@ def manuscript(request):
     else:
         hands = Hand.objects.filter(manuscript=ms)
 
-    hand_names = [x.name for x in hands]
-    hand_names.sort()
+    correctors = [x.name for x in hands if x.name != 'firsthand']
+    correctors.sort()
 
     return default_response(request,
                             'manuscript.html',
                             {'ms': ms,
-                             'hands': hand_names,
+                             'correctors': correctors,
                              'books': my_books,
                              'book_to_show': book_to_show,
                              'chapter_to_show': chapter_to_show})

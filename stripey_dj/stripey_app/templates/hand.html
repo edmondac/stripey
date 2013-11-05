@@ -1,0 +1,27 @@
+{% extends "stripey_app/base.html" %}
+
+{% block rightbar %}
+    <a href="/manuscript.html?ms_id={{ ms.id }}">{{ ms.display_ref }} Overview</a>
+    <p></p>
+    Other hands in manuscript:
+        {% for h in other_hands %}
+            <a href="/hand.html?ms_id={{ ms.id }}&hand={{ h }}">{{ h }}</a>
+            {% if not forloop.last %}, {% endif %}
+        {% endfor %}
+    
+{% endblock rightbar %}
+
+{% block content %}
+
+<h1>Hand {{ hand }} ({{ ms.display_ref }})</h1>
+
+<h2>Summary of corrections:</h2>
+<ul>
+    {% for c in chapter_refs %}
+        <li><a href="/manuscript.html?ms_id={{ ms.id }}&bk={{ c.0.book.num }}&ch={{ c.0.num }}">{{ c.0.book.name|title }} {{ c.0.num }}</a>: {{ hand }} changed {{ c.1 }} verse{% if c.1 > 1 %}s{% endif %}</li>
+    {% endfor %}
+</ul>
+
+<p>Hand {{ hand }} changed {{ total_corrections }} verse{% if total_corrections > 1 %}s{% endif %} in total.</p>
+
+{% endblock content %}
