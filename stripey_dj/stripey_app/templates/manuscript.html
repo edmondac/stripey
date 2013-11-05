@@ -1,11 +1,10 @@
 {% extends "stripey_app/base.html" %}
 
 {% block head %}
-    {% load static from staticfiles %}
-    <script type="text/javascript" src="{% static 'stripey_app/d3.v3.min.js' %}"></script>
-    <script type="text/javascript" src="{% static 'stripey_app/chapter_correctors.js' %}"></script>
-    <script type="text/javascript" src="{% static 'stripey_app/d3.dependencyWheel.js' %}"></script>
-    <script type="text/javascript" src="{% static 'stripey_app/book_correctors.js' %}"></script>
+    <script type="text/javascript" src="/static/stripey_app/d3.v3.min.js"></script>
+    <script type="text/javascript" src="/static/stripey_app/chapter_correctors.js"></script>
+    <script type="text/javascript" src="/static/stripey_app/d3.dependencyWheel.js"></script>
+    <script type="text/javascript" src="/static/stripey_app/book_correctors.js"></script>
 {% endblock head %}
 
 {% block rightbar %}
