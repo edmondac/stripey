@@ -93,13 +93,13 @@ def manuscript(request):
     else:
         hands = Hand.objects.filter(manuscript=ms)
 
-    hand_names = [x.name for x in hands]
-    hand_names.sort()
+    correctors = [x.name for x in hands if x.name != 'firsthand']
+    correctors.sort()
 
     return default_response(request,
                             'manuscript.html',
                             {'ms': ms,
-                             'hands': hand_names,
+                             'correctors': correctors,
                              'books': my_books,
                              'book_to_show': book_to_show,
                              'chapter_to_show': chapter_to_show})
