@@ -66,10 +66,13 @@ def manuscript(request):
     else:
         hands = Hand.objects.filter(manuscript=ms)
 
+    hand_names = [x.name for x in hands]
+    hand_names.sort()
+
     return default_response(request,
                             'manuscript.html',
                             {'ms': ms,
-                             'hands': [x.name for x in hands],
+                             'hands': hand_names,
                              'books': my_books,
                              'book_to_show': book_to_show,
                              'chapter_to_show': chapter_to_show})
@@ -133,6 +136,42 @@ def _manuscript_chapter_data(ms_id, bk, ch):
                              #~ 'chapter_to_show': chapter})
 
 
+def manuscript_correctors_json(request):
+    """
+    Return the JSON blob to draw the correctors graph for this manuscript
+    """
+    ms = get_object_or_404(ManuscriptTranscription, pk=request.GET.get('ms_id'))
+    hands = [x for x in Hand.objects.filter(manuscript=ms) if x.name != 'firsthand']
+    my_books = set([c.chapter.book for c in MsChapter.objects.filter(manuscript=ms)])
+
+    matrix = []
+    for h in hands:
+        # No hand refers to itself
+        row = [0 for i in hands]
+        for book in my_books:
+            refs = MsVerse.objects.filter(hand=h, verse__chapter__book=book).count()
+            # For now, just say every hand refers to every chapter
+            row.append(refs)
+        matrix.append(row)
+
+    # We don't need to calculate it all again - just look up the relevant value
+    # in the matrix and put a 1 in place, to make it look pretty.
+    tot_h = len(hands)
+    for i, b in enumerate(my_books):
+        row = []
+        for j in range(tot_h):
+            ref = 1 if matrix[j][tot_h+i] else 0
+            row.append(ref)
+        # No book refers to itself
+        row.extend([0 for i in my_books])
+        matrix.append(row)
+
+    ret = {'packageNames': [h.name for h in hands] + [b.name.title() for b in my_books],
+           'matrix': matrix}
+
+    return HttpResponse(json.dumps(ret), mimetype='application/json')
+
+
 def book_correctors_json(request):
     """
     Return the JSON blob to draw the correctors graph for this book
@@ -182,17 +221,19 @@ def chapter_correctors_json(request):
     hands, chapter = _manuscript_chapter_data(request.GET.get('ms_id'),
                                               request.GET.get('bk'),
                                               request.GET.get('ch'))
+    found_hands = set()
     verses = defaultdict(list)
     for v in chapter.verses:
         if v.hand.name == 'firsthand':
             # initialise the empty list
             verses[v.verse.num]
         else:
+            found_hands.add(v.hand.name)
             verses[v.verse.num].append(v.hand.name)
     verses_l = []
     for k in sorted(verses.keys()):
         verses_l.append((k, verses[k]))
-    ret = {'hands': [x.name for x in hands if x.name != 'firsthand'],
+    ret = {'hands': list(found_hands),
            'verses': verses_l}
            #~ 'verses': [(v.verse.num, [x.name for x in v.hand])
                       #~ for v in chapter.verses]}

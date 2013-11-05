@@ -10,52 +10,54 @@
   <body>
     <div id="page">
 
-    <div id="header">
-     <div id="topbar"></div>
-     <div id="options">
-         <form action="set_base_text.html">
-             <label for="base_ms_id">Base Text:</label>
-             <select name="base_ms_id" onchange="this.form.submit()">
-                 {% for ms in all_mss %}
-                     <option value="{{ ms.id }}" {% if ms.id == base_ms_id %}selected{% endif %}>{{ ms.display_ref }}</option>
-                 {% endfor %}
-             </select>
-         </form>
-     </div>
-     <div id="banner">
-      <b>Stripey</b>
-     </div>
-     <div id="menu">
-       <a href="index.html">Home</a>
-       <a href="{% url 'admin:index' %}" target="admin">Manage</a>
-     </div>
-    </div>
+        <div id="header">
+         <div id="topbar"></div>
+         <div id="options">
+             <form action="set_base_text.html">
+                 <label for="base_ms_id">Base Text:</label>
+                 <select name="base_ms_id" onchange="this.form.submit()">
+                     {% for ms in all_mss %}
+                         <option value="{{ ms.id }}" {% if ms.id == base_ms_id %}selected{% endif %}>{{ ms.display_ref }}</option>
+                     {% endfor %}
+                 </select>
+             </form>
+         </div>
+         <div id="banner">
+          <b>Stripey</b>
+         </div>
+         <div id="menu">
+           <a href="index.html">Home</a>
+           <a href="{% url 'admin:index' %}" target="admin">Manage</a>
+         </div>
+        </div>
 
-    <div id="container">
+        <div id="container">
 
-    <div class="clear"></div>
+        <div class="clear"></div>
 
-    <div id="rightbar" class="rightbar">
-        {% block rightbar %}{% endblock %}
-    </div>
+        <div id="rightbar" class="rightbar">
+            {% block rightbar %}{% endblock %}
+        </div>
 
-    <div id="content" class="content">
-          {% block content %}{% endblock %}
-    </div>
+        <div id="content" class="content">
+              {% block content %}{% endblock %}
+        </div>
 
-    <div id="fullcontent" class="fullcontent">
-          {% block fullcontent %}{% endblock %}
-    </div>
+        <div class="clear"></div>
 
-    <div class="clear"></div>
+        <div id="fullcontent" class="fullcontent">
+              {% block fullcontent %}{% endblock %}
 
-    <i>* Note on corrections: The text displayed for a corrector is the firsthand(orig) reading with any specific changes made by the corrector as it is not possible from the XML to know the order in which correctors acted. Unfortunately, this means it is possible that the text as it left that corrector's hand is not accurately displayed.</i>
+               <i>* Note on corrections: The text displayed for a corrector is the firsthand(orig) reading with any specific changes made by the corrector as it is not possible from the XML to know the order in which correctors acted. Unfortunately, this means it is possible that the text as it left that corrector's hand is not accurately displayed.</i>
+        </div>
 
-      </div>
+        <div class="clear"></div>
 
-      <div id="footer">
-       Linux, Python, Django, SQLite3
-      </div>
+        </div>
+
+        <div id="footer">
+            Linux, Python, Django, SQLite3, <a href="http://redotheweb.com/DependencyWheel/">DependencyWheel</a>
+        </div>
 
     </div>
 

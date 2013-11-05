@@ -9,14 +9,16 @@
 {% endblock head %}
 
 {% block rightbar %}
+    <a href="?ms_id={{ ms.id }}">Overview for {{ ms.display_ref }}</a>
+    <p></p>
     {% if book_to_show %}
         <a href="chapter.html?bk={{ book_to_show.num }}{% if chapter_to_show %}&ch={{ chapter_to_show.num }}{% else %}&ch=1{% endif %}&v=1">View {{ book_to_show.name|title }} {{ chapter_to_show.num }} in all manuscripts</a>
         {% if chapter_to_show %}
-            | <a href="?ms_id={{ ms.id }}&bk={{ book_to_show.num }}">Overview for {{ book_to_show.name|title }}</a>
+            | <a href="?ms_id={{ ms.id }}&bk={{ book_to_show.num }}">Overview for {{ book_to_show.name|title }} in {{ ms.display_ref }}</a>
         {% endif %}
     {% endif %}
     <p></p>
-    Select chapter:
+    Select book or chapter:
     {% for book in books %}
      <div>
       <b><a href="?ms_id={{ ms.id }}&bk={{ book.num }}">{{ book.name|title }}</a>: </b>
@@ -29,6 +31,8 @@
     View {{ ms.display_ref }} in:
     <a href="http://ntvmr.uni-muenster.de/en_GB/manuscript-workspace/?docid={{ ms.liste_id }}">NTVMR</a> |
     <a href="http://www.iohannes.com/XML/transcriptions/greek/{{ ms.ms_ref }}.xml">IGNTP</a>
+    <p></p>
+    All hands in manuscript: {{ hands|join:", " }}
 {% endblock rightbar %}
 
 {% block content %}
@@ -58,6 +62,11 @@
                 <div id="graph"></div>
                 <script>
                     book_correctors_gr({{ ms.id }}, {{ book_to_show.num }});
+                </script>
+            {% else %}
+                <div id="graph"></div>
+                <script>
+                    manuscript_correctors_gr({{ ms.id }});
                 </script>
             {% endif %}
         {% endif %}
