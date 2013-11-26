@@ -2,17 +2,20 @@
 
 import os
 import sys
+import re
 
 # Sort out the paths so we can import the django stuff
 sys.path.append('../stripey_dj/')
 os.environ['DJANGO_SETTINGS_MODULE'] = 'stripey_dj.settings'
 
-from stripey_app.models import ManuscriptTranscription
+from stripey_app.models import ManuscriptTranscription, MsBook
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 
 import logging
 logger = logging.getLogger('load_all.py')
+
+ms_re = re.compile("([0-9]+)_([P0-9S]+)\.xml")
 
 
 @transaction.commit_on_success
@@ -20,20 +23,25 @@ def load_ms(folder, f):
     """
     Load a single XML file
     """
-    name = f.rsplit('.', 1)[0]
+    # We expect the files to be called, e.g. 23_424.xml
+    # == book 23 (1 John), ms 424.
+    match = ms_re.match(f)
+    if not match:
+        raise ValueError("Unexpected filename {}".format(f))
+    book_num = int(match.group(1))
+    name = match.group(2)
     try:
-        ManuscriptTranscription.objects.get(ms_ref=name)
+        m = ManuscriptTranscription.objects.get(ms_ref=name)
     except ObjectDoesNotExist:
-        pass
+        m = ManuscriptTranscription()
+        m.ms_ref = name
     else:
-        # Already got this one
-        logger.warning("{} is not unique - presuming it's already loaded".format(name))
-        return
+        gotit = MsBook.objects.filter(manuscript=m, book__num=book_num).count()
+        if gotit:
+            logger.debug("Already loaded book {} for ms {} - skipping".format(book_num, name))
+            return
 
-    m = ManuscriptTranscription()
-    m.ms_ref = name
-    m.xml_filename = os.path.join(folder, f)
-    m.load()
+    m.load(os.path.join(folder, f))
 
 
 def load_all(folder):
@@ -48,7 +56,7 @@ def load_all(folder):
         except Exception as e:
             logger.error("{} failed to load: {}".format(f, e))
             failures.append("{} ({})".format(f, e))
-            raise
+            #raise
 
     if failures:
         logger.error("Load failed for: \n{}".format('\n\t'.join(failures)))

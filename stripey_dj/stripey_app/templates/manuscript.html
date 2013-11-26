@@ -14,7 +14,7 @@
         {% if chapter_to_show %}
             <a href="?ms_id={{ ms.id }}&bk={{ book_to_show.num }}">Overview for {{ book_to_show.name|title }} in {{ ms.display_ref }}</a>
             <p></p>
-        {% endif %}    
+        {% endif %}
         <a href="chapter.html?bk={{ book_to_show.num }}{% if chapter_to_show %}&ch={{ chapter_to_show.num }}{% else %}&ch=1{% endif %}&v=1">View {{ book_to_show.name|title }} {{ chapter_to_show.num }} in all manuscripts</a>
     {% endif %}
     <p></p>
@@ -38,6 +38,13 @@
                 <a href="/hand.html?ms_id={{ ms.id }}&hand={{ h }}">{{ h }}</a>
                 {% if not forloop.last %}, {% endif %}
             {% endfor %}
+
+        <p></p>
+        Number of corrected verses per book:<br/>
+        {% for c in corrections_per_book %}
+            {{ c.0.name|title }} : {{ c.1 }} ({{ c.2|floatformat }}%)<br/>
+        {% endfor %}
+
     {% else %}
         Manuscript has no correctors.
     {% endif %}
@@ -50,7 +57,7 @@
     <div class="block">
         {% if chapter_to_show %}
             <h2>{{ book_to_show.name|title }} {{ chapter_to_show.num }}</h2>
- 
+
             {% if correctors %}
                 <div id="graph"></div>
                 <script>
@@ -78,7 +85,7 @@
                     </script>
                 {% else %}
                     <p>No corrections to display</p>
-                {% endif %}    
+                {% endif %}
             {% else %}
                 {% if correctors %}
                     <div id="graph"></div>

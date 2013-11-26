@@ -39,10 +39,10 @@ class Snippet(object):
         self._word_sep = word_sep
 
     def add_reading(self, text, hand_name='firsthand', hand_type='orig'):
+        #print u"Adding reading {} for {}.{}".format(text, hand_name, hand_type)
         assert not self._snippets, self
-        assert hand_name, hand_name
-        assert hand_type, hand_type
-        #print "Adding reading for {}.{}".format(hand_name, hand_type)
+        assert hand_name, (text, hand_name, hand_type)
+        assert hand_type, (text, hand_name, hand_type)
 
         key = (hand_name, hand_type)
         if key in self._readings:
@@ -145,11 +145,13 @@ class Snippet(object):
             if key in self._readings:
                 ret = self._readings[key]
             else:
-                fh_key = ('firsthand', 'orig')
-                if fh_key in self._readings:
+                all_orig = [x for x in self._readings.keys()
+                            if x[1] == 'orig']
+                if len(all_orig) == 1:
+                    fh_key = all_orig[0]
                     ret = self._readings[fh_key]
                 else:
-                    raise ValueError("Couldn't find reading for {} or {}".format(key, fh_key))
+                    raise ValueError("n!=1 original readings: {}".format(self._readings))
 
             # Run any required post processing on the text
             ret = self._post_process(ret)
@@ -319,6 +321,9 @@ class Verse(object):  # flake8: noqa
             # Now parse the rdg tag to get its text
             ch_snippet = self._parse(ch)
             hand = ch.attrib.get('hand')
+            if hand == '*':
+                # Occasionally firsthand is named '*' in the XML
+                hand = 'firsthand'
             typ = ch.attrib.get('type')
             text = ch_snippet.get_text()
             if text == "" and hand == typ == None:

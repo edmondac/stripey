@@ -8,7 +8,7 @@
             <a href="/hand.html?ms_id={{ ms.id }}&hand={{ h }}">{{ h }}</a>
             {% if not forloop.last %}, {% endif %}
         {% endfor %}
-    
+
 {% endblock rightbar %}
 
 {% block content %}
@@ -17,8 +17,13 @@
 
 <h2>Summary of corrections:</h2>
 <ul>
-    {% for c in chapter_refs %}
-        <li><a href="/manuscript.html?ms_id={{ ms.id }}&bk={{ c.0.book.num }}&ch={{ c.0.num }}">{{ c.0.book.name|title }} {{ c.0.num }}</a>: {{ hand }} changed {{ c.1 }} verse{% if c.1 > 1 %}s{% endif %}</li>
+    {% for b in book_refs %}
+        <li><a href="/manuscript.html?ms_id={{ ms.id }}&bk={{ b.book.num }}">{{ b.0.book.name|title }}</a> ({{ b.1 }} verses changed)</li>
+        <ul>
+        {% for c in b.0.chapter_refs %}
+            <li><a href="/manuscript.html?ms_id={{ ms.id }}&bk={{ c.0.book.num }}&ch={{ c.0.num }}">{{ c.0.book.name|title }} {{ c.0.num }}</a>: {{ hand }} changed {{ c.1 }} verse{% if c.1 > 1 %}s{% endif %}</li>
+        {% endfor %}
+        </ul>
     {% endfor %}
 </ul>
 

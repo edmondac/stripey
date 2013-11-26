@@ -41,40 +41,43 @@ assert strip_accents(test_in) == test_out, u"ERROR: \n{}\n{}".format(test_in, te
 
 class ManuscriptTranscription(models.Model):
     ms_ref = models.CharField(max_length=10, unique=True)
-    xml_filename = models.CharField(max_length=200)
-    status = models.CharField(max_length=20,
-                              blank=True)
     ms_name = models.CharField(max_length=50, blank=True)
     tischendorf = models.CharField(max_length=5, blank=True)
     ga = models.CharField(max_length=10, blank=True)
     liste_id = models.IntegerField(blank=True)
 
-    def load(self):
+    def load(self, filename):
         """
         Load the XML, parse it, and create mschapter, chapter,
         verse, msverse and hand objects.
         """
-        if self.status == 'loaded':
-            logger.debug("MS {} is already loaded - ignoring".format(self))
-            return
-
         logger.info("Loading MS {}".format(self))
-        obj = xmlmss.Manuscript(self.ms_ref, self.xml_filename)
+        obj = xmlmss.Manuscript(self.ms_ref, filename)
         if not obj.book:
             raise ValueError("Couldn't work out the book")
 
         # Metadata
-        self.ms_name = obj.ms_desc.get('ms_name', '')
-        self.tischendorf = obj.ms_desc.get('Tischendorf', '')
-        self.ga = obj.ms_desc.get('GA', '')
-        liste_id = obj.ms_desc.get('Liste', '')
-        if liste_id in ('3NA27', '300TR'):
+        for k, a in (('ms_name', 'ms_name'),
+                     ('tischendorf', 'Tischendorf'),
+                     ('ga', 'GA'),
+                     ('liste_id', 'Liste')):
+            old = getattr(self, k, '')
+            new = obj.ms_desc.get(a, '')
+            if new == old:
+                continue
+            elif old:
+                logger.info(u"Keeping old value for {}:{} - new value is {}".format(k, old, new))
+                continue
+            elif new:
+                setattr(self, k, new)
+
+        if self.liste_id in ('3NA27', '300TR'):
             # Special case "manuscripts"
             self.liste_id = -1
             if not self.ms_name:
                 self.ms_name = self.ga
         else:
-            self.liste_id = int(liste_id)
+            self.liste_id = int(self.liste_id)
 
         # Save myself so that other objects can reference me
         self.save()
@@ -83,7 +86,12 @@ class ManuscriptTranscription(models.Model):
                                                           self.ga,
                                                           self.liste_id))
 
+        # Add/get book objects
         db_book = _get_book(obj.book, obj.num)
+        ms_book = MsBook()
+        ms_book.manuscript = self
+        ms_book.book = db_book
+        ms_book.save()
 
         for ch in obj.chapters.values():
             db_chapter = _get_chapter(db_book, ch.num)
@@ -107,7 +115,6 @@ class ManuscriptTranscription(models.Model):
                         ms_verse.raw_text = text
                         ms_verse.save()
 
-        self.status = 'loaded'
         self.save()
 
     def __unicode__(self):
@@ -196,6 +203,11 @@ class Hand(models.Model):
 class Book(models.Model):
     name = models.CharField(max_length=20)
     num = models.IntegerField()
+
+
+class MsBook(models.Model):
+    book = models.ForeignKey(Book)
+    manuscript = models.ForeignKey(ManuscriptTranscription)
 
 
 class Chapter(models.Model):

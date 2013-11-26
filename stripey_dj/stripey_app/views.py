@@ -1,7 +1,7 @@
 from django.shortcuts import render_to_response, get_object_or_404
 from stripey_app.models import (ManuscriptTranscription, Book, Chapter,
                                 Hand, Verse, MsVerse, get_all_verses,
-                                collate, Algorithm, MsChapter)
+                                collate, Algorithm, MsChapter, MsBook)
 from django.http import HttpResponseRedirect, HttpResponse
 import json
 from memoize import memoize
@@ -26,6 +26,9 @@ def index(request):
     for book in books:
         book.chapters = Chapter.objects.filter(book=book).order_by('num')
 
+    for ms in all_mss:
+        ms.books = MsBook.objects.filter(manuscript=ms)
+
     return default_response(request,
                             'index.html',
                             {'all_mss': all_mss,
@@ -42,22 +45,28 @@ def hand(request):
     all_hands = Hand.objects.filter(manuscript=ms)
     hand = all_hands.filter(name=hand_name)[0]
 
-    # Per-chapter list of refs
-    chapter_refs = []
-    for ch in MsChapter.objects.filter(manuscript=ms).order_by('chapter__book__num', 'chapter__num'):
-        verses = MsVerse.objects.filter(hand=hand, verse__chapter=ch.chapter).count()
-        if verses:
-            chapter_refs.append((ch.chapter, verses))
+    # Per-book list of refs
+    book_refs = []
+    for bk in MsBook.objects.filter(manuscript=ms).order_by('book__num'):
+        # Per-chapter list of refs
+        bk.chapter_refs = []
+        for ch in MsChapter.objects.filter(manuscript=ms, chapter__book=bk.book).order_by('chapter__num'):
+            verses = MsVerse.objects.filter(hand=hand, verse__chapter=ch.chapter).count()
+            if verses:
+                bk.chapter_refs.append((ch.chapter, verses))
+        if bk.chapter_refs:
+            book_refs.append((bk, sum([x[1] for x in bk.chapter_refs])))
 
-    total_corrections = sum([x[1] for x in chapter_refs])
+    total_corrections = sum([b[1] for b in book_refs])
 
     return default_response(request,
                             'hand.html',
                             {'hand': hand_name,
                              'other_hands': [x.name for x in all_hands if x != hand],
-                             'chapter_refs': chapter_refs,
+                             'book_refs': book_refs,
                              'total_corrections': total_corrections,
                              'ms': ms})
+
 
 def manuscript(request):
     """
@@ -68,6 +77,7 @@ def manuscript(request):
 
     # Needed for all situations
     my_books = []
+    corrections_per_book = []
     all_books = Book.objects.all().order_by('num')
     for book in all_books:
         chapters = [x.chapter for x in
@@ -77,6 +87,15 @@ def manuscript(request):
             # Record this book, and add its chapters to it
             my_books.append(book)
             book.chapters = chapters
+
+            # Now calculate how many corrected verses there are in this book
+            n_corr = len(set([x.verse for x in
+                              MsVerse.objects.filter(hand__manuscript=ms,
+                                                     verse__chapter__book=book).exclude(hand__name='firsthand')]))
+            n_vs = MsVerse.objects.filter(hand__manuscript=ms,
+                                          verse__chapter__book=book,
+                                          hand__name='firsthand').count()
+            corrections_per_book.append((book, n_corr, 100.0 * n_corr / n_vs))
 
     # Needed if we've got a book specified
     book_to_show = None
@@ -100,6 +119,7 @@ def manuscript(request):
                             'manuscript.html',
                             {'ms': ms,
                              'correctors': correctors,
+                             'corrections_per_book': corrections_per_book,
                              'books': my_books,
                              'book_to_show': book_to_show,
                              'chapter_to_show': chapter_to_show})
@@ -187,7 +207,7 @@ def manuscript_correctors_json(request):
     for i, b in enumerate(my_books):
         row = []
         for j in range(tot_h):
-            ref = 1 if matrix[j][tot_h+i] else 0
+            ref = 1 if matrix[j][tot_h + i] else 0
             row.append(ref)
         # No book refers to itself
         row.extend([0 for i in my_books])
@@ -224,7 +244,7 @@ def book_correctors_json(request):
     for i, c in enumerate(chapters):
         row = []
         for j in range(tot_h):
-            ref = 1 if matrix[j][tot_h+i] else 0
+            ref = 1 if matrix[j][tot_h + i] else 0
             row.append(ref)
         # No chapter refers to itself
         row.extend([0 for i in chapters])
