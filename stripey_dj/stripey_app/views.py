@@ -394,3 +394,268 @@ def chapter(request):
                              'is_last_chapter': is_last_chapter,
                              'is_last_verse': is_last_verse,
                              'algorithms': algos})
+
+
+def nexus(request):
+    """
+    Create a nexus file, suitable for input to SplitsTree4
+    """
+    book_obj = Book.objects.get(num=request.GET.get('bk'))
+    chapter_obj = Chapter.objects.get(book=book_obj,
+                                      num=request.GET.get('ch'))
+    v = request.GET.get('v')
+    if (v is not None and v != 'None'):
+        v = int(v)
+        verse_obj = Verse.objects.get(chapter=chapter_obj,
+                                      num=v)
+    else:
+        v = None
+        verse_obj = None
+
+    algorithm_obj = Algorithm.objects.get(name=request.GET.get('al'))
+
+    return default_response(request,
+                            'nexus.html',
+                            {'book': book_obj,
+                             'chapter': chapter_obj,
+                             'algorithm': algorithm_obj,
+                             'v': v})
+
+
+def nexus_file(request):
+    """
+    Takes a collation and makes a SplitsTree4-compatible nexus file
+    """
+    base_ms_id = int(request.COOKIES.get('base_ms', '0'))
+    bk = request.GET.get('bk')
+    ch = request.GET.get('ch')
+    v = request.GET.get('v')
+    al = request.GET.get('al')
+    nexus = _nexus_file(bk, ch, v, al, base_ms_id)
+    return HttpResponse(nexus, mimetype='text/plain')
+
+@memoize
+def _nexus_file(bk, ch, v, al, base_ms_id):
+    """
+    Memoized innards of the nexus file creation
+    """
+    book_obj = Book.objects.get(num=bk)
+    chapter_obj = Chapter.objects.get(book=book_obj,
+                                      num=ch)
+    if (v is not None and v != 'None'):
+        v = int(v)
+        verse_obj = Verse.objects.get(chapter=chapter_obj,
+                                      num=v)
+    else:
+        verse_obj = None
+
+    algorithm_obj = Algorithm.objects.get(name=al)
+
+    # Get our memoized collation data
+    collation = collate(chapter_obj, verse_obj, algorithm_obj, base_ms_id)
+
+    import string
+    LABELS = string.lowercase
+
+    taxlabels = set()
+    symbols = set()
+    matrix = {}  # keyed on verse, then {(ms_ga, hand_name): [labels], ...}
+
+    for verse, data in collation:
+        matrix[verse] = {}
+        for stripe, mss in data:
+            stripe_labels = []
+            for r in stripe.readings.all():
+                symbols.add(LABELS[r.label])
+                stripe_labels.append(LABELS[r.label])
+
+            for ms in mss:
+                hand = ms.ms_verse.hand
+                ident = (hand.manuscript.ga, hand.name.replace('(','').replace(')',''))
+                if ident in matrix[verse]:
+                    # Can't handle multiple instances of the same passage
+                    # in a given hand. Ignore the rest...
+                    print "Ignoring {}'s subsequent reading of {}".format(
+                        ident, ms.ms_verse.verse)
+                    continue
+                matrix[verse][ident] = stripe_labels
+                taxlabels.add(ident)
+        if matrix[verse] == {}:
+            print "WARNING: Empty dict for {} - it will be omitted".format(verse)
+            del matrix[verse]
+
+    # Taxa section
+    labs = sorted(taxlabels)
+    nexus = """#nexus
+BEGIN Taxa;
+DIMENSIONS ntax={};
+TAXLABELS
+""".format(len(labs))
+    for i, l in enumerate(labs):
+        nexus += "[{}] '{}_{}'\n".format(i + 1, l[0], l[1])
+    nexus += ";\nEND; [Taxa]"
+
+    # Characters section
+    syms = sorted(symbols)
+
+    # Now the matrix
+    matrix_bit = "MATRIX\n"
+    linelength = None
+    for lab in labs:
+        all_chars = []
+        for verse in matrix:
+            if lab in matrix[verse]:
+                all_chars.extend(matrix[verse][lab])
+            else:
+                #~ # look for firsthand
+                #~ fh = (lab[0], 'firsthand')
+                #~ if fh in matrix[verse]:
+                    #~ all_chars.extend(matrix[verse][fh])
+                #~ else:
+                    #~ print("Couldn't find firsthand for missing {} entry - "
+                          #~ "aborting whole hand".format(lab))
+                    #~ break
+
+                # Add correct num of "missing" signs
+                any_old_lab = matrix[verse].keys()[0]
+                for i in range(len(matrix[verse][any_old_lab])):
+                    all_chars.append('?')
+        else:
+            if linelength is not None:
+                assert linelength == len(all_chars), (linelength, len(all_chars))
+            linelength = len(all_chars)
+            matrix_bit += "'{}_{}' {}\n".format(lab[0], lab[1], ''.join(all_chars))
+
+    nexus += """
+BEGIN Characters;
+DIMENSIONS nchar={};
+
+FORMAT
+    datatype=STANDARD
+    missing=?
+    gap=-
+    symbols="{}"
+    labels=left
+    transpose=no
+    interleave=yes
+;
+""".format(linelength,
+           ' '.join(syms))
+
+    nexus += matrix_bit
+    nexus += """;
+END; [Characters]
+"""
+
+    return nexus
+
+    #~ example = """
+    #~ DIMENSIONS ntax=6;
+#~ TAXLABELS
+#~ [1] 'A.andrenof'
+#~ [2] 'A.mellifer'
+#~ [3] 'A.dorsata'
+#~ [4] 'A.cerana'
+#~ [5] 'A.florea'
+#~ [6] 'A.koschev'
+#~ ;
+#~ END; [Taxa]
+#~
+#~ BEGIN Characters;
+#~ DIMENSIONS nchar=677;
+#~ FORMAT
+    #~ datatype=DNA
+    #~ missing=?
+    #~ gap=-
+    #~ symbols="a t g c"
+    #~ labels=left
+    #~ transpose=no
+    #~ interleave=yes
+#~ ;
+#~ MATRIX
+#~ 'A.andrenof'  atttctacatgaataatatttatatttcaagagtcaaattcattatatgctgataattta
+#~ 'A.mellifer'  atttccacatgatttatatttatatttcaagaatcaaattcatattatgctgataattta
+#~ 'A.dorsata'   atttcaacatgaataatattaatatttcaagaatcaaattcattttacgcagataattta
+#~ 'A.cerana'    atttctacatgattcatatttatgtttcaagaatcaaattcatattatgctgataattta
+#~ 'A.florea'    atttctacatgaataatatttatatttcaagagtcaaattcattatatgctgataattta
+#~ 'A.koschev'   atttctacatgaataatatttatatttcaagaatcaaactcattttatgctgataattta
+#~
+#~ 'A.andrenof'  gtatcttttcataacatagtaataatgattgtaattataatttcaacattaacagtttat
+#~ 'A.mellifer'  atttcatttcataatatagttataataattattattataatttcaacattaactgtatat
+#~ 'A.dorsata'   atttcatttcataatatagtaataacaataattgtaataatttcaacattaacaatttat
+#~ 'A.cerana'    atttcatttcataatatagtaataataattattattataatttctactttaacagtatat
+#~ 'A.florea'    gtatcttttcataacatagtaataattattgtaattataatttcaacattaacagtttat
+#~ 'A.koschev'   gtgtcatttcacaatttagtaataataattattattataatttcaacacttacaatttat
+#~
+#~ 'A.andrenof'  attatttttgatttatttttaaataaattttcaaatttatatttacttaaaaatcataat
+#~ 'A.mellifer'  attattttagatttatttttaaataaattttcaaatttatatttacttaaaaatcataat
+#~ 'A.dorsata'   atcattatagatctattcataaataaattttcaaatttatttttattaaaaaatcataat
+#~ 'A.cerana'    attattatagatctatttttaaataaattttcaaatctatttttattaaaaaatcataat
+#~ 'A.florea'    attatttttgatttatttttaaataaattttcaaatttatatttacttaaaaatcataat
+#~ 'A.koschev'   attatttttgatttatttataaataaattttcaaatttatttttattaaaaaatcataat
+#~
+#~ 'A.andrenof'  attgaaattatctgaacaattgttcctattgttattttattaattatttgttttccatca
+#~ 'A.mellifer'  attgaaattatttgaacaattattccaattattattctattaattatttgttttccatca
+#~ 'A.dorsata'   attgaaattatttgaacaattattcctatttttgttcttttaataatttgttttccatca
+#~ 'A.cerana'    attgaaatcatttgaacagtaattccaattattattttattaattatttgttttccatca
+#~ 'A.florea'    attgaaattatctgaataattgttcctattgttattttattaattatttgttttccatca
+#~ 'A.koschev'   attgaaattatttgaacaattgttcctattgtaattttattaattatttgttttccatca
+#~
+#~ 'A.andrenof'  ttaaaaattttatatttaattgatgaaattgtgaatccatttttttctattaaatcaatt
+#~ 'A.mellifer'  ttaaaaattttatatttaattgatgaaattgtaaatccttttttttcaattaaatcaatt
+#~ 'A.dorsata'   ttaaaaattttatatttaattgatgaaattgtaaatccttttttttcaattaaatctatt
+#~ 'A.cerana'    ttaaaaattttatatttaattgatgaaattgtaaatccattcttttctgtaaaatcaatt
+#~ 'A.florea'    ttaaaaattttatatttaattgatgaaattgtgaatccatttttttctattaaatcaatt
+#~ 'A.koschev'   ttaaaaattttatatttaattgatgaaattattaatccattcttttctattaaatcaatt
+#~
+#~ 'A.andrenof'  ggtcatcaatgatattgatcatatgagtatcctgaatttaataatattgaatttgattca
+#~ 'A.mellifer'  ggtcatcaatgatattgatcatatgaatatccagaatttaataatattgaatttgattca
+#~ 'A.dorsata'   ggccaccaatgatattgatcatatgaatatcctgaattcaataatattgaatttgattca
+#~ 'A.cerana'    ggtcatcaatgatattgatcctatgaatatcctgaatttaataatattgaatttgattct
+#~ 'A.florea'    ggtcatcaatgatattgatcatatgagtatcctgaatttaataatattgaattttattca
+#~ 'A.koschev'   ggacaccaatgatactgatcatatgaataccctgaatttaataatattgaatttgattca
+#~
+#~ 'A.andrenof'  tatatattaaattatagagatttaaatcaatttcgtttattagaaactgataatcgaata
+#~ 'A.mellifer'  tatatactaaattataataatttaaaccaatttcgtttactagaaactgataatcgaata
+#~ 'A.dorsata'   tatatattaaattatacaaatttaaatcaatttcgattattagaaacagataatcgaata
+#~ 'A.cerana'    tatatattaaattatagaaatttaaatcaatttcgattattagaaactgataatcgaata
+#~ 'A.florea'    tatatattaaattatagagatttaaatcaatttcgtttattagaaactgataatcgaata
+#~ 'A.koschev'   tatatattaaattatagaaatttaaatcaatttcgattattagaaactgacaatcgaata
+#~
+#~ 'A.andrenof'  attattcctataaaaattcctttacgattaattactacatcaactgatgtaattcattca
+#~ 'A.mellifer'  gtaattccaataaaaatcccactacgtttaattacaacatcaacagatgtaattcattca
+#~ 'A.dorsata'   gtaattcctataagaatacctatacgtttaattactacatcaacagatgtaattcattca
+#~ 'A.cerana'    attatccctataaatattccattacgattaattacaacttctacagatgtaattcattca
+#~ 'A.florea'    attattcctataaaaattcctttacgattaattactacatcaactgatgtaattcattca
+#~ 'A.koschev'   attatcccaataaaaattcctatacgattaattactacatcaactgatgtaattcattca
+#~
+#~ 'A.andrenof'  tgaactgttccatctttaggaattaaagttgatgcagttccaggacgaattaatcaattg
+#~ 'A.mellifer'  tgaacagttccatccttaggtattaaagttgatgcagttccaggacgaattaatcaatta
+#~ 'A.dorsata'   tgaactgttccatctttaggaattaaagtagatgctgttccaggacgaattaatcaatta
+#~ 'A.cerana'    tgaactgttccatcacttggaattaaagttgatgcagttccaggacgaattaatcaatta
+#~ 'A.florea'    tgaactgttccatctttaggaattaaagttgatgcagttccaggacgaattaatcaattg
+#~ 'A.koschev'   tgaactgtgccttcattaggtattaaagttgatgcagttccaggtcgaattaatcaatta
+#~
+#~ 'A.andrenof'  aatttaattagaaaacgacctggaattttttttggtcaatgttctgaaatttgtggaata
+#~ 'A.mellifer'  aatttaattagaaaacgtccaggaattttttttggtcaatgttcagaaatttgtggtata
+#~ 'A.dorsata'   aatttaattagaaaacgaccaggaattttcttcggtcaatgttctgaaatctgtggaata
+#~ 'A.cerana'    aatttaattagaaaacgacctggaatcttttttggtcaatgttcagaaatttgtggtata
+#~ 'A.florea'    aatttaattagaaaacgacctggaattttttttggtcaatgttctgaaatttgtggaata
+#~ 'A.koschev'   aatttaattagaaaacgtccaggaattttttttggtcaatgttcagaaatttgtggaata
+#~
+#~ 'A.andrenof'  aatcatagatttataccaattatagttgaatcaacatcatttaaatattttataaattga
+#~ 'A.mellifer'  aatcatagatttataccaattataattgaatcaacttcatttcaatattttttaaattga
+#~ 'A.dorsata'   aatcatagatttataccaattataattgaatcaacttcatttaattattttttaaattga
+#~ 'A.cerana'    aatcatagattcataccaattatagtagaatctacatcatttaaatattttcttaattgg
+#~ 'A.florea'    aatcatagatttataccaattatagttgaatcaacatcatttaaatattttataaattga
+#~ 'A.koschev'   aatcatagattcatacctattatagttgaatcaacatcatttaaatttttcttaaattga
+#~
+#~ 'A.andrenof'  atttataaaataaatta
+#~ 'A.mellifer'  gtaaataaacaaatcta
+#~ 'A.dorsata'   gttaataaacaatctta
+#~ 'A.cerana'    gtaaataaacaaaataa
+#~ 'A.florea'    atttataaaataaatta
+#~ 'A.koschev'   attaataaacaaaatta
+#~ ;
+#~ END; [Characters]
+#~ """

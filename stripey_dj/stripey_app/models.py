@@ -511,6 +511,10 @@ def collate(chapter_obj, verse_obj, algorithm_obj, base_ms_id):
         ]),
      (<Verse: Verse john 1:2>...
     """
+    print "Creating collation for {}:{}:{}:{}".format(chapter_obj.num,
+                                                      verse_obj,
+                                                      algorithm_obj.name,
+                                                      base_ms_id)
     collation = []
     if verse_obj:
         verses = [verse_obj]

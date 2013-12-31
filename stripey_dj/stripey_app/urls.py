@@ -11,5 +11,7 @@ urlpatterns = patterns('stripey_app.views',
     url(r'manuscript_correctors.json', 'manuscript_correctors_json'),
     url(r'book_correctors.json', 'book_correctors_json'),
     url(r'chapter_correctors.json', 'chapter_correctors_json'),
+    url(r'nexus.html', 'nexus'),
+    url(r'nexus_file.txt', 'nexus_file'),
 )
 

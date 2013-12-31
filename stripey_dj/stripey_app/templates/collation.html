@@ -37,7 +37,7 @@
 
     $(document).ready(function() {
         // Convert the idents to letters
-        var idents = ' bcdefghijklmnopqrstuvwxzy';
+        var idents = ' bcdefghijklmnopqrstuvwxyz';
         console.log('Looking')
 
         $('table').each(function() {
@@ -75,9 +75,17 @@
 </script>
 {% endblock head %}
 
+{% block rightbar %}
+    Change algorithm: {% for alg in algorithms %}{% if alg.name == algorithm.name %}<b>{{ alg.name }}</b>{% else %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v }}&al={{ alg.name }}">{{ alg.name }}</a>{% endif %} {% endfor %}
+    <br/>
+    <a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&al={{ algorithm.name }}">View whole chapter</a>
+    <br/>
+    <a href="nexus.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v }}&al={{ algorithm.name }}">View nexus file</a>
+{% endblock rightbar %}
+
 {% block content %}
 
-<h2>{% if chapter.num > 1 %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num|add:'-1' }}&v=1&al={{ algorithm.name }}">-1</a>{% endif %} Collation of {{ book.name|title }} {{ chapter.num }} ({{ algorithm.name }}) {% if not is_last_chapter %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num|add:'+1' }}&v=1&al={{ algorithm.name }}">+1</a>{% endif %} | Change algorithm: {% for alg in algorithms %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v }}&al={{ alg.name }}">{{ alg.name }}</a> {% endfor %}</h2>
+<h2>{% if chapter.num > 1 %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num|add:'-1' }}&v=1&al={{ algorithm.name }}">-1</a>{% endif %} Collation of {{ book.name|title }} {{ chapter.num }} ({{ algorithm.name }}) {% if not is_last_chapter %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num|add:'+1' }}&v=1&al={{ algorithm.name }}">+1</a>{% endif %}</h2>
 
 {% for verse, stripes in collation %}
     <h3>

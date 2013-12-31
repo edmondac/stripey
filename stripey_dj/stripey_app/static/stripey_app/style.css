@@ -208,3 +208,11 @@ height:1px;
   stroke: #000;
   stroke-width: .5px;
 }
+
+#nexus {
+    font-size: 60%;
+    border: 1px solid red;
+    overflow-y: auto;
+    height: 50vh;
+
+}
