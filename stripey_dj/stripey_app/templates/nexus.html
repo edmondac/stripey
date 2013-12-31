@@ -1,0 +1,44 @@
+{% extends "stripey_app/base.html" %}
+
+{% block head %}
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+<script>
+    function load_nexus (pre_id, link_id) {
+        console.log("Loading nexus data...");
+        var url = "nexus_file.txt?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v }}&al={{ algorithm.name }}";
+
+        function callback(responseText, textStatus, XMLHttpRequest) {
+            // Make a download link
+            console.log("Making download link");
+            var filename = "stripey_{{ book.name }}_{{ chapter.num }}{% if v %}_{{ v }}{% endif %}_{{ algorithm.name }}.nex"
+            $("#" + link_id).attr("href", url).attr("download", filename).html("Download");
+        }
+
+        $("#" + pre_id).load(url, callback);
+    }
+</script>
+{% endblock head %}
+
+{% block content %}
+<h1>Nexus file for {{ book.name|title }} {{ chapter.num }}{% if v %}:{{ v }}{% endif %} ({{ algorithm.name }})</h1>
+{% endblock content %}
+
+{% block rightbar %}
+    <a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v }}&al={{ algorithm.name }}">View collation</a>
+    <br/>
+    <a href="nexus.html?bk={{ book.num }}&ch={{ chapter.num }}&al={{ algorithm.name }}">View whole chapter</a>
+{% endblock rightbar %}
+
+{% block fullcontent %}
+
+<a id="nexus_link"></a>
+<pre id="nexus">
+<i>Loading... this could take a couple of minutes...</i>
+</pre>
+<script>load_nexus('nexus', 'nexus_link');</script>
+
+{% endblock fullcontent %}
+
+{% block correctors_warning %}
+<!-- no warning needed here -->
+{% endblock correctors_warning %}
