@@ -15,19 +15,22 @@ from django.db import transaction
 import logging
 logger = logging.getLogger('load_all.py')
 
-ms_re = re.compile("([0-9]+)_([P0-9S]+)\.xml")
+ms_re = re.compile("([0-9]+)_([PNATRS0-9]+)\.xml")
 
+
+class UnexpectedFilename(Exception):
+    pass
 
 @transaction.commit_on_success
 def load_ms(folder, f):
     """
     Load a single XML file
     """
-    # We expect the files to be called, e.g. 23_424.xml
+    # We expect the files to be called, e.g. 23_424.xml, or 04_NA27.xml
     # == book 23 (1 John), ms 424.
     match = ms_re.match(f)
     if not match:
-        raise ValueError("Unexpected filename {}".format(f))
+        raise UnexpectedFilename("Unexpected filename {}".format(f))
     book_num = int(match.group(1))
     name = match.group(2)
     try:
@@ -46,17 +49,21 @@ def load_ms(folder, f):
 
 def load_all(folder):
     """
-    Load all the XML files in a folder into the database
+    Load all the XML files in a folder (and subfolders) into the database
     """
     logger.info("Loading everything in {}".format(folder))
     failures = []
-    for f in [x for x in os.listdir(folder) if x.endswith('.xml')]:
-        try:
-            load_ms(folder, f)
-        except Exception as e:
-            logger.error("{} failed to load: {}".format(f, e))
-            failures.append("{} ({})".format(f, e))
-            #raise
+    for path, dirs, files in os.walk(folder):
+        for f in [x for x in files if x.endswith('.xml')]:
+            try:
+                load_ms(path, f)
+            except UnexpectedFilename as e:
+                logger.warning("{} failed to load: {}".format(f, e))
+                failures.append("{} ({})".format(f, e))
+            except Exception as e:
+                logger.exception("{} failed to load: {}".format(f, e))
+                failures.append("{} ({})".format(f, e))
+                #raise
 
     if failures:
         logger.error("Load failed for: \n{}".format('\n\t'.join(failures)))
