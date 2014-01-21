@@ -208,6 +208,7 @@ class Book(models.Model):
 class MsBook(models.Model):
     book = models.ForeignKey(Book)
     manuscript = models.ForeignKey(ManuscriptTranscription)
+    unique_together = (book, manuscript)
 
 
 class Chapter(models.Model):
