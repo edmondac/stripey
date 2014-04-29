@@ -35,7 +35,7 @@
             <tr>
                 <th width="30%">
                     {% for ms in text.1.0 %}
-                        <a href="/manuscript.html?ms_id={{ ms.0.id }}&bk={{ book.num }}&ch={{ chapter.num }}" title="{{ ms.0.display_ref }}">
+                        <a href="manuscript.html?ms_id={{ ms.0.id }}&bk={{ book.num }}&ch={{ chapter.num }}" title="{{ ms.0.display_ref }}">
                         <font class="{% if ms.0.id == base_ms_id %}base_ms{% endif %} ms_{{ ms.0.id }}" onmouseover="highlightManuscript('ms_{{ ms.0.id }}')" onmouseout="resetManuscript('ms_{{ ms.0.id }}')">
                             {{ ms.0.display_short }} {% if ms.1 != 'firsthand' %}<i>{{ ms.1 }}</i>{% endif %}
                         </font></a>&nbsp;

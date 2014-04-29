@@ -35,7 +35,7 @@
     {% if correctors %}
         All correctors in manuscript:
             {% for h in correctors %}
-                <a href="/hand.html?ms_id={{ ms.id }}&hand={{ h }}">{{ h }}</a>
+                <a href="hand.html?ms_id={{ ms.id }}&hand={{ h }}">{{ h }}</a>
                 {% if not forloop.last %}, {% endif %}
             {% endfor %}
 
@@ -70,7 +70,7 @@
             <table>
             {% for verse in chapter_to_show.verses %}
               <tr>
-                  <th>{{ verse.verse.num }}{% if verse.hand.name != 'firsthand' %} <a href="/hand.html?ms_id={{ ms.id }}&hand={{ verse.hand.name }}">{{ verse.hand.name }}</a>{% endif %}</th>
+                  <th>{{ verse.verse.num }}{% if verse.hand.name != 'firsthand' %} <a href="hand.html?ms_id={{ ms.id }}&hand={{ verse.hand.name }}">{{ verse.hand.name }}</a>{% endif %}</th>
                   <td class="greek">{{ verse.text }}</td>
               </tr>
             {% endfor %}
