@@ -14,9 +14,13 @@ set -e
 
 hg commit -m "Deploying to openshift"
 
+msg="$(hg summary | head -1)"
+
 OPENSHIFT_REPO="/home/ed/openshift/django/wsgi/openshift/"
 #(cd ${OPENSHIFT_REPO} && git rm stripey_app)
 cp -r stripey_app ${OPENSHIFT_REPO}
 cd ${OPENSHIFT_REPO}
 find stripey_app -name "*.pyc" -exec rm {} ';'
 git add stripey_app
+git commit -a -m "Auto-deploy from hg (${msg})"
+git push
