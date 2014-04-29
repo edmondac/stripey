@@ -10,7 +10,7 @@ read ok
 [[ ${ok} == 'n' ]] && fatal "Aborting"
 
 set -x
-#set -e
+set -e
 
 hg commit -m "Deploying to openshift"
 
