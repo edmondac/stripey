@@ -20,6 +20,8 @@ TEMPDIR="/tmp/deploy_to_openshift_tempdir"
 
 mkdir ${TEMPDIR}
 
-
+cp -r stripey_app ${TEMPDIR}
+cp -r stripey_lib ${TEMPDIR}
+(cd ${TEMPDIR} && find -name "*.pyc" -exec rm {} '\;')
 
 rm -rf ${TEMPDIR}
