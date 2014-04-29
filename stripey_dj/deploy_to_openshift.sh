@@ -14,16 +14,9 @@ set -e
 
 hg commit -m "Deploying to openshift"
 
-TEMPDIR="/tmp/deploy_to_openshift_tempdir"
-
-[[ -e ${TEMPDIR} ]] && fatal "${TEMPDIR} exists - aborting"
-
-mkdir ${TEMPDIR}
-
-cp -r stripey_app ${TEMPDIR}
-cp -r stripey_lib ${TEMPDIR}
-cd ${TEMPDIR} && find -name "*.pyc" -exec rm {} ';'
-bash
-cd -
-
-rm -rf ${TEMPDIR}
+OPENSHIFT_REPO="/home/ed/openshift/django/wsgi/openshift/"
+(cd ${OPENSHIFT_REPO} && git rm stripey_app)
+cp -r stripey_app ${OPENSHIFT_REPO}
+cd ${OPENSHIFT_REPO}
+find stripey_app -name "*.pyc" -exec rm {} ';'
+git add stripey_app

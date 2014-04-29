@@ -2,7 +2,11 @@
 
 from django.db import models
 from django.core.exceptions import ObjectDoesNotExist
-from stripey_lib import xmlmss
+try:
+    from stripey_lib import xmlmss
+except ImportError:
+    xmlmss = None
+
 from django.db.models import Max
 from memoize import memoize
 
@@ -51,6 +55,10 @@ class ManuscriptTranscription(models.Model):
         Load the XML, parse it, and create mschapter, chapter,
         verse, msverse and hand objects.
         """
+        if xmlmss is None:
+            logger.error("No xmlmss - can't load anything")
+            return False
+
         logger.info("Loading MS {}".format(self))
         obj = xmlmss.Manuscript(self.ms_ref, filename)
         if not obj.book:
