@@ -23,6 +23,7 @@ mkdir ${TEMPDIR}
 cp -r stripey_app ${TEMPDIR}
 cp -r stripey_lib ${TEMPDIR}
 cd ${TEMPDIR} && find -name "*.pyc" -exec rm {} ';'
+bash
 cd -
 
 rm -rf ${TEMPDIR}
