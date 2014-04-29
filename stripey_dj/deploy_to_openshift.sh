@@ -10,7 +10,7 @@ read ok
 [[ ${ok} == 'n' ]] && fatal "Aborting"
 
 set -x
-set -e
+#set -e
 
 hg commit -m "Deploying to openshift"
 
@@ -22,6 +22,7 @@ mkdir ${TEMPDIR}
 
 cp -r stripey_app ${TEMPDIR}
 cp -r stripey_lib ${TEMPDIR}
-(cd ${TEMPDIR} && find -name "*.pyc" -exec rm {} ';')
+cd ${TEMPDIR} && find -name "*.pyc" -exec rm {} ';'
+cd -
 
 rm -rf ${TEMPDIR}
