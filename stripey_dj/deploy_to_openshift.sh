@@ -12,7 +12,7 @@ read ok
 set -x
 set -e
 
-hg commit -m "Deploying to openshift"
+hg commit -m "Deploying to openshift" || echo "Continuing..."
 
 msg="$(hg summary | head -1)"
 
