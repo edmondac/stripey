@@ -189,6 +189,10 @@ td.greek, div.greek, div.ident {
  font-size: 100%;
 }
 
+ul.manuscripts {
+ font-size: 60%;
+}
+
 .clear {
 clear:both;
 height:1px;

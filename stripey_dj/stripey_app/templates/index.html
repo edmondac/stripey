@@ -16,7 +16,7 @@
     <div class="block">
         <h1>Manuscript transcriptions</h1>
         {% if all_mss %}
-            <ul>
+            <ul class="manuscripts">
             {% for ms in all_mss %}
                 <li><a href="manuscript.html?ms_id={{ ms.id }}">{{ ms.display_ref }}</a>
                     ({% for b in ms.books %}{{ b.book.name|title }}{% if not forloop.last %}, {% endif %}{% endfor %})</li>

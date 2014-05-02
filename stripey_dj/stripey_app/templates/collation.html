@@ -76,6 +76,7 @@
 {% endblock head %}
 
 {% block rightbar %}
+    <a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v }}">View text</a><br/><br/>
     Change algorithm: {% for alg in algorithms %}{% if alg.name == algorithm.name %}<b>{{ alg.name }}</b>{% else %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v }}&al={{ alg.name }}">{{ alg.name }}</a>{% endif %} {% endfor %}
     <br/>
     <a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&al={{ algorithm.name }}">View whole chapter</a>
@@ -94,7 +95,6 @@
         {% else %}
             <a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ verse.num }}&al={{ algorithm.name }}">Verse {{ verse.num }}</a>
         {% endif %}
-    <a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v }}">View text</a>
     <button onclick="toggleIdents()">Toggle text/idents</button>
     </h3>
 
