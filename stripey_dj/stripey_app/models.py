@@ -133,11 +133,15 @@ class ManuscriptTranscription(models.Model):
         A combination of the various ids to give a helpful reference.
         """
         ref = []
-        if self.ms_name:
-            ref.append(self.ms_name)
 
         if self.tischendorf:
             ref.append(self.tischendorf)
+
+        if self.ms_name:
+            ref.append(self.ms_name)
+
+        if self.liste_id:
+            ref.append(u"Liste:{}".format(self.liste_id))
 
         if self.ga:
             ref.append(u"GA:{}".format(self.ga))
