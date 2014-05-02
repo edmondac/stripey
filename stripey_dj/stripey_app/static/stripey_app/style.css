@@ -1,179 +1,182 @@
 body {
-background-color: #dddddd;
-margin: 0px 0px 0px 0px;
-font-family: Gentium, Gentium Plus, Arial, sans-serif;
-font-size: 14pt;
+ background-color: #dddddd;
+ margin: 0px 0px 0px 0px;
+ font-family: Gentium, Gentium Plus, Arial, sans-serif;
+ font-size: 14pt;
 }
 
 #page {
-margin-left: auto;
-margin-right: auto;
-margin-top: 20px;
-margin-bottom: 20px;
-width:90%;
-//width: 960px;
+ margin-left: auto;
+ margin-right: auto;
+ margin-top: 20px;
+ margin-bottom: 20px;
+ width:90%;
 }
 
 #page {
--moz-box-shadow: 0 0 15px black;
--webkit-box-shadow: 0 0 15px black;
-box-shadow: 0 0 15px black;
+ -moz-box-shadow: 0 0 15px black;
+ -webkit-box-shadow: 0 0 15px black;
+ box-shadow: 0 0 15px black;
 }
 
 #header {
-background-color: darkgreen;
-color: white;
+ background-color: darkgreen;
+ color: white;
 }
 
 #header img {
-border: none;
-margin: 0px 0px 0px 30px;
+ border: none;
+ margin: 0px 0px 0px 30px;
 }
 
 #topbar {
-height: 3px;
-vertical-align: top;
-text-align:right;
-font-size: 70%;
+ height: 3px;
+ vertical-align: top;
+ text-align:right;
+ font-size: 70%;
 }
 
 #topbar a {
-text-decoration: none;
-color: white;
+ text-decoration: none;
+ color: white;
 }
 
 #banner {
-color:#ffea00;
-padding-left: 2px;
-font-size: 120%;
-font-weight: bold;
+ color:#ffea00;
+ padding-left: 2px;
+ font-size: 120%;
+ font-weight: bold;
 }
 
 #menu {
-padding: 5px 0px 5px 30px;
+ padding: 5px 0px 5px 30px;
 }
 
 #menu a {
-color: white;
-font-weight: bold;
-text-decoration: none;
-padding: 1px 10px 1px 10px;
-border: 1px solid darkgray;
+ color: white;
+ font-weight: bold;
+ text-decoration: none;
+ padding: 1px 10px 1px 10px;
+ border: 1px solid darkgray;
 }
 
 #menu a:hover {
-background-color: white;
-color: #66999a;
-border: 1px solid white;
+ background-color: white;
+ color: #66999a;
+ border: 1px solid white;
 }
 
 #options {
-float: right;
+ float: right;
 }
 
 #footer {
-width: 100%;
-color: #ffea00;
-background-color: darkgreen;
-text-align: right;
-font-size: 90%;
+ width: 100%;
+ color: #ffea00;
+ background-color: darkgreen;
+ text-align: right;
+ font-size: 90%;
 }
 
 #footer * {
-padding-right: 2px;
+ padding-right: 2px;
 }
 
 #footer a {
-text-decoration: none;
-color: white;
+ text-decoration: none;
+ color: white;
 }
 
 #footer a:hover {
-text-decoration: underline;
+ text-decoration: underline;
 }
 
 #container {
-background-color: white;
-border: 1px solid ;
+ background-color: white;
+ border: 1px solid ;
 }
 
 #content, #fullcontent {
-background-color: white;
-position: relative;
-margin: 5px;
-padding: 5px;
--moz-box-shadow: 0 0 5px black;
--webkit-box-shadow: 0 0 5px black;
-box-shadow: 0 0 5px black;
+ background-color: white;
+ position: relative;
+ margin: 5px;
+ padding: 5px;
+ -moz-box-shadow: 0 0 5px black;
+ -webkit-box-shadow: 0 0 5px black;
+ box-shadow: 0 0 5px black;
 }
 
 #content {
-width: 67%;
+ width: 67%;
 }
 
 #rightbar {
-border: 1px solid blue;
-background-color: #eeeeff;
-margin: 5px;
-padding: 5px;
-float: right;
-width: 30%;
-font-size: 75%;
--moz-box-shadow: 0 0 5px black;
--webkit-box-shadow: 0 0 5px black;
-box-shadow: 0 0 5px black;
+ border: 1px solid blue;
+ background-color: #eeeeff;
+ margin: 5px;
+ padding: 5px;
+ float: right;
+ width: 30%;
+ font-size: 75%;
+ -moz-box-shadow: 0 0 5px black;
+ -webkit-box-shadow: 0 0 5px black;
+ box-shadow: 0 0 5px black;
 }
 
 #filters {
-float: right;
-border: 1px solid grey;
-padding: 5px;
-background-color: #dddddd;
+ float: right;
+ border: 1px solid grey;
+ padding: 5px;
+ background-color: #dddddd;
 }
 
 #filters_tab {
-font-size: 100%;
+ font-size: 100%;
 }
 
 h1 {
-color: white;
-font-size: 110%;
-border: 1px solid #336667;
-background-color: #66999a;
-padding: 1px 1px 1px 1px;
-margin: 0px 0px 5px 0px;
+ color: white;
+ font-size: 110%;
+ border: 1px solid #336667;
+ background-color: #66999a;
+ padding: 1px 1px 1px 1px;
+ margin: 0px 0px 5px 0px;
 }
 
 h2 {
-color: garkgreen;
-font-size: 100%;
-border: 1px solid darkgreen;
-background-color: #eeffee;
-padding: 1px 1px 1px 1px;
-margin: 0px 0px 5px 0px;
+ color: garkgreen;
+ font-size: 100%;
+ border: 1px solid darkgreen;
+ background-color: #eeffee;
+ padding: 1px 1px 1px 1px;
+ margin: 0px 0px 5px 0px;
 }
 
 h3 {
-color: grey;
-font-size: 90%;
-border: 1px solid grey;
-padding: 1px 1px 1px 1px;
-margin: 0px 0px 5px 0px;
+ color: grey;
+ font-size: 90%;
+ border: 1px solid grey;
+ padding: 1px 1px 1px 1px;
+ margin: 0px 0px 5px 0px;
 }
 
 a {
-color: darkred;
-text-decoration: none;
+ color: darkred;
+ text-decoration: none;
 }
 
 a:hover {
-text-decoration: underline;
+ text-decoration: underline;
 }
 
 table, th, td {
-border: 1px solid #aaccce;
-border-collapse:collapse;
-font-size: 80%;
+ border: 1px solid #aaccce;
+ border-collapse:collapse;
+ font-size: 80%;
+}
+
+table.manuscripts {
+ vertical-align: top;
 }
 
 tr.high_tr {
@@ -189,13 +192,9 @@ td.greek, div.greek, div.ident {
  font-size: 100%;
 }
 
-ul.manuscripts {
- font-size: 60%;
-}
-
 .clear {
-clear:both;
-height:1px;
+ clear:both;
+ height:1px;
 }
 
 .base_ms {
@@ -208,15 +207,14 @@ height:1px;
 }
 
 .chord path {
-  fill-opacity: .67;
-  stroke: #000;
-  stroke-width: .5px;
+ fill-opacity: .67;
+ stroke: #000;
+ stroke-width: .5px;
 }
 
 #nexus {
-    font-size: 60%;
-    border: 1px solid red;
-    overflow-y: auto;
-    height: 50vh;
-
+ font-size: 60%;
+ border: 1px solid red;
+ overflow-y: auto;
+ height: 50vh;
 }
