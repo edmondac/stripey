@@ -17,9 +17,11 @@
         <h1>Manuscript transcriptions</h1>
         {% if all_mss %}
             <ul class="manuscripts">
-            {% for ms in all_mss %}
-                <li><a href="manuscript.html?ms_id={{ ms.id }}">{{ ms.display_ref }}</a>
-                    ({% for b in ms.books %}{{ b.book.name|title }}{% if not forloop.last %}, {% endif %}{% endfor %})</li>
+            {% for sec in all_mss %}
+                {% for ms in sec %}
+                    <li><a href="manuscript.html?ms_id={{ ms.id }}">{{ ms.display_ref }}</a>
+                        ({% for b in ms.books %}{{ b.book.name|title }}{% if not forloop.last %}, {% endif %}{% endfor %})</li>
+                {% endfor %}
             {% endfor %}
             </ul>
         {% else %}

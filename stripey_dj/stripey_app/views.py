@@ -20,7 +20,14 @@ def default_response(request, url, data):
 
 
 def index(request):
-    all_mss = ManuscriptTranscription.objects.all().order_by('liste_id')
+    """
+    The home page. Show a list of all manuscript transcriptions loaded.
+    """
+    misc_mss = ManuscriptTranscription.objects.all().filter(liste_id_lt=10000).order_by('liste_id')
+    pap_mss = ManuscriptTranscription.objects.all().filter(liste_id_lt=20000).filter(liste_gte=10000).order_by('liste_id')
+    maj_mss = ManuscriptTranscription.objects.all().filter(liste_id_lt=30000).filter(liste_gte=20000).order_by('liste_id')
+    min_mss = ManuscriptTranscription.objects.all().filter(liste_id_gte=30000).order_by('liste_id')
+
     books = Book.objects.all().order_by('num')
     # We want a list of chapters - per book.
     for book in books:
@@ -31,7 +38,7 @@ def index(request):
 
     return default_response(request,
                             'index.html',
-                            {'all_mss': all_mss,
+                            {'all_mss': (misc_mss, pap_mss, maj_mss, min_mss),
                              'books': books})
 
 
