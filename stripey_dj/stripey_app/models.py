@@ -140,8 +140,8 @@ class ManuscriptTranscription(models.Model):
         if self.ms_name:
             ref.append(self.ms_name)
 
-        if self.liste_id:
-            ref.append(u"Liste:{}".format(self.liste_id))
+        #if self.liste_id:
+        #    ref.append(u"Liste:{}".format(self.liste_id))
 
         if self.ga:
             ref.append(u"GA:{}".format(self.ga))
