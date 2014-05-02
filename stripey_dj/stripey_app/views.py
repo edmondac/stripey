@@ -33,7 +33,7 @@ def index(request):
     for book in books:
         book.chapters = Chapter.objects.filter(book=book).order_by('num')
 
-    for ms in all_mss:
+    for ms in misc_mss + pap_mss + maj_mss + min_mss:
         ms.books = MsBook.objects.filter(manuscript=ms)
 
     return default_response(request,
@@ -413,11 +413,11 @@ def nexus(request):
     v = request.GET.get('v')
     if (v is not None and v != 'None'):
         v = int(v)
-        verse_obj = Verse.objects.get(chapter=chapter_obj,
-                                      num=v)
+        #verse_obj = Verse.objects.get(chapter=chapter_obj,
+        #                              num=v)
     else:
         v = None
-        verse_obj = None
+        #verse_obj = None
 
     algorithm_obj = Algorithm.objects.get(name=request.GET.get('al'))
 
@@ -440,6 +440,7 @@ def nexus_file(request):
     al = request.GET.get('al')
     nexus = _nexus_file(bk, ch, v, al, base_ms_id)
     return HttpResponse(nexus, mimetype='text/plain')
+
 
 @memoize
 def _nexus_file(bk, ch, v, al, base_ms_id):
@@ -478,7 +479,7 @@ def _nexus_file(bk, ch, v, al, base_ms_id):
 
             for ms in mss:
                 hand = ms.ms_verse.hand
-                ident = (hand.manuscript.ga, hand.name.replace('(','').replace(')',''))
+                ident = (hand.manuscript.ga, hand.name.replace('(', '').replace(')', ''))
                 if ident in matrix[verse]:
                     # Can't handle multiple instances of the same passage
                     # in a given hand. Ignore the rest...
