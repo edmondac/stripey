@@ -33,8 +33,9 @@ def index(request):
     for book in books:
         book.chapters = Chapter.objects.filter(book=book).order_by('num')
 
-    for ms in misc_mss + pap_mss + maj_mss + min_mss:
-        ms.books = MsBook.objects.filter(manuscript=ms)
+    for mss in (misc_mss, pap_mss, maj_mss, min_mss):
+        for ms in mss:
+            ms.books = MsBook.objects.filter(manuscript=ms)
 
     return default_response(request,
                             'index.html',
