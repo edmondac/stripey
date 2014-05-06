@@ -15,7 +15,7 @@ from django.db import transaction
 import logging
 logger = logging.getLogger('load_all.py')
 
-ms_re = re.compile("([0-9]+)_([PNATRS0-9]+)\.xml")
+ms_re = re.compile("([0-9]+)_([LPNATRS0-9]+)\.xml")
 
 
 class UnexpectedFilename(Exception):

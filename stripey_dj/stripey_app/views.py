@@ -26,20 +26,21 @@ def index(request):
     misc_mss = ManuscriptTranscription.objects.all().filter(liste_id__lt=10000).order_by('liste_id')
     pap_mss = ManuscriptTranscription.objects.all().filter(liste_id__lt=20000).filter(liste_id__gte=10000).order_by('liste_id')
     maj_mss = ManuscriptTranscription.objects.all().filter(liste_id__lt=30000).filter(liste_id__gte=20000).order_by('liste_id')
-    min_mss = ManuscriptTranscription.objects.all().filter(liste_id__gte=30000).order_by('liste_id')
+    min_mss = ManuscriptTranscription.objects.all().filter(liste_id__lt=40000).filter(liste_id__gte=30000).order_by('liste_id')
+    lec_mss = ManuscriptTranscription.objects.all().filter(liste_id__gte=40000).order_by('liste_id')
 
     books = Book.objects.all().order_by('num')
     # We want a list of chapters - per book.
     for book in books:
         book.chapters = Chapter.objects.filter(book=book).order_by('num')
 
-    for mss in (misc_mss, pap_mss, maj_mss, min_mss):
+    for mss in (misc_mss, pap_mss, maj_mss, min_mss, lec_mss):
         for ms in mss:
             ms.books = MsBook.objects.filter(manuscript=ms)
 
     return default_response(request,
                             'index.html',
-                            {'all_mss': (misc_mss, pap_mss, maj_mss, min_mss),
+                            {'all_mss': (misc_mss, pap_mss, maj_mss, min_mss, lec_mss),
                              'books': books})
 
 
