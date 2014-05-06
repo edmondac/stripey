@@ -17,7 +17,7 @@
     </h1>
     <h2>
         {% if v %}
-            {% if v > 1 %}<a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v|add:'-1' }}">-1</a>{% endif %} Verse {{ verse.0 }}{% if not is_last_verse %} <a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v|add:'+1' }}">+1</a>{% endif %} <a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num }}">all</a>
+            {% if v > 1 %}<a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v|add:'-1' }}">-1</a>{% endif %} Verse {{ verse.0 }}{% if not is_last_verse %} <a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v|add:'+1' }}">+1</a>{% endif %}
         {% else %}
             <a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ verse.0 }}">Verse {{ verse.0 }}</a>
         {% endif %}
@@ -33,7 +33,7 @@
     <table>
         {% for text in verse.1 %}
             <tr>
-                <th width="30%">
+                <th>
                     {% for ms in text.1.0 %}
                         <a href="manuscript.html?ms_id={{ ms.0.id }}&bk={{ book.num }}&ch={{ chapter.num }}" title="{{ ms.0.display_ref }}">
                         <font class="{% if ms.0.id == base_ms_id %}base_ms{% endif %} ms_{{ ms.0.id }}" onmouseover="highlightManuscript('ms_{{ ms.0.id }}')" onmouseout="resetManuscript('ms_{{ ms.0.id }}')">
@@ -42,7 +42,7 @@
                     {% endfor %}
                 </th>
                 <td>{{ text.1.1|floatformat }}%</td>
-                <td class="greek">{{ text.0 }}</td>
+                <td class="greek" nowrap>{{ text.0 }}</td>
             </tr>
         {% endfor %}
     </table><br/>

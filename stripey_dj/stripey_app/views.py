@@ -364,7 +364,7 @@ def chapter(request):
         is_last_chapter = True
 
     v = request.GET.get('v')
-    v = int(v)
+    v = int(v) if v is not None else 1
     last_verse = Verse.objects.filter(chapter=chapter_obj).order_by('-num')[0]
     is_last_verse = None
     if last_verse.num == v:
@@ -422,12 +422,14 @@ def nexus(request):
         #verse_obj = None
 
     algorithm_obj = Algorithm.objects.get(name=request.GET.get('al'))
+    algos = Algorithm.objects.all()
 
     return default_response(request,
                             'nexus.html',
                             {'book': book_obj,
                              'chapter': chapter_obj,
                              'algorithm': algorithm_obj,
+                             'algorithms': algos,
                              'v': v})
 
 
@@ -558,114 +560,3 @@ END; [Characters]
 """
 
     return nexus
-
-    #~ example = """
-    #~ DIMENSIONS ntax=6;
-#~ TAXLABELS
-#~ [1] 'A.andrenof'
-#~ [2] 'A.mellifer'
-#~ [3] 'A.dorsata'
-#~ [4] 'A.cerana'
-#~ [5] 'A.florea'
-#~ [6] 'A.koschev'
-#~ ;
-#~ END; [Taxa]
-#~
-#~ BEGIN Characters;
-#~ DIMENSIONS nchar=677;
-#~ FORMAT
-    #~ datatype=DNA
-    #~ missing=?
-    #~ gap=-
-    #~ symbols="a t g c"
-    #~ labels=left
-    #~ transpose=no
-    #~ interleave=yes
-#~ ;
-#~ MATRIX
-#~ 'A.andrenof'  atttctacatgaataatatttatatttcaagagtcaaattcattatatgctgataattta
-#~ 'A.mellifer'  atttccacatgatttatatttatatttcaagaatcaaattcatattatgctgataattta
-#~ 'A.dorsata'   atttcaacatgaataatattaatatttcaagaatcaaattcattttacgcagataattta
-#~ 'A.cerana'    atttctacatgattcatatttatgtttcaagaatcaaattcatattatgctgataattta
-#~ 'A.florea'    atttctacatgaataatatttatatttcaagagtcaaattcattatatgctgataattta
-#~ 'A.koschev'   atttctacatgaataatatttatatttcaagaatcaaactcattttatgctgataattta
-#~
-#~ 'A.andrenof'  gtatcttttcataacatagtaataatgattgtaattataatttcaacattaacagtttat
-#~ 'A.mellifer'  atttcatttcataatatagttataataattattattataatttcaacattaactgtatat
-#~ 'A.dorsata'   atttcatttcataatatagtaataacaataattgtaataatttcaacattaacaatttat
-#~ 'A.cerana'    atttcatttcataatatagtaataataattattattataatttctactttaacagtatat
-#~ 'A.florea'    gtatcttttcataacatagtaataattattgtaattataatttcaacattaacagtttat
-#~ 'A.koschev'   gtgtcatttcacaatttagtaataataattattattataatttcaacacttacaatttat
-#~
-#~ 'A.andrenof'  attatttttgatttatttttaaataaattttcaaatttatatttacttaaaaatcataat
-#~ 'A.mellifer'  attattttagatttatttttaaataaattttcaaatttatatttacttaaaaatcataat
-#~ 'A.dorsata'   atcattatagatctattcataaataaattttcaaatttatttttattaaaaaatcataat
-#~ 'A.cerana'    attattatagatctatttttaaataaattttcaaatctatttttattaaaaaatcataat
-#~ 'A.florea'    attatttttgatttatttttaaataaattttcaaatttatatttacttaaaaatcataat
-#~ 'A.koschev'   attatttttgatttatttataaataaattttcaaatttatttttattaaaaaatcataat
-#~
-#~ 'A.andrenof'  attgaaattatctgaacaattgttcctattgttattttattaattatttgttttccatca
-#~ 'A.mellifer'  attgaaattatttgaacaattattccaattattattctattaattatttgttttccatca
-#~ 'A.dorsata'   attgaaattatttgaacaattattcctatttttgttcttttaataatttgttttccatca
-#~ 'A.cerana'    attgaaatcatttgaacagtaattccaattattattttattaattatttgttttccatca
-#~ 'A.florea'    attgaaattatctgaataattgttcctattgttattttattaattatttgttttccatca
-#~ 'A.koschev'   attgaaattatttgaacaattgttcctattgtaattttattaattatttgttttccatca
-#~
-#~ 'A.andrenof'  ttaaaaattttatatttaattgatgaaattgtgaatccatttttttctattaaatcaatt
-#~ 'A.mellifer'  ttaaaaattttatatttaattgatgaaattgtaaatccttttttttcaattaaatcaatt
-#~ 'A.dorsata'   ttaaaaattttatatttaattgatgaaattgtaaatccttttttttcaattaaatctatt
-#~ 'A.cerana'    ttaaaaattttatatttaattgatgaaattgtaaatccattcttttctgtaaaatcaatt
-#~ 'A.florea'    ttaaaaattttatatttaattgatgaaattgtgaatccatttttttctattaaatcaatt
-#~ 'A.koschev'   ttaaaaattttatatttaattgatgaaattattaatccattcttttctattaaatcaatt
-#~
-#~ 'A.andrenof'  ggtcatcaatgatattgatcatatgagtatcctgaatttaataatattgaatttgattca
-#~ 'A.mellifer'  ggtcatcaatgatattgatcatatgaatatccagaatttaataatattgaatttgattca
-#~ 'A.dorsata'   ggccaccaatgatattgatcatatgaatatcctgaattcaataatattgaatttgattca
-#~ 'A.cerana'    ggtcatcaatgatattgatcctatgaatatcctgaatttaataatattgaatttgattct
-#~ 'A.florea'    ggtcatcaatgatattgatcatatgagtatcctgaatttaataatattgaattttattca
-#~ 'A.koschev'   ggacaccaatgatactgatcatatgaataccctgaatttaataatattgaatttgattca
-#~
-#~ 'A.andrenof'  tatatattaaattatagagatttaaatcaatttcgtttattagaaactgataatcgaata
-#~ 'A.mellifer'  tatatactaaattataataatttaaaccaatttcgtttactagaaactgataatcgaata
-#~ 'A.dorsata'   tatatattaaattatacaaatttaaatcaatttcgattattagaaacagataatcgaata
-#~ 'A.cerana'    tatatattaaattatagaaatttaaatcaatttcgattattagaaactgataatcgaata
-#~ 'A.florea'    tatatattaaattatagagatttaaatcaatttcgtttattagaaactgataatcgaata
-#~ 'A.koschev'   tatatattaaattatagaaatttaaatcaatttcgattattagaaactgacaatcgaata
-#~
-#~ 'A.andrenof'  attattcctataaaaattcctttacgattaattactacatcaactgatgtaattcattca
-#~ 'A.mellifer'  gtaattccaataaaaatcccactacgtttaattacaacatcaacagatgtaattcattca
-#~ 'A.dorsata'   gtaattcctataagaatacctatacgtttaattactacatcaacagatgtaattcattca
-#~ 'A.cerana'    attatccctataaatattccattacgattaattacaacttctacagatgtaattcattca
-#~ 'A.florea'    attattcctataaaaattcctttacgattaattactacatcaactgatgtaattcattca
-#~ 'A.koschev'   attatcccaataaaaattcctatacgattaattactacatcaactgatgtaattcattca
-#~
-#~ 'A.andrenof'  tgaactgttccatctttaggaattaaagttgatgcagttccaggacgaattaatcaattg
-#~ 'A.mellifer'  tgaacagttccatccttaggtattaaagttgatgcagttccaggacgaattaatcaatta
-#~ 'A.dorsata'   tgaactgttccatctttaggaattaaagtagatgctgttccaggacgaattaatcaatta
-#~ 'A.cerana'    tgaactgttccatcacttggaattaaagttgatgcagttccaggacgaattaatcaatta
-#~ 'A.florea'    tgaactgttccatctttaggaattaaagttgatgcagttccaggacgaattaatcaattg
-#~ 'A.koschev'   tgaactgtgccttcattaggtattaaagttgatgcagttccaggtcgaattaatcaatta
-#~
-#~ 'A.andrenof'  aatttaattagaaaacgacctggaattttttttggtcaatgttctgaaatttgtggaata
-#~ 'A.mellifer'  aatttaattagaaaacgtccaggaattttttttggtcaatgttcagaaatttgtggtata
-#~ 'A.dorsata'   aatttaattagaaaacgaccaggaattttcttcggtcaatgttctgaaatctgtggaata
-#~ 'A.cerana'    aatttaattagaaaacgacctggaatcttttttggtcaatgttcagaaatttgtggtata
-#~ 'A.florea'    aatttaattagaaaacgacctggaattttttttggtcaatgttctgaaatttgtggaata
-#~ 'A.koschev'   aatttaattagaaaacgtccaggaattttttttggtcaatgttcagaaatttgtggaata
-#~
-#~ 'A.andrenof'  aatcatagatttataccaattatagttgaatcaacatcatttaaatattttataaattga
-#~ 'A.mellifer'  aatcatagatttataccaattataattgaatcaacttcatttcaatattttttaaattga
-#~ 'A.dorsata'   aatcatagatttataccaattataattgaatcaacttcatttaattattttttaaattga
-#~ 'A.cerana'    aatcatagattcataccaattatagtagaatctacatcatttaaatattttcttaattgg
-#~ 'A.florea'    aatcatagatttataccaattatagttgaatcaacatcatttaaatattttataaattga
-#~ 'A.koschev'   aatcatagattcatacctattatagttgaatcaacatcatttaaatttttcttaaattga
-#~
-#~ 'A.andrenof'  atttataaaataaatta
-#~ 'A.mellifer'  gtaaataaacaaatcta
-#~ 'A.dorsata'   gttaataaacaatctta
-#~ 'A.cerana'    gtaaataaacaaaataa
-#~ 'A.florea'    atttataaaataaatta
-#~ 'A.koschev'   attaataaacaaaatta
-#~ ;
-#~ END; [Characters]
-#~ """

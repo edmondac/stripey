@@ -2,6 +2,19 @@
 <html lang="en">
   <head>
     <link rel="stylesheet" href="/static/stripey_app/style.css" />
+    <script>
+        function toggle_rightbarcontents() {
+            var rb = document.getElementById('rightbarcontents');
+            var sh = document.getElementById('rightbarshowhide');
+            if (rb.style.display == 'block') {
+                rb.style.display = 'none';
+                sh.innerText = 'Expand menu';
+            } else {
+                rb.style.display = 'block';
+                sh.innerText = 'Collapse menu';
+            }
+        }
+    </script>
     <title>{% block title %}Stripey{% endblock %}</title>
     {% block head %}{% endblock %}
   </head>
@@ -35,7 +48,8 @@
         <div class="clear"></div>
 
         <div id="rightbar" class="rightbar">
-            {% block rightbar %}{% endblock %}
+            <div id="rightbarshowhide" onclick="toggle_rightbarcontents();" style="text-decoration:underline;">Collapse menu</div>
+            <div id="rightbarcontents" style="display:block;"><br/>{% block rightbar %}{% endblock %}</div>
         </div>
 
         <div id="content" class="content">

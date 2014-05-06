@@ -6,12 +6,12 @@
     var toggle = 0;
     function toggleIdents() {
         if (toggle) {
-            $('.greek').show();
-            $('.ident').hide();
+            $('div.greek').show();
+            $('div.ident').hide();
             toggle = 0;
         } else {
-            $('.greek').hide();
-            $('.ident').show();
+            $('div.greek').hide();
+            $('div.ident').show();
             toggle = 1;
         }
      }
@@ -38,7 +38,6 @@
     $(document).ready(function() {
         // Convert the idents to letters
         var idents = ' bcdefghijklmnopqrstuvwxyz';
-        console.log('Looking')
 
         $('table').each(function() {
             var other_rows = $(this).find('tr').slice(1);
@@ -76,32 +75,33 @@
 {% endblock head %}
 
 {% block rightbar %}
-    <a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v }}">View text</a><br/><br/>
-    Change algorithm: {% for alg in algorithms %}{% if alg.name == algorithm.name %}<b>{{ alg.name }}</b>{% else %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v }}&al={{ alg.name }}">{{ alg.name }}</a>{% endif %} {% endfor %}
-    <br/>
-    <a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&al={{ algorithm.name }}">View whole chapter</a>
-    <br/>
-    <a href="nexus.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v }}&al={{ algorithm.name }}">View nexus file</a>
+    <ul>
+        <li><a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v }}">View text</a></li>
+        <li><a onclick="toggleIdents()">Toggle text/idents</a></li>
+        <li>Change algorithm: {% for alg in algorithms %}{% if alg.name == algorithm.name %}<b>{{ alg.name }}</b>{% else %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v }}&al={{ alg.name }}">{{ alg.name }}</a>{% endif %} {% endfor %}</li>
+        <li><a href="nexus.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v }}&al={{ algorithm.name }}">View nexus file of this collation</a></li>
+        <li><a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&al={{ algorithm.name }}">View collation of whole chapter (very slow)</a></li>
+    </ul>
+
 {% endblock rightbar %}
 
 {% block content %}
 
-<h2>{% if chapter.num > 1 %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num|add:'-1' }}&v=1&al={{ algorithm.name }}">-1</a>{% endif %} Collation of {{ book.name|title }} {{ chapter.num }} ({{ algorithm.name }}) {% if not is_last_chapter %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num|add:'+1' }}&v=1&al={{ algorithm.name }}">+1</a>{% endif %}</h2>
+<h1>{% if chapter.num > 1 %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num|add:'-1' }}&v=1&al={{ algorithm.name }}">-1</a>{% endif %} Collation of {{ book.name|title }} {{ chapter.num }} ({{ algorithm.name }}) {% if not is_last_chapter %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num|add:'+1' }}&v=1&al={{ algorithm.name }}">+1</a>{% endif %}</h1>
 
 {% for verse, stripes in collation %}
-    <h3>
+    <h2>
         {% if v %}
-            {% if v > 1 %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v|add:'-1' }}&al={{ algorithm.name }}">-1</a>{% endif %} Verse {{ verse.num }}{% if not is_last_verse %} <a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v|add:'+1' }}&al={{ algorithm.name }}">+1</a>{% endif %} <a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&al={{ algorithm.name }}">all</a>
+            {% if v > 1 %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v|add:'-1' }}&al={{ algorithm.name }}">-1</a>{% endif %} Verse {{ verse.num }}{% if not is_last_verse %} <a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v|add:'+1' }}&al={{ algorithm.name }}">+1</a>{% endif %}
         {% else %}
             <a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ verse.num }}&al={{ algorithm.name }}">Verse {{ verse.num }}</a>
         {% endif %}
-    <button onclick="toggleIdents()">Toggle text/idents</button>
-    </h3>
+    </h2>
 
     <table>
         {% for stripe, ms_stripes in stripes %}
             <tr id="stripe{{ stripe.id }}" onmouseover="highlightReadings('stripe{{ stripe.id }}')" onmouseout="resetRow('stripe{{ stripe.id }}')">
-                <th width="400px">
+                <th>
                     {% for m in ms_stripes %}
                         <a href="manuscript.html?ms_id={{ m.ms_verse.hand.manuscript.id }}&bk={{ book.num }}&ch={{ chapter.num }}" title="{{ m.ms_verse.hand.manuscript.display_ref }}">
                         <font class="{% if m.ms_verse.hand.manuscript.id == base_ms_id %}base_ms{% endif %} ms_{{ m.ms_verse.hand.manuscript.id }}" onmouseover="highlightManuscript('ms_{{ m.ms_verse.hand.manuscript.id }}')" onmouseout="resetManuscript('ms_{{ m.ms_verse.hand.manuscript.id }}')">
@@ -110,8 +110,8 @@
                     {% endfor %}
                 </th>
                 <td>{{ stripe.similarity|floatformat }}%</td>
-                {% for reading in stripe.readings.all %}
-                    <td id="vr{{ reading.variant.id }}">
+                {% for reading in stripe.sorted_readings %}
+                    <td id="vr{{ reading.variant.id }}" nowrap class="greek">
                         <div class="greek">{{ reading.text }}</div>
                         <div class="ident" style="display:none">{{ reading.label }}</div>
                     </td>

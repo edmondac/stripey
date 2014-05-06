@@ -94,11 +94,12 @@ body {
 #container {
  background-color: white;
  border: 1px solid ;
+ position: relative;
 }
 
 #content, #fullcontent {
  background-color: white;
- position: relative;
+ //position: relative;
  margin: 5px;
  padding: 5px;
  -moz-box-shadow: 0 0 5px black;
@@ -107,7 +108,7 @@ body {
 }
 
 #content {
- width: 67%;
+ width: calc(100%-5px);
 }
 
 #rightbar {
@@ -115,9 +116,13 @@ body {
  background-color: #eeeeff;
  margin: 5px;
  padding: 5px;
- float: right;
+ //float: right;
+ position: absolute;
+ left: calc(70% - 25px);
+ top: 6px;
  width: 30%;
  font-size: 75%;
+ opacity:0.8;
  -moz-box-shadow: 0 0 5px black;
  -webkit-box-shadow: 0 0 5px black;
  box-shadow: 0 0 5px black;
@@ -137,6 +142,7 @@ body {
 h1 {
  color: white;
  font-size: 110%;
+ width: calc(70% - 27px);
  border: 1px solid #336667;
  background-color: #66999a;
  padding: 1px 1px 1px 1px;

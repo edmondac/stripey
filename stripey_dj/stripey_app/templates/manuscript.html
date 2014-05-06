@@ -8,17 +8,20 @@
 {% endblock head %}
 
 {% block rightbar %}
-    <a href="?ms_id={{ ms.id }}">Overview for {{ ms.display_ref }}</a>
-    <p></p>
+    {% if book_to_show %}
+        <a href="chapter.html?bk={{ book_to_show.num }}{% if chapter_to_show %}&ch={{ chapter_to_show.num }}{% else %}&ch=1{% endif %}&v=1">View {{ book_to_show.name|title }} {{ chapter_to_show.num }} in all manuscripts</a><br/><br/>
+    {% endif %}
+
+    <h2>{{ ms.display_ref }}</h2>
+    <a href="?ms_id={{ ms.id }}">Overall correctors' chart </a><br/>
+
     {% if book_to_show %}
         {% if chapter_to_show %}
-            <a href="?ms_id={{ ms.id }}&bk={{ book_to_show.num }}">Overview for {{ book_to_show.name|title }} in {{ ms.display_ref }}</a>
-            <p></p>
+            <a href="?ms_id={{ ms.id }}&bk={{ book_to_show.num }}">{{ book_to_show.name|title }} correctors' chart</a><br/>
         {% endif %}
-        <a href="chapter.html?bk={{ book_to_show.num }}{% if chapter_to_show %}&ch={{ chapter_to_show.num }}{% else %}&ch=1{% endif %}&v=1">View {{ book_to_show.name|title }} {{ chapter_to_show.num }} in all manuscripts</a>
     {% endif %}
-    <p></p>
-    Select book or chapter:
+
+    <br/><h2>Text in {{ ms.display_ref }}</h2>
     {% for book in books %}
      <div>
       <b><a href="?ms_id={{ ms.id }}&bk={{ book.num }}">{{ book.name|title }}</a>: </b>
@@ -27,11 +30,8 @@
       {% endfor %}
      </div>
     {% endfor %}
-    <p></p>
-    View {{ ms.display_ref }} in:
-    <a href="http://ntvmr.uni-muenster.de/en_GB/manuscript-workspace/?docid={{ ms.liste_id }}">NTVMR</a> |
-    <a href="http://www.iohannes.com/XML/transcriptions/greek/{{ ms.ms_ref }}.xml">IGNTP</a>
-    <p></p>
+
+    <br/><h2>Correctors</h2>
     {% if correctors %}
         All correctors in manuscript:
             {% for h in correctors %}
@@ -48,6 +48,12 @@
     {% else %}
         Manuscript has no correctors.
     {% endif %}
+
+    <br/><h2>Links</h2>
+    View {{ ms.display_ref }} in:
+    <a href="http://ntvmr.uni-muenster.de/en_GB/manuscript-workspace/?docid={{ ms.liste_id }}">NTVMR</a> |
+    <a href="http://www.iohannes.com/XML/transcriptions/greek/{{ ms.ms_ref }}.xml">IGNTP</a>
+
 {% endblock rightbar %}
 
 {% block content %}

@@ -437,7 +437,11 @@ def get_all_verses(book_obj, chapter_obj, base_ms_id=None, verse_num=None):
         base_ms = ManuscriptTranscription.objects.all()[0]
 
     base_texts = base_ms.get_text(book_obj, chapter_obj)
-    sorters = {x[0]: TextSorter([i.text for i in x[1] if i.hand.name == 'firsthand'][0]) for x in base_texts}
+    sorters = {}
+    for x in base_texts:
+        first_hands = [i.text for i in x[1] if i.hand.name == 'firsthand']
+        base = first_hands[0] if first_hands else (x[1][0].text if x[1] else u'')
+        sorters[x[0]] = TextSorter(base)
 
     vs_d = {}
     for ms in all_mss:
@@ -541,6 +545,7 @@ def collate(chapter_obj, verse_obj, algorithm_obj, base_ms_id):
             ms_stripes = sorted(MsStripe.objects.filter(stripe=st),
                                 key=lambda a: a.ms_verse.hand.manuscript.liste_id)
             my_data.append((st, ms_stripes))
+            st.sorted_readings = st.readings.all().order_by('variant__id')
 
         # Now sort it by similarity to our base ms's reading - and add the
         # similarity to the object
