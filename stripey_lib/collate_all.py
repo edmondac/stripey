@@ -136,22 +136,29 @@ def collate_verse(chapter_obj, verse_obj, mss, algo):
     logger.debug("  .. added {} entries in {} secs".format(count, round(t, 3)))
 
 
-def collate_book(book_obj, algo):
+def collate_book(book_obj, algo, chapter_ref=None):
+    """
+    Collate a particular book using the specified algo
+
+    @param book_obj: db book object
+    @param algo: db algorithm object
+    @chapter_ref: (int) chapter number to collate (or None for all)
+    """
     logger.info("Collating book {}:{}".format(book_obj.num, book_obj.name))
     for chapter_obj in Chapter.objects.filter(book=book_obj).order_by('num'):
-        logger.info("Collating chapter {} {}".format(book_obj.name, chapter_obj.num))
-        all_verses = get_all_verses(book_obj, chapter_obj)
-        for v, mss in all_verses:
-            verse_obj = Verse.objects.get(chapter=chapter_obj, num=v)
-            # 1. check we've not already done this one
-            if Variant.objects.filter(verse=verse_obj, algorithm=algo):
-                continue
-            # 2. make the new collation
-            collate_verse(chapter_obj, verse_obj, mss, algo)
-            # 3. tidy up django's query list, to free up some memory
-            reset_queries()
+        if chapter_ref is None or chapter_ref == chapter_obj.num:
+            logger.info("Collating chapter {} {}".format(book_obj.name, chapter_obj.num))
+            all_verses = get_all_verses(book_obj, chapter_obj)
+            for v, mss in all_verses:
+                verse_obj = Verse.objects.get(chapter=chapter_obj, num=v)
+                # 1. check we've not already done this one
+                if Variant.objects.filter(verse=verse_obj, algorithm=algo):
+                    continue
+                # 2. make the new collation
+                collate_verse(chapter_obj, verse_obj, mss, algo)
+                # 3. tidy up django's query list, to free up some memory
+                reset_queries()
 
-        #raise ValueError("That's chapter 1")
 
 @transaction.commit_on_success
 def drop_all(algo):
@@ -168,10 +175,20 @@ def drop_all(algo):
     logger.warning("Done")
 
 
-def collate_all(algo):
+def collate_all(algo, chapter_ref):
     """
     Collate everything using the collatex service
+
+    @param algo: name of an algorithm
+    @param chapter_ref: book:chapter, e.g. 04:11, to collate
     """
+    if chapter_ref:
+        mubook, muchapter = chapter_ref.split(':')
+        mubook = int(mubook)
+        muchapter = int(muchapter)
+    else:
+        mubook = muchapter = None
+
     with collatex_service():
         try:
             algo_obj = Algorithm.objects.get(name=algo)
@@ -181,7 +198,8 @@ def collate_all(algo):
             algo_obj.save()
 
         for book in Book.objects.all():
-            collate_book(book, algo_obj)
+            if mubook is None or book.num == mubook:
+                collate_book(book, algo_obj, muchapter)
 
 
 def tests():
@@ -285,22 +303,32 @@ def _arg(question, default=None):
 
 
 if __name__ == "__main__":
-    if 'test' in sys.argv:
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-a', '--algorithm', help='Which algorithm to use? Options are: {}, all'.format(SUPPORTED_ALGORITHMS), default='dekker')
+    parser.add_argument('-t', '--test', help="Just run tests and exit", default=False, action='store_true')
+    parser.add_argument('-c', '--clean', help="Clean out old colation before adding new", type=bool, default=False)
+    parser.add_argument('--chapter', help="Collate only one specific chapter (04:11 => John 11)")
+    args = parser.parse_args()
+
+    if args.test:
         logger.info("Running tests...")
         tests()
     else:
-        logger.info("Collating everything...")
-        algo = _arg("Enter name for algorithm ({} - or all)".format(', '.join(SUPPORTED_ALGORITHMS)))
-        drop = _arg("Remove old collation ({}) before continuing?".format(algo), False)
-
-        if algo == 'all':
+        if args.algorithm == 'all':
             algos = SUPPORTED_ALGORITHMS
         else:
-            algos = [algo]
+            algos = [args.algorithm]
 
-        if drop:
+        if args.clean:
+            ok = _arg("Remove old collation ({}) before continuing?".format(algos), False)
+            if not ok:
+                sys.exit(1)
             for a in algos:
                 drop_all(a)
 
         for a in algos:
-            collate_all(a)
+            if args.chapter:
+                collate_all(a, args.chapter)
+            else:
+                collate_all(a)
