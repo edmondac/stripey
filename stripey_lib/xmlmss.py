@@ -58,13 +58,20 @@ class Snippet(object):
     def _post_process(self, text):
         """
         Take some text and process it - e.g. rationalise out final nu.
+
+        Get rid of any double spaces.
+
         TODO: should this do anything else? Nomina sacra for example?
 
         XXX: Is this a good idea at all? It's standard...
         """
         # Final nu
-        ret = text.replace(u'¯', u'ν')
-        return ret
+        text = text.replace(u'¯', u'ν')
+        while '  ' in text:
+            #~ print "Stripping double space"
+            text = text.replace('  ', ' ')
+
+        return text
 
     #~ def flatten(self):
         #~ """
@@ -133,7 +140,7 @@ class Snippet(object):
             ret = []
             for s in self._snippets:
                 ret.append(s.get_text(hand_name, hand_type))
-            return ''.join(ret)
+            return self._post_process(''.join(ret))
 
         elif not self._readings:
             # Empty snippet - return empty string
@@ -161,8 +168,8 @@ class Snippet(object):
                 ret = u" " + ret
 
             # Trim out double spaces
-            while '  ' in ret:
-                ret = ret.replace('  ', ' ')
+            #~ while '  ' in ret:
+                #~ ret = ret.replace('  ', ' ')
             #print u"Returning reading for {}:{}: {}".format(hand_name, hand_type, ret)
             return ret
 
@@ -428,3 +435,14 @@ class Manuscript(object):
                     self.chapters[my_ch] = Chapter(child, my_ch)
 
         logger.debug("Finished parsing %s" % (self.name, ))
+
+if __name__ == "__main__":
+    import sys
+    m = Manuscript("Test", sys.argv[1])
+    print m.book, m.num
+    for ch in m.chapters.values():
+        for vl in ch.verses.values():
+            for vs in vl:
+                print "> {}:{}".format(ch.num, vs.num)
+                for t, h in vs.get_texts():
+                    print h + '\t' + t
