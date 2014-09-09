@@ -134,20 +134,23 @@ class ManuscriptTranscription(models.Model):
         """
         ref = []
 
-        if self.tischendorf:
-            ref.append(self.tischendorf)
+        if self.ga.startswith('P'):
+            ref = [u'𝔓{}'.format(self.ga[1:])]
+        else:
+            if self.tischendorf:
+                ref.append(self.tischendorf)
 
-        if self.ms_name:
-            ref.append(self.ms_name)
+            if self.ms_name:
+                ref.append(self.ms_name)
 
-        #if self.liste_id:
-        #    ref.append(u"Liste:{}".format(self.liste_id))
+            #if self.liste_id:
+            #    ref.append(u"Liste:{}".format(self.liste_id))
 
-        if self.ga and self.ga != self.ms_name:
-            ref.append(self.ga)
+            if self.ga and self.ga != self.ms_name:
+                ref.append(self.ga)
 
-        if not ref:
-            ref = [self.ms_ref]
+            if not ref:
+                ref = [self.ms_ref]
 
         return u", ".join(ref)
 
@@ -155,6 +158,9 @@ class ManuscriptTranscription(models.Model):
         """
         A short ref to display
         """
+        if self.ga.startswith('P'):
+            return u'𝔓{}'.format(self.ga[1:])
+
         if self.tischendorf:
             return self.tischendorf
 
