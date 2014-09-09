@@ -305,9 +305,11 @@ def _arg(question, default=None):
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('-a', '--algorithm', help='Which algorithm to use? Options are: {}, all'.format(SUPPORTED_ALGORITHMS), default='dekker')
+    parser.add_argument('-a', '--algorithm', default='dekker',
+                        help='Which algorithm to use? Options are: {}, all'.format(SUPPORTED_ALGORITHMS))
     parser.add_argument('-t', '--test', help="Just run tests and exit", default=False, action='store_true')
-    parser.add_argument('-c', '--clean', help="Clean out old colation before adding new", type=bool, default=False)
+    parser.add_argument('-c', '--clean', help="Clean out old colation before adding new",
+                        default=False, action='store_true')
     parser.add_argument('--chapter', help="Collate only one specific chapter (04:11 => John 11)")
     args = parser.parse_args()
 
@@ -321,7 +323,7 @@ if __name__ == "__main__":
             algos = [args.algorithm]
 
         if args.clean:
-            ok = _arg("Remove old collation ({}) before continuing?".format(algos), False)
+            ok = _arg("Remove old collation FOR ALL WORKS ({}) before continuing?".format(algos), False)
             if not ok:
                 sys.exit(1)
             for a in algos:

@@ -15,40 +15,42 @@
 {% block content %}
     <h1>{% if chapter.num > 1 %}<a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num|add:'-1' }}&v=1">-1</a>{% endif %} Text of {{ book.name|title }} {{ chapter.num }} {% if not is_last_chapter %}<a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num|add:'+1' }}&v=1">+1</a>{% endif %}
     </h1>
-    <h2>
-        {% if v %}
-            {% if v > 1 %}<a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v|add:'-1' }}">-1</a>{% endif %} Verse {{ verse.0 }}{% if not is_last_verse %} <a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v|add:'+1' }}">+1</a>{% endif %}
-        {% else %}
-            <a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ verse.0 }}">Verse {{ verse.0 }}</a>
-        {% endif %}
-    </h2>
 {% endblock content %}
 
 {% block rightbar %}
-    View collation: {% for alg in algorithms %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ verse.0 }}&al={{ alg.name }}">{{ alg.name }}</a> {% endfor %}
+    View collation: {% for alg in algorithms %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v }}&al={{ alg.name }}">{{ alg.name }}</a> {% endfor %}<br/>
+    <a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num }}">View whole chapter</a>
 
     <br/><br/>
     <a href="book.html?bk={{ book.num }}">Overview for {{ book.name|title }}</b></a>
 {% endblock rightbar %}
 
 {% block fullcontent %}
-
-    <table>
-        {% for text in verse.1 %}
-            <tr>
-                <th>
-                    {% for ms in text.1.0 %}
-                        <a href="manuscript.html?ms_id={{ ms.0.id }}&bk={{ book.num }}&ch={{ chapter.num }}" title="{{ ms.0.display_ref }}">
-                        <font class="{% if ms.0.id == base_ms_id %}base_ms{% endif %} ms_{{ ms.0.id }}" onmouseover="highlightManuscript('ms_{{ ms.0.id }}')" onmouseout="resetManuscript('ms_{{ ms.0.id }}')">
-                            {{ ms.0.display_short }} {% if ms.1 != 'firsthand' %}<i>{{ ms.1 }}</i>{% endif %}
-                        </font></a>&nbsp;
-                    {% endfor %}
-                </th>
-                <td>{{ text.1.1|floatformat }}%</td>
-                <td class="greek" nowrap>{{ text.0 }}</td>
-            </tr>
-        {% endfor %}
-    </table><br/>
+    {% for verse in verses %}
+        <h2>
+            {% if v %}
+                {% if v > 1 %}<a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v|add:'-1' }}">-1</a>{% endif %} Verse {{ verse.0 }}{% if not is_last_verse %} <a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v|add:'+1' }}">+1</a>{% endif %}
+            {% else %}
+                <a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ verse.0 }}">Verse {{ verse.0 }}</a>
+            {% endif %}
+        </h2>
+        <table>
+            {% for text in verse.1 %}
+                <tr>
+                    <th>
+                        {% for ms in text.1.0 %}
+                            <a href="manuscript.html?ms_id={{ ms.0.id }}&bk={{ book.num }}&ch={{ chapter.num }}" title="{{ ms.0.display_ref }}">
+                            <font class="{% if ms.0.id == base_ms_id %}base_ms{% endif %} ms_{{ ms.0.id }}" onmouseover="highlightManuscript('ms_{{ ms.0.id }}')" onmouseout="resetManuscript('ms_{{ ms.0.id }}')">
+                                {{ ms.0.display_short }} {% if ms.1 != 'firsthand' %}<i>{{ ms.1 }}</i>{% endif %}
+                            </font></a>&nbsp;
+                        {% endfor %}
+                    </th>
+                    <td>{{ text.1.1|floatformat }}%</td>
+                    <td class="greek" nowrap>{{ text.0 }}</td>
+                </tr>
+            {% endfor %}
+        </table><br/>
+    {% endfor %}
 
 
 {% endblock fullcontent %}

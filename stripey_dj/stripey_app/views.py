@@ -339,10 +339,9 @@ def collation(request):
     algorithm_obj = Algorithm.objects.get(name=request.GET.get('al'))
     chapter_obj = Chapter.objects.get(book=book_obj,
                                       num=request.GET.get('ch'))
-    v = request.GET.get('v')
+    v = _int_from_val(request.GET.get('v'))
     is_last_verse = None
-    if (v is not None and v != 'None'):
-        v = int(v)
+    if v is not None:
         verse_obj = Verse.objects.get(chapter=chapter_obj,
                                       num=v)
         last_verse = Verse.objects.filter(chapter=chapter_obj).order_by('-num')[0]
@@ -357,9 +356,11 @@ def collation(request):
         is_last_chapter = True
 
     # Get our memoized collation data
-    collation = collate(chapter_obj, verse_obj, algorithm_obj, base_ms_id)
+    collation = collate(book_obj, chapter_obj, verse_obj, algorithm_obj, base_ms_id)
 
     algos = Algorithm.objects.all()
+
+    print "GO GO GO"
 
     return default_response(request,
                             'collation.html',
@@ -397,8 +398,7 @@ def chapter(request):
     if chapter_obj.num == last_chapter.num:
         is_last_chapter = True
 
-    v = request.GET.get('v')
-    v = int(v) if v is not None else 1
+    v = _int_from_val(request.GET.get('v'))
     last_verse = Verse.objects.filter(chapter=chapter_obj).order_by('-num')[0]
     is_last_verse = None
     if last_verse.num == v:
@@ -424,8 +424,6 @@ def chapter(request):
 
         grouped_verses.append((vs, all_readings))
 
-    assert len(grouped_verses) == 1, grouped_verses
-
     algos = Algorithm.objects.all()
 
     return default_response(request,
@@ -433,10 +431,21 @@ def chapter(request):
                             {'book': book_obj,
                              'chapter': chapter_obj,
                              'v': v,
-                             'verse': grouped_verses[0],
+                             'verses': grouped_verses,
                              'is_last_chapter': is_last_chapter,
                              'is_last_verse': is_last_verse,
                              'algorithms': algos})
+
+
+def _int_from_val(x):
+    """
+    Returns an integer from the passed in value, unless it is
+    None or the string 'None' - in which case it returns None.
+    """
+    if (x is not None and x != 'None' and x != ''):
+        return int(x)
+    else:
+        return None
 
 
 def nexus(request):
@@ -444,26 +453,17 @@ def nexus(request):
     Create a nexus file, suitable for input to SplitsTree4
     """
     book_obj = Book.objects.get(num=request.GET.get('bk'))
-    chapter_obj = Chapter.objects.get(book=book_obj,
-                                      num=request.GET.get('ch'))
-    v = request.GET.get('v')
-    if (v is not None and v != 'None'):
-        v = int(v)
-        #verse_obj = Verse.objects.get(chapter=chapter_obj,
-        #                              num=v)
-    else:
-        v = None
-        #verse_obj = None
-
+    ch = _int_from_val(request.GET.get('ch'))
+    v = _int_from_val(request.GET.get('v'))
     algorithm_obj = Algorithm.objects.get(name=request.GET.get('al'))
     algos = Algorithm.objects.all()
 
     return default_response(request,
                             'nexus.html',
                             {'book': book_obj,
-                             'chapter': chapter_obj,
                              'algorithm': algorithm_obj,
                              'algorithms': algos,
+                             'ch': ch,
                              'v': v})
 
 
@@ -473,8 +473,8 @@ def nexus_file(request):
     """
     base_ms_id = int(request.COOKIES.get('base_ms', '0'))
     bk = request.GET.get('bk')
-    ch = request.GET.get('ch')
-    v = request.GET.get('v')
+    ch = _int_from_val(request.GET.get('ch'))
+    v = _int_from_val(request.GET.get('v'))
     al = request.GET.get('al')
     nexus = _nexus_file(bk, ch, v, al, base_ms_id)
     return HttpResponse(nexus, mimetype='text/plain')
@@ -486,19 +486,21 @@ def _nexus_file(bk, ch, v, al, base_ms_id):
     Memoized innards of the nexus file creation
     """
     book_obj = Book.objects.get(num=bk)
-    chapter_obj = Chapter.objects.get(book=book_obj,
-                                      num=ch)
-    if (v is not None and v != 'None'):
-        v = int(v)
-        verse_obj = Verse.objects.get(chapter=chapter_obj,
-                                      num=v)
+    if ch is not None:
+        chapter_obj = Chapter.objects.get(book=book_obj,
+                                          num=ch)
+        if v is not None:
+            verse_obj = Verse.objects.get(chapter=chapter_obj,
+                                          num=v)
+        else:
+            verse_obj = None
     else:
-        verse_obj = None
+        chapter_obj = None
 
     algorithm_obj = Algorithm.objects.get(name=al)
 
     # Get our memoized collation data
-    collation = collate(chapter_obj, verse_obj, algorithm_obj, base_ms_id)
+    collation = collate(book_obj, chapter_obj, verse_obj, algorithm_obj, base_ms_id)
 
     import string
     LABELS = string.lowercase

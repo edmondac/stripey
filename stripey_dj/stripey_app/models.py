@@ -519,9 +519,11 @@ class StripeSorter(TextSorter):
         return super(StripeSorter, self).__call__(text)
 
 
-@memoize
-def collate(chapter_obj, verse_obj, algorithm_obj, base_ms_id):
+#@memoize
+def collate(book_obj, chapter_obj, verse_obj, algorithm_obj, base_ms_id):
     """
+    @param chapter_obj: This is optional - if set to None this function
+    will return all chapters in the book
     @param verse_obj: This is optional - if set to None this function
     will return all verses in the chaper.
 
@@ -534,16 +536,25 @@ def collate(chapter_obj, verse_obj, algorithm_obj, base_ms_id):
         ]),
      (<Verse: Verse john 1:2>...
     """
-    print "Creating collation for {}:{}:{}:{}".format(chapter_obj.num,
-                                                      verse_obj,
-                                                      algorithm_obj.name,
-                                                      base_ms_id)
-    collation = []
+    print "Creating collation for {}:{}:{}:{}:{}".format(book_obj.name,
+                                                         chapter_obj,
+                                                         verse_obj,
+                                                         algorithm_obj.name,
+                                                         base_ms_id)
+
+    if chapter_obj:
+        chapters = [chapter_obj]
+    else:
+        chapters = Chapter.objects.filter(book=book_obj).order_by('num')
+
     if verse_obj:
         verses = [verse_obj]
     else:
-        verses = Verse.objects.filter(chapter=chapter_obj).order_by('num')
+        verses = []
+        for chapter in chapters:
+            verses.extend(Verse.objects.filter(chapter=chapter).order_by('num'))
 
+    #collation = []
     for verse in verses:
         stripes = Stripe.objects.filter(verse=verse, algorithm=algorithm_obj)
         my_data = []
@@ -560,6 +571,8 @@ def collate(chapter_obj, verse_obj, algorithm_obj, base_ms_id):
             st.similarity = sorter(st)
 
         sorted_data = sorted(my_data, key=lambda a: a[0].similarity, reverse=True)
-        collation.append((verse, sorted_data))
+        print "YIELD: ", verse
+        yield (verse, sorted_data)
+        #collation.append((verse, sorted_data))
 
-    return collation
+    #return collation
