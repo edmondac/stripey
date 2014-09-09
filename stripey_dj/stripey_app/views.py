@@ -360,8 +360,6 @@ def collation(request):
 
     algos = Algorithm.objects.all()
 
-    print "GO GO GO"
-
     return default_response(request,
                             'collation.html',
                             {'book': book_obj,
@@ -496,6 +494,7 @@ def _nexus_file(bk, ch, v, al, base_ms_id):
             verse_obj = None
     else:
         chapter_obj = None
+        verse_obj = None
 
     algorithm_obj = Algorithm.objects.get(name=al)
 

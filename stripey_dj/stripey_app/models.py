@@ -519,7 +519,30 @@ class StripeSorter(TextSorter):
         return super(StripeSorter, self).__call__(text)
 
 
-#@memoize
+@memoize
+def _collate_verse(verse, algorithm_obj, base_ms_id):
+    """
+    Collate a single verse - this is an internal function used
+    by collate() - which should be called instead.
+    """
+    stripes = Stripe.objects.filter(verse=verse, algorithm=algorithm_obj)
+    my_data = []
+    for st in stripes:
+        ms_stripes = sorted(MsStripe.objects.filter(stripe=st),
+                            key=lambda a: a.ms_verse.hand.manuscript.liste_id)
+        my_data.append((st, ms_stripes))
+        st.sorted_readings = st.readings.all().order_by('variant__id')
+
+    # Now sort it by similarity to our base ms's reading - and add the
+    # similarity to the object
+    sorter = StripeSorter(base_ms_id, my_data)
+    for st, ms_stripes in my_data:
+        st.similarity = sorter(st)
+
+    sorted_data = sorted(my_data, key=lambda a: a[0].similarity, reverse=True)
+    return (verse, sorted_data)
+
+
 def collate(book_obj, chapter_obj, verse_obj, algorithm_obj, base_ms_id):
     """
     @param chapter_obj: This is optional - if set to None this function
@@ -554,25 +577,7 @@ def collate(book_obj, chapter_obj, verse_obj, algorithm_obj, base_ms_id):
         for chapter in chapters:
             verses.extend(Verse.objects.filter(chapter=chapter).order_by('num'))
 
-    #collation = []
-    for verse in verses:
-        stripes = Stripe.objects.filter(verse=verse, algorithm=algorithm_obj)
-        my_data = []
-        for st in stripes:
-            ms_stripes = sorted(MsStripe.objects.filter(stripe=st),
-                                key=lambda a: a.ms_verse.hand.manuscript.liste_id)
-            my_data.append((st, ms_stripes))
-            st.sorted_readings = st.readings.all().order_by('variant__id')
-
-        # Now sort it by similarity to our base ms's reading - and add the
-        # similarity to the object
-        sorter = StripeSorter(base_ms_id, my_data)
-        for st, ms_stripes in my_data:
-            st.similarity = sorter(st)
-
-        sorted_data = sorted(my_data, key=lambda a: a[0].similarity, reverse=True)
-        print "YIELD: ", verse
-        yield (verse, sorted_data)
-        #collation.append((verse, sorted_data))
-
-    #return collation
+    print "Collating {} verses".format(len(verses))
+    for i, verse in enumerate(verses):
+        print " - collating {}/{} - {}".format(i + 1, len(verses), verse)
+        yield _collate_verse(verse, algorithm_obj, base_ms_id)
