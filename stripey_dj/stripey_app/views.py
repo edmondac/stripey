@@ -40,8 +40,44 @@ def index(request):
 
     return default_response(request,
                             'index.html',
-                            {'all_mss': (misc_mss, pap_mss, maj_mss, min_mss, lec_mss),
+                            {'all_mss': (('Special', misc_mss),
+                                         ('Papyri', pap_mss),
+                                         ('Majuscules', maj_mss),
+                                         ('Minuscules', min_mss),
+                                         ('Lectionaries', lec_mss)),
                              'books': books})
+
+
+def book(request):
+    """
+    Show a list of all manuscript transcriptions loaded for the specified book.
+    """
+    book_num = request.GET.get('bk')
+    book = get_object_or_404(Book, num=book_num)
+
+    #~ q = ManuscriptTranscription.objects.filter(msbook__book__num=book_num)
+    #~ print q.query
+    misc_mss = ManuscriptTranscription.objects.filter(msbook__book__num=book_num).filter(liste_id__lt=10000).order_by('liste_id')
+    pap_mss = ManuscriptTranscription.objects.filter(msbook__book__num=book_num).filter(liste_id__lt=20000).filter(liste_id__gte=10000).order_by('liste_id')
+    maj_mss = ManuscriptTranscription.objects.filter(msbook__book__num=book_num).filter(liste_id__lt=30000).filter(liste_id__gte=20000).order_by('liste_id')
+    min_mss = ManuscriptTranscription.objects.filter(msbook__book__num=book_num).filter(liste_id__lt=40000).filter(liste_id__gte=30000).order_by('liste_id')
+    lec_mss = ManuscriptTranscription.objects.filter(msbook__book__num=book_num).filter(liste_id__gte=40000).order_by('liste_id')
+
+    chapters = Chapter.objects.filter(book=book).order_by('num')
+
+    for mss in (misc_mss, pap_mss, maj_mss, min_mss, lec_mss):
+        for ms in mss:
+            ms.books = MsBook.objects.filter(manuscript=ms)
+
+    return default_response(request,
+                            'book.html',
+                            {'all_mss': (('Special', misc_mss),
+                                         ('Papyri', pap_mss),
+                                         ('Majuscules', maj_mss),
+                                         ('Minuscules', min_mss),
+                                         ('Lectionaries', lec_mss)),
+                             'chapters': chapters,
+                             'book': book})
 
 
 def hand(request):

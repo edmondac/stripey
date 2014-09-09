@@ -26,6 +26,9 @@
 
 {% block rightbar %}
     View collation: {% for alg in algorithms %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ verse.0 }}&al={{ alg.name }}">{{ alg.name }}</a> {% endfor %}
+
+    <br/><br/>
+    <a href="book.html?bk={{ book.num }}">Overview for {{ book.name|title }}</b></a>
 {% endblock rightbar %}
 
 {% block fullcontent %}

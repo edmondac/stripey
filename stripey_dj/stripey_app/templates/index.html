@@ -4,7 +4,7 @@
     <h2>Books</h2>
     {% for book in books %}
      <div>
-      <b>{{ book.name|title }}:</b>
+      <b><a href="book.html?bk={{ book.num }}">{{ book.name|title }}:</b></a>
       {% for chapter in book.chapters %}
         <a href="chapter.html?bk={{ book.num }}&ch={{ chapter.num }}&v=1">{{ chapter.num }}</a>
       {% endfor %}
@@ -19,7 +19,8 @@
             <table><tr>
             {% for sec in all_mss %}
                 <td class="manuscript_list">
-                {% for ms in sec %}
+                <b>{{ sec.0 }} ({{ sec.1|length }})</b><hr/>
+                {% for ms in sec.1 %}
                     <a href="manuscript.html?ms_id={{ ms.id }}">{{ ms.display_ref }}</a>
                     ({% for b in ms.books %}{{ b.book.name|title }}{% if not forloop.last %}, {% endif %}{% endfor %})
                     <br/>
