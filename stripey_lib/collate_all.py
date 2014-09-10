@@ -175,7 +175,7 @@ def drop_all(algo):
     logger.warning("Done")
 
 
-def collate_all(algo, chapter_ref):
+def collate_all(algo, chapter_ref=None):
     """
     Collate everything using the collatex service
 
@@ -310,7 +310,8 @@ if __name__ == "__main__":
     parser.add_argument('-t', '--test', help="Just run tests and exit", default=False, action='store_true')
     parser.add_argument('-c', '--clean', help="Clean out old colation before adding new",
                         default=False, action='store_true')
-    parser.add_argument('--chapter', help="Collate only one specific chapter (04:11 => John 11)")
+    parser.add_argument('--chapter', help="Collate only one specific chapter (04:11 => John 11)",
+                        default=None)
     args = parser.parse_args()
 
     if args.test:
