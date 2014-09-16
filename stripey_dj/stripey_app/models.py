@@ -489,15 +489,8 @@ class TextSorter(object):
         self.base_text = base_text
 
     def __call__(self, text):
-        try:
-            lev = Levenshtein.ratio(self.base_text if self.base_text else u'',
-                                    text if text else u'') * 100.0
-        except:
-            print 1, self.base_text
-            print 2, text
-            raise
-        #~ if lev != 100.0:
-            #~ logger.warning(u"|{}|{}|{}".format(self.base_text, text, lev))
+        lev = Levenshtein.ratio(self.base_text if self.base_text else u'',
+                                text if text else u'') * 100.0
         return lev
 
 
