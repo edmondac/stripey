@@ -502,7 +502,7 @@ def _nexus_file(bk, ch, v, al, base_ms_id):
     collation = collate(book_obj, chapter_obj, verse_obj, algorithm_obj, base_ms_id)
 
     import string
-    LABELS = string.lowercase
+    LABELS = string.ascii_lowercase + string.digits
 
     taxlabels = set()
     symbols = set()

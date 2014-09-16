@@ -10,7 +10,7 @@
         function callback(responseText, textStatus, XMLHttpRequest) {
             // Make a download link
             console.log("Making download link");
-            var filename = "stripey_{{ book.name }}{% if chapter %}_{{ ch }}{% endif %}{% if v %}_{{ v }}{% endif %}_{{ algorithm.name }}.nex"
+            var filename = "stripey_{{ book.name }}{% if ch %}_{{ ch }}{% endif %}{% if v %}_{{ v }}{% endif %}_{{ algorithm.name }}.nex"
             $("#" + link_id).attr("href", url).attr("download", filename).html("Download");
         }
 

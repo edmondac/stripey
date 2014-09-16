@@ -8,7 +8,7 @@ except ImportError:
     xmlmss = None
 
 from django.db.models import Max
-from memoize import memoize
+from memoize import memoize, picklify
 
 import Levenshtein
 import unicodedata
@@ -489,7 +489,13 @@ class TextSorter(object):
         self.base_text = base_text
 
     def __call__(self, text):
-        lev = Levenshtein.ratio(self.base_text, text) * 100.0
+        try:
+            lev = Levenshtein.ratio(self.base_text if self.base_text else u'',
+                                    text if text else u'') * 100.0
+        except:
+            print 1, self.base_text
+            print 2, text
+            raise
         #~ if lev != 100.0:
             #~ logger.warning(u"|{}|{}|{}".format(self.base_text, text, lev))
         return lev
@@ -519,7 +525,7 @@ class StripeSorter(TextSorter):
         return super(StripeSorter, self).__call__(text)
 
 
-@memoize
+@picklify
 def _collate_verse(verse, algorithm_obj, base_ms_id):
     """
     Collate a single verse - this is an internal function used
