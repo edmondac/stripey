@@ -539,8 +539,9 @@ DIMENSIONS ntax={};
 TAXLABELS
 """.format(len(labs))
     for i, l in enumerate(labs):
-        nexus += "[{}] '{}_{}'\n".format(i + 1, l[0], l[1])
-    nexus += ";\nEND; [Taxa]"
+        #nexus += "[{}] '{}_{}'\n".format(i + 1, l[0], l[1])
+        nexus += "'{}_{}'\n".format(l[0], l[1])
+    nexus += ";\nEND;"
 
     # Characters section
     syms = sorted(symbols)
@@ -582,16 +583,13 @@ FORMAT
     missing=?
     gap=-
     symbols="{}"
-    labels=left
-    transpose=no
-    interleave=yes
 ;
 """.format(linelength,
            ' '.join(syms))
 
     nexus += matrix_bit
     nexus += """;
-END; [Characters]
+END;
 """
 
     return nexus
