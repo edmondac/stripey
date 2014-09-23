@@ -456,7 +456,7 @@ def nexus(request):
     v = _int_from_val(request.GET.get('v'))
     algorithm_obj = Algorithm.objects.get(name=request.GET.get('al'))
     algos = Algorithm.objects.all()
-    nexus_variant = request.GET.get('variant', None)
+    nexus_variant = request.GET.get('variant', 'mesquite')
 
     return default_response(request,
                             'nexus.html',

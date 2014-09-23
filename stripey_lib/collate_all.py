@@ -9,7 +9,7 @@ import urllib2
 from contextlib import contextmanager
 
 # Collatex settings:
-COLLATEX_SERVICE = "collatex-tools-1.3/bin/collatex-server"
+COLLATEX_SERVICE = "collatex-tools-1.5/bin/collatex-server"
 COLLATEX_PORT = 7369
 SUPPORTED_ALGORITHMS = ('dekker', 'needleman-wunsch', 'medite')
 # levenstein distance: the edit distance threshold for optional fuzzy matching
@@ -161,16 +161,39 @@ def collate_book(book_obj, algo, chapter_ref=None):
 
 
 @transaction.commit_on_success
-def drop_all(algo):
+def drop_all(algo, chapter_ref=None):
     """
     Clear out all collation data from the db
+
+    @param algo: name of an algorithm
+    @param chapter_ref: book:chapter, e.g. 04:11, to collate
     """
     logger.warning("Clearing out old data for {}".format(algo))
 
-    for v in Variant.objects.filter(algorithm__name=algo):
-        v.delete()
-    for s in Stripe.objects.filter(algorithm__name=algo):
-        s.delete()
+    to_del = []
+    if chapter_ref is None:
+        for v in Variant.objects.filter(algorithm__name=algo):
+            to_del.append(v)
+        for s in Stripe.objects.filter(algorithm__name=algo):
+            to_del.append(s)
+    else:
+        mubook, muchapter = chapter_ref.split(':')
+        mubook = int(mubook)
+        muchapter = int(muchapter)
+        for v in Variant.objects.filter(algorithm__name=algo,
+                                        verse__chapter__num=muchapter,
+                                        verse__chapter__book__num=mubook):
+            to_del.append(v)
+        for s in Stripe.objects.filter(algorithm__name=algo,
+                                       verse__chapter__num=muchapter,
+                                       verse__chapter__book__num=mubook):
+            to_del.append(s)
+
+    print " > Deleting {} objects".format(len(to_del))
+    for i, x in enumerate(to_del):
+        x.delete()
+        sys.stdout.write("\r > {} ({}%)   ".format(i+1, i*100.0/len(to_del)))
+    print
 
     logger.warning("Done")
 
@@ -310,6 +333,8 @@ if __name__ == "__main__":
     parser.add_argument('-t', '--test', help="Just run tests and exit", default=False, action='store_true')
     parser.add_argument('-c', '--clean', help="Clean out old colation before adding new",
                         default=False, action='store_true')
+    parser.add_argument('-f', '--force', help="Don't ask any questions - just do it!",
+                        default=False, action='store_true')
     parser.add_argument('--chapter', help="Collate only one specific chapter (04:11 => John 11)",
                         default=None)
     args = parser.parse_args()
@@ -324,14 +349,17 @@ if __name__ == "__main__":
             algos = [args.algorithm]
 
         if args.clean:
-            ok = _arg("Remove old collation FOR ALL WORKS ({}) before continuing?".format(algos), False)
+            ok = (args.force or
+                  _arg("Remove old ({}) collation for {} before continuing?"
+                      .format(algos, args.chapter if args.chapter else "ALL WORKS"),
+                      False))
             if not ok:
                 sys.exit(1)
             for a in algos:
-                drop_all(a)
+                drop_all(a, args.chapter)
 
         for a in algos:
-            if args.chapter:
-                collate_all(a, args.chapter)
-            else:
-                collate_all(a)
+            collate_all(a, args.chapter)
+
+        print "\n** Don't forget to delete the old picklify data"
+
