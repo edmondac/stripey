@@ -1,12 +1,13 @@
+import json
+import string
+from collections import defaultdict
+import logging
 from django.shortcuts import render_to_response, get_object_or_404
 from stripey_app.models import (ManuscriptTranscription, Book, Chapter,
                                 Hand, Verse, MsVerse, get_all_verses,
                                 collate, Algorithm, MsChapter, MsBook)
 from django.http import HttpResponseRedirect, HttpResponse
-import json
 from memoize import memoize
-from collections import defaultdict
-import logging
 logger = logging.getLogger('stripey_app.views')
 
 
@@ -455,6 +456,7 @@ def nexus(request):
     v = _int_from_val(request.GET.get('v'))
     algorithm_obj = Algorithm.objects.get(name=request.GET.get('al'))
     algos = Algorithm.objects.all()
+    nexus_variant = request.GET.get('variant', None)
 
     return default_response(request,
                             'nexus.html',
@@ -462,7 +464,8 @@ def nexus(request):
                              'algorithm': algorithm_obj,
                              'algorithms': algos,
                              'ch': ch,
-                             'v': v})
+                             'v': v,
+                             'nexus_variant': nexus_variant})
 
 
 def nexus_file(request):
@@ -474,14 +477,23 @@ def nexus_file(request):
     ch = _int_from_val(request.GET.get('ch'))
     v = _int_from_val(request.GET.get('v'))
     al = request.GET.get('al')
-    nexus = _nexus_file(bk, ch, v, al, base_ms_id)
+    nexus_variant = request.GET.get('variant', None)
+    nexus = _nexus_file(bk, ch, v, al, base_ms_id, nexus_variant)
     return HttpResponse(nexus, mimetype='text/plain')
 
 
 @memoize
-def _nexus_file(bk, ch, v, al, base_ms_id):
+def _nexus_file(bk, ch, v, al, base_ms_id, variant="mesquite"):
     """
     Memoized innards of the nexus file creation
+    @param bk: book num
+    @param ch: chapter num or None for all chapters
+    @param v: verse num or None for all verses
+    @param al: algorithm name to use, e.g. dekker
+    @param bas_ms_id: id of the base manuscript for the collation
+    @param variant: NEXUS file variant to create. Options are:
+        * mesquite - default
+        * mrbayes - has restrictions on symbols that can be used
     """
     book_obj = Book.objects.get(num=bk)
     if ch is not None:
@@ -501,8 +513,10 @@ def _nexus_file(bk, ch, v, al, base_ms_id):
     # Get our memoized collation data
     collation = collate(book_obj, chapter_obj, verse_obj, algorithm_obj, base_ms_id)
 
-    import string
-    LABELS = string.ascii_lowercase + string.digits
+    if variant == 'mrbayes':
+        LABELS = "0123456789"  # mrbayes doesn't support custom symbols...
+    else:
+        LABELS = string.ascii_lowercase + string.digits
 
     taxlabels = set()
     symbols = set()
@@ -513,6 +527,9 @@ def _nexus_file(bk, ch, v, al, base_ms_id):
         for stripe, mss in data:
             stripe_labels = []
             for r in stripe.readings.all():
+                if r.label + 1 > len(LABELS):
+                    raise ValueError("Unsupported label index {} - check NEXUS variant"
+                                     .format(r.label))
                 symbols.add(LABELS[r.label])
                 stripe_labels.append(LABELS[r.label])
 
@@ -540,7 +557,7 @@ TAXLABELS
 """.format(len(labs))
     for i, l in enumerate(labs):
         #nexus += "[{}] '{}_{}'\n".format(i + 1, l[0], l[1])
-        nexus += "'{}_{}'\n".format(l[0], l[1])
+        nexus += "{}_{}\n".format(l[0], l[1])
     nexus += ";\nEND;"
 
     # Characters section
@@ -572,7 +589,7 @@ TAXLABELS
             if linelength is not None:
                 assert linelength == len(all_chars), (linelength, len(all_chars))
             linelength = len(all_chars)
-            matrix_bit += "'{}_{}' {}\n".format(lab[0], lab[1], ''.join(all_chars))
+            matrix_bit += "{}_{} {}\n".format(lab[0], lab[1], ''.join(all_chars))
 
     nexus += """
 BEGIN Characters;

@@ -5,9 +5,13 @@
 <script>
     function load_nexus (pre_id, link_id) {
         console.log("Loading nexus data...");
-        var url = "nexus_file.txt?bk={{ book.num }}&ch={{ ch }}&v={{ v }}&al={{ algorithm.name }}";
+        var url = "nexus_file.txt?bk={{ book.num }}&ch={{ ch }}&v={{ v }}&al={{ algorithm.name }}&variant={{ nexus_variant }}";
 
-        function callback(responseText, textStatus, XMLHttpRequest) {
+        function callback(responseText, textStatus, xhr) {
+            if ( textStatus == "error" ) {
+                var msg = "Sorry but there was an error: ";
+                $( "#nexus" ).html( "<b>" + msg + xhr.status + " " + xhr.statusText + "</b><hr/>" + xhr.responseText);
+            }
             // Make a download link
             console.log("Making download link");
             var filename = "stripey_{{ book.name }}{% if ch %}_{{ ch }}{% endif %}{% if v %}_{{ v }}{% endif %}_{{ algorithm.name }}.nex"
@@ -20,7 +24,7 @@
 {% endblock head %}
 
 {% block content %}
-<h1>Nexus file for {{ book.name|title }} {% if chapter %}{{ ch }}{% endif %}{% if v %}:{{ v }}{% endif %} ({{ algorithm.name }})</h1>
+<h1>Nexus ({{ nexus_variant }}) file for {{ book.name|title }} {% if chapter %}{{ ch }}{% endif %}{% if v %}:{{ v }}{% endif %} ({{ algorithm.name }})</h1>
 {% endblock content %}
 
 {% block rightbar %}
@@ -28,8 +32,9 @@
 <a href="chapter.html?bk={{ book.num }}&ch={{ ch }}&v={{ v }}">View text</a><br/>
 <a href="collation.html?bk={{ book.num }}&ch={{ ch }}&v={{ v }}&al={{ algorithm.name }}">View collation</a><br/>
 Change algorithm: {% for alg in algorithms %}{% if alg.name == algorithm.name %}<b>{{ alg.name }}</b>{% else %}<a href="nexus.html?bk={{ book.num }}&ch={{ ch }}&v={{ v }}&al={{ alg.name }}">{{ alg.name }}</a>{% endif %} {% endfor %}<br/>
-<a href="nexus.html?bk={{ book.num }}&ch={{ ch }}&al={{ algorithm.name }}">View nexus file of whole chapter (slow)</a><br/>
-<a href="nexus.html?bk={{ book.num }}&al={{ algorithm.name }}">View nexus file of whole book (very slow)</a><br/>
+<a href="nexus.html?bk={{ book.num }}&ch={{ ch }}&al={{ algorithm.name }}&variant={{ nexus_variant }}">View nexus file of whole chapter (slow)</a><br/>
+<a href="nexus.html?bk={{ book.num }}&al={{ algorithm.name }}&variant={{ nexus_variant }}">View nexus file of whole book (very slow)</a><br/>
+Change NEXUS variant to: {% if nexus_variant != 'mrbayes' %}<a href="nexus.html?bk={{ book.num }}&ch={{ ch }}&v={{ v }}&al={{ algorithm.name }}&variant=mrbayes">MrBayes</a>{% else %}<a href="nexus.html?bk={{ book.num }}&ch={{ ch }}&v={{ v }}&al={{ algorithm.name }}&variant=mesquite">Mesquite</a>{% endif %}<br/>
 <br/>
 <a href="book.html?bk={{ book.num }}">Overview for {{ book.name|title }}</b></a>
 
