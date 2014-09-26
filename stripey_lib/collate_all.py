@@ -4,6 +4,7 @@ import os
 import time
 import sys
 import subprocess
+import signal
 import json
 import urllib2
 from contextlib import contextmanager
@@ -43,15 +44,15 @@ def collate_verse(chapter_obj, verse_obj, mss, algo):
             if verse.text:
                 witnesses.append({'id': str(verse.id),
                                   'content': verse.text})
-
+    cx = CollateXService()
     try:
         # Get the apparatus from collatex - this is the clever bit...
-        collation = query(witnesses, algo.name)
-    except urllib2.HTTPError as e:
+        collation = cx.query(witnesses, algo.name)
+    except Exception as e:
         # Collate failed
         logger.error("Collate has failed us: {}".format(str(e)))
-        logger.debug("Waiting for 30s for it to sort its self out...")
-        time.sleep(30)
+        logger.debug("Waiting for 5s for it to sort itself out...")
+        time.sleep(5)
         return
 
     logger.debug(" .. collatex produced {} entries for {} witnesses".format(
@@ -192,7 +193,7 @@ def drop_all(algo, chapter_ref=None):
     print " > Deleting {} objects".format(len(to_del))
     for i, x in enumerate(to_del):
         x.delete()
-        sys.stdout.write("\r > {} ({}%)   ".format(i+1, i*100.0/len(to_del)))
+        sys.stdout.write("\r > {} ({}%)   ".format(i + 1, i * 100.0 / len(to_del)))
     print
 
     logger.warning("Done")
@@ -212,91 +213,158 @@ def collate_all(algo, chapter_ref=None):
     else:
         mubook = muchapter = None
 
-    with collatex_service():
-        try:
-            algo_obj = Algorithm.objects.get(name=algo)
-        except ObjectDoesNotExist:
-            algo_obj = Algorithm()
-            algo_obj.name = algo
-            algo_obj.save()
+    try:
+        algo_obj = Algorithm.objects.get(name=algo)
+    except ObjectDoesNotExist:
+        algo_obj = Algorithm()
+        algo_obj.name = algo
+        algo_obj.save()
 
-        for book in Book.objects.all():
-            if mubook is None or book.num == mubook:
-                collate_book(book, algo_obj, muchapter)
+    for book in Book.objects.all():
+        if mubook is None or book.num == mubook:
+            collate_book(book, algo_obj, muchapter)
 
 
 def tests():
     """
     Collate everything using the collatex service
     """
-    with collatex_service():
+    cx = CollateXService()
+    witnesses = [{'id': '1',
+                  'content': 'This is a test'},
+                 {'id': '2',
+                  'content': 'This is test'},
+                 {'id': '3',
+                  'content': 'This is a testimony'},
+                 {'id': '4',
+                  'content': 'These are tests'},
+                 {'id': '5',
+                  'content': 'This is a a test'}]
+    print cx.query(witnesses, 'dekker')
+    print cx.query(witnesses, 'needleman-wunsch')
+    print cx.query(witnesses, 'medite')
+
+
+class TimeoutException(Exception):
+    pass
+
+
+class CollateXService(object):
+    """
+    Manage and query collatex
+    """
+    _service = COLLATEX_SERVICE
+    _port = COLLATEX_PORT
+    _popen = None
+
+    def _start_service(self):
+        logger.info("Starting CollateX service on port {}".format(self._port))
+        self.__class__._popen = subprocess.Popen([self._service, '-p', str(self._port)])
+        time.sleep(5)
+
+    def _stop_service(self):
+        logger.info("Stopping CollateX service")
+        self.__class__._popen.terminate()
+        for i in range(5):
+            self.__class__._popen.poll()
+            if self.__class__._popen.returncode is None:
+                time.sleep(1)
+            else:
+                break
+        else:
+            logger.warning("CollateX service didn't stop - killing it")
+            self._popen.kill()
+
+        self.__class__._popen = None
+
+    def _test(self):
+        """
+        Test the running collatex service.
+        Returns True for success and False for failure.
+        """
         witnesses = [{'id': '1',
                       'content': 'This is a test'},
                      {'id': '2',
-                      'content': 'This is test'},
-                     {'id': '3',
-                      'content': 'This is a testimony'},
-                     {'id': '4',
-                      'content': 'These are tests'},
-                     {'id': '5',
-                      'content': 'This is a a test'}]
-        print query(witnesses, 'dekker')
-        print query(witnesses, 'needleman-wunsch')
-        print query(witnesses, 'medite')
+                      'content': 'This is test'}]
+        try:
+            self._query(witnesses, 'dekker', quiet=True)
+        except Exception:
+            return False
+        else:
+            return True
 
+    def query(self, *args):
+        """
+        Wraps the _query method with a test and starts the service if it fails.
+        """
+        if self.__class__._popen is None:
+            self._start_service()
 
-@contextmanager
-def collatex_service():
-    """
-    Launch the collatex service, then yield to the caller. When we come back
-    we'll stop the service again.
-    """
-    p = subprocess.Popen([COLLATEX_SERVICE, '-p', str(COLLATEX_PORT)])
-    time.sleep(5)
-    try:
-        yield
-    finally:
-        logger.info("Closing server")
-        p.terminate()
+        if not self._test():
+            logger.warning("CollateX service failed the test - restarting it")
+            self._stop_service()
+            time.sleep(5)
+            self._start_service()
+            if not self._test():
+                raise IOError("Even after restarting CollateX failed the test - aborting")
 
+        return self._query(*args)
 
-def query(witnesses, algorithm="dekker"):
-    """
-    Query the collatex service. Witnesses muyst be a list, as such:
-    "witnesses" : [
-        {
-            "id" : "A",
-            "content" : "A black cat in a black basket"
-        },
-        {
-            "id" : "B",
-            "content" : "A black cat in a black basket"
-        },
-    ]
+    def _query(self, witnesses, algorithm="dekker", quiet=False):
+        """
+        Query the collatex service. Witnesses muyst be a list, as such:
+        "witnesses" : [
+            {
+                "id" : "A",
+                "content" : "A black cat in a black basket"
+            },
+            {
+                "id" : "B",
+                "content" : "A black cat in a black basket"
+            },
+        ]
 
-    See http://collatex.net/doc/
-    """
-    assert algorithm in SUPPORTED_ALGORITHMS
-    input_d = dict(witnesses=witnesses,
-                   algorithm=algorithm)
-    if FUZZY_EDIT_DISTANCE:
-        input_d['tokenComparator'] = {"type": "levenshtein",
-                                      "distance": FUZZY_EDIT_DISTANCE}
-    data = json.dumps(input_d)
+        See http://collatex.net/doc/
+        """
+        assert algorithm in SUPPORTED_ALGORITHMS
 
-    url = "http://localhost:{}/collate".format(COLLATEX_PORT)
-    headers = {'Content-Type': 'application/json',
-               'Accept': 'application/json'}
-    start = time.time()
-    req = urllib2.Request(url, data, headers)
-    #print req.get_method(), data
-    resp = urllib2.urlopen(req)
-    logger.info("[{}] {} ({})".format(resp.getcode(), url, algorithm))
-    #print resp.info()
-    ret = json.loads(resp.read())
-    end = time.time()
-    logger.info("[{}] {} ({}) - {} secs".format(resp.getcode(), url, algorithm, end - start))
-    return ret
+        def timeout_handler(signum, frame):
+            raise TimeoutException('Timeout')
+
+        @contextmanager
+        def timeout(seconds):
+            old_handler = signal.signal(signal.SIGALRM, timeout_handler)
+            signal.alarm(seconds)
+            try:
+                yield
+            finally:
+                signal.alarm(0)
+                signal.signal(signal.SIGALRM, old_handler)
+
+        input_d = dict(witnesses=witnesses,
+                       algorithm=algorithm)
+        if FUZZY_EDIT_DISTANCE:
+            input_d['tokenComparator'] = {"type": "levenshtein",
+                                          "distance": FUZZY_EDIT_DISTANCE}
+        data = json.dumps(input_d)
+
+        url = "http://localhost:{}/collate".format(COLLATEX_PORT)
+        headers = {'Content-Type': 'application/json',
+                   'Accept': 'application/json'}
+        if not quiet:
+            logger.debug("Start time {}".format(time.ctime()))
+        start = time.time()
+        with timeout(300):
+            print "STARTING THE CLOCK"
+            req = urllib2.Request(url, data, headers)
+            #print req.get_method(), data
+            resp = urllib2.urlopen(req)
+            #print resp.info()
+            ret = json.loads(resp.read())
+            end = time.time()
+            if not quiet:
+                logger.info("[{}] {} ({}) - {} secs".format(resp.getcode(), url, algorithm, end - start))
+        return ret
 
 
 def _arg(question, default=None):
@@ -352,7 +420,7 @@ if __name__ == "__main__":
             ok = (args.force or
                   _arg("Remove old ({}) collation for {} before continuing?"
                       .format(algos, args.chapter if args.chapter else "ALL WORKS"),
-                      False))
+                       False))
             if not ok:
                 sys.exit(1)
             for a in algos:
@@ -362,4 +430,3 @@ if __name__ == "__main__":
             collate_all(a, args.chapter)
 
         print "\n** Don't forget to delete the old picklify data"
-
