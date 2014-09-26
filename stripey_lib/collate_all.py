@@ -355,7 +355,6 @@ class CollateXService(object):
             logger.debug("Start time {}".format(time.ctime()))
         start = time.time()
         with timeout(300):
-            print "STARTING THE CLOCK"
             req = urllib2.Request(url, data, headers)
             #print req.get_method(), data
             resp = urllib2.urlopen(req)
