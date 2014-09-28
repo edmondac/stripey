@@ -516,7 +516,7 @@ def _nexus_file(bk, ch, v, al, base_ms_id, variant="mesquite"):
     if variant == 'mrbayes':
         LABELS = "0123456789"  # mrbayes doesn't support custom symbols...
     else:
-        LABELS = string.ascii_lowercase + string.digits
+        LABELS = string.ascii_letters
 
     taxlabels = set()
     symbols = set()
