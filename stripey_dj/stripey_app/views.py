@@ -456,7 +456,7 @@ def nexus(request):
     v = _int_from_val(request.GET.get('v'))
     algorithm_obj = Algorithm.objects.get(name=request.GET.get('al'))
     algos = Algorithm.objects.all()
-    nexus_variant = request.GET.get('variant', 'mesquite')
+    nexus_variant = request.GET.get('variant', 'default')
     nexus_filename = "stripey_{}{}{}_{}.nex".format(book_obj.name.replace(' ', '_'),
                                                     '_{}'.format(ch) if ch else '',
                                                     '_{}'.format(v) if v else '',
@@ -488,7 +488,7 @@ def nexus_file(request):
 
 
 @memoize
-def _nexus_file(bk, ch, v, al, base_ms_id, variant="mesquite"):
+def _nexus_file(bk, ch, v, al, base_ms_id, variant="default"):
     """
     Memoized innards of the nexus file creation
     @param bk: book num
@@ -497,7 +497,7 @@ def _nexus_file(bk, ch, v, al, base_ms_id, variant="mesquite"):
     @param al: algorithm name to use, e.g. dekker
     @param bas_ms_id: id of the base manuscript for the collation
     @param variant: NEXUS file variant to create. Options are:
-        * mesquite - default
+        * default - default (Mesquite and my modified MrBayes
         * mrbayes - has restrictions on symbols that can be used
     """
     book_obj = Book.objects.get(num=bk)
@@ -540,7 +540,7 @@ def _nexus_file(bk, ch, v, al, base_ms_id, variant="mesquite"):
 
             for ms in mss:
                 hand = ms.ms_verse.hand
-                ident = (hand.manuscript.ga, hand.name.replace('(', '').replace(')', ''))
+                ident = (hand.manuscript.ga, hand.name.replace('(', '').replace(')', '').replace(':','_'))
                 if ident in matrix[verse]:
                     # Can't handle multiple instances of the same passage
                     # in a given hand. Ignore the rest...

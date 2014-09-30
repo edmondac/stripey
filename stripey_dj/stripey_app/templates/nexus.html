@@ -34,7 +34,7 @@
 Change algorithm: {% for alg in algorithms %}{% if alg.name == algorithm.name %}<b>{{ alg.name }}</b>{% else %}<a href="nexus.html?bk={{ book.num }}&ch={{ ch }}&v={{ v }}&al={{ alg.name }}">{{ alg.name }}</a>{% endif %} {% endfor %}<br/>
 <a href="nexus.html?bk={{ book.num }}&ch={{ ch }}&al={{ algorithm.name }}&variant={{ nexus_variant }}">View nexus file of whole chapter (slow)</a><br/>
 <a href="nexus.html?bk={{ book.num }}&al={{ algorithm.name }}&variant={{ nexus_variant }}">View nexus file of whole book (very slow)</a><br/>
-Change NEXUS variant to: {% if nexus_variant != 'mrbayes' %}<a href="nexus.html?bk={{ book.num }}&ch={{ ch }}&v={{ v }}&al={{ algorithm.name }}&variant=mrbayes">MrBayes</a>{% else %}<a href="nexus.html?bk={{ book.num }}&ch={{ ch }}&v={{ v }}&al={{ algorithm.name }}&variant=mesquite">Mesquite</a>{% endif %}<br/>
+Change NEXUS variant to: {% if nexus_variant != 'mrbayes' %}<a href="nexus.html?bk={{ book.num }}&ch={{ ch }}&v={{ v }}&al={{ algorithm.name }}&variant=mrbayes">Standard MrBayes</a>{% else %}<a href="nexus.html?bk={{ book.num }}&ch={{ ch }}&v={{ v }}&al={{ algorithm.name }}&variant=default">Default (Mesquite, Modified MrBayes)</a>{% endif %}<br/>
 <br/>
 <a href="book.html?bk={{ book.num }}">Overview for {{ book.name|title }}</b></a>
 
