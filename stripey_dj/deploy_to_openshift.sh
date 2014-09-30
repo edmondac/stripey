@@ -15,7 +15,7 @@ hg commit -m "Deploying to openshift" || echo "Continuing..."
 
 msg="$(hg summary | head -1)"
 
-OPENSHIFT_REPO="/home/ed/openshift/django/wsgi/openshift/"
+OPENSHIFT_REPO="/home/ed/openshift/stripey/wsgi/openshift/"
 #(cd ${OPENSHIFT_REPO} && git rm stripey_app)
 cp -r stripey_app ${OPENSHIFT_REPO}
 cd ${OPENSHIFT_REPO}

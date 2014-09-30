@@ -457,6 +457,10 @@ def nexus(request):
     algorithm_obj = Algorithm.objects.get(name=request.GET.get('al'))
     algos = Algorithm.objects.all()
     nexus_variant = request.GET.get('variant', 'mesquite')
+    nexus_filename = "stripey_{}{}{}_{}.nex".format(book_obj.name.replace(' ', '_'),
+                                                    '_{}'.format(ch) if ch else '',
+                                                    '_{}'.format(v) if v else '',
+                                                    algorithm_obj.name)
 
     return default_response(request,
                             'nexus.html',
@@ -465,7 +469,8 @@ def nexus(request):
                              'algorithms': algos,
                              'ch': ch,
                              'v': v,
-                             'nexus_variant': nexus_variant})
+                             'nexus_variant': nexus_variant,
+                             'nexus_filename': nexus_filename})
 
 
 def nexus_file(request):
