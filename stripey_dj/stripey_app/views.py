@@ -169,31 +169,6 @@ def manuscript(request):
                              'chapter_to_show': chapter_to_show})
 
 
-#~ def manuscript_book(request):
-    #~ """
-    #~ Display info about the specified book in this manuscript
-    #~ """
-    #~ ms, book, chapters = _manuscript_book_data(ms_id, book_num)
-    #~ return default_response(request,
-                            #~ 'manuscript_book.html',
-                            #~ {'ms': ms,
-                             #~ 'book': book,
-                             #~ 'chapters': chapters})
-#~
-
-#~ def _manuscript_book_data(request):
-    #~ """
-    #~ Display info about the specified book in this manuscript
-    #~ """
-    #~ ms = get_object_or_404(ManuscriptTranscription, pk=request.GET.get('ms_id'))
-    #~ hands = Hand.objects.filter(manuscript=ms)
-    #~ book = get_object_or_404(Book, num=request.GET.get('bk'))
-    #~ chapters = [x.chapter for x in
-                #~ MsChapter.objects.filter(chapter__book=book,
-                                         #~ manuscript=ms).order_by('chapter__num')]
-    #~ return (ms, hands, book, chapters)
-
-
 @memoize
 def _manuscript_chapter_data(ms_id, bk, ch):
     """
@@ -436,15 +411,15 @@ def chapter(request):
                              'algorithms': algos})
 
 
-def _int_from_val(x):
+def _int_from_val(x, default=None):
     """
     Returns an integer from the passed in value, unless it is
-    None or the string 'None' - in which case it returns None.
+    None or the string 'None' - in which case it returns default.
     """
     if (x is not None and x != 'None' and x != ''):
         return int(x)
     else:
-        return None
+        return default
 
 
 def nexus(request):
@@ -454,6 +429,7 @@ def nexus(request):
     book_obj = Book.objects.get(num=request.GET.get('bk'))
     ch = _int_from_val(request.GET.get('ch'))
     v = _int_from_val(request.GET.get('v'))
+    frag = _int_from_val(request.GET.get('frag'), 0)
     algorithm_obj = Algorithm.objects.get(name=request.GET.get('al'))
     algos = Algorithm.objects.all()
     nexus_variant = request.GET.get('variant', 'default')
@@ -470,7 +446,9 @@ def nexus(request):
                              'ch': ch,
                              'v': v,
                              'nexus_variant': nexus_variant,
-                             'nexus_filename': nexus_filename})
+                             'nexus_filename': nexus_filename,
+                             'frag': frag,
+                             'frag_options': [0, 10, 20]})
 
 
 def nexus_file(request):
@@ -481,24 +459,28 @@ def nexus_file(request):
     bk = request.GET.get('bk')
     ch = _int_from_val(request.GET.get('ch'))
     v = _int_from_val(request.GET.get('v'))
+    frag = _int_from_val(request.GET.get('frag'), 0)
     al = request.GET.get('al')
     nexus_variant = request.GET.get('variant', None)
-    nexus = _nexus_file(bk, ch, v, al, base_ms_id, nexus_variant)
+    nexus = _nexus_file(bk, ch, v, al, base_ms_id, nexus_variant, frag)
     return HttpResponse(nexus, mimetype='text/plain')
 
 
 @memoize
-def _nexus_file(bk, ch, v, al, base_ms_id, variant="default"):
+def _nexus_file(bk, ch, v, al, base_ms_id, variant="default", frag=0):
     """
     Memoized innards of the nexus file creation
     @param bk: book num
     @param ch: chapter num or None for all chapters
     @param v: verse num or None for all verses
     @param al: algorithm name to use, e.g. dekker
-    @param bas_ms_id: id of the base manuscript for the collation
+    @param base_ms_id: id of the base manuscript for the collation
     @param variant: NEXUS file variant to create. Options are:
         * default - default (Mesquite and my modified MrBayes
         * mrbayes - has restrictions on symbols that can be used
+    @param frag: the threshold (percentage) of variant units that a witness
+             needs to have so as not to be considered "fragmentary" and thus
+             be excluded.
     """
     book_obj = Book.objects.get(num=bk)
     if ch is not None:
@@ -523,7 +505,11 @@ def _nexus_file(bk, ch, v, al, base_ms_id, variant="default"):
     else:
         LABELS = string.ascii_letters
 
-    taxlabels = set()
+    MISSING = "-"
+    GAP = "?"
+
+    # to keep a list of unique taxa and count their variant units:
+    taxa = defaultdict(int)
     symbols = set()
     matrix = {}  # keyed on verse, then {(ms_ga, hand_name): [labels], ...}
 
@@ -532,15 +518,22 @@ def _nexus_file(bk, ch, v, al, base_ms_id, variant="default"):
         for stripe, mss in data:
             stripe_labels = []
             for r in stripe.readings.all():
-                if r.label + 1 > len(LABELS):
+                if r.label == 0:
+                    # Label 0 implies blank text => gap
+                    stripe_labels.append(GAP)
+                elif r.label > len(LABELS):
                     raise ValueError("Unsupported label index {} - check NEXUS variant"
                                      .format(r.label))
-                symbols.add(LABELS[r.label])
-                stripe_labels.append(LABELS[r.label])
+                else:
+                    symbols.add(LABELS[r.label - 1])
+                    stripe_labels.append(LABELS[r.label - 1])
 
             for ms in mss:
                 hand = ms.ms_verse.hand
-                ident = (hand.manuscript.ga, hand.name.replace('(', '').replace(')', '').replace(':','_'))
+                ident = (hand.manuscript.ga,
+                         hand.name.replace('(', '').replace(')', '').replace(':', '_'))
+                if hand.manuscript.ga == 'P59':
+                    print stripe_labels
                 if ident in matrix[verse]:
                     # Can't handle multiple instances of the same passage
                     # in a given hand. Ignore the rest...
@@ -548,13 +541,20 @@ def _nexus_file(bk, ch, v, al, base_ms_id, variant="default"):
                         ident, ms.ms_verse.verse)
                     continue
                 matrix[verse][ident] = stripe_labels
-                taxlabels.add(ident)
+                taxa[ident] += len(stripe_labels)
         if matrix[verse] == {}:
             print "WARNING: Empty dict for {} - it will be omitted".format(verse)
             del matrix[verse]
 
+    # Remove fragmentary witnesses
+    frag_thresh = max(taxa.values()) * frag / 100.0
+    labs = [x for x in sorted(taxa.keys())
+            if taxa[x] >= frag_thresh]
+    if len(labs) < len(taxa):
+        print ("WARNING: Ignoring {} fragmentary witnesses (threshold {}%)"
+               .format(len(taxa) - len(labs), frag))
+
     # Taxa section
-    labs = sorted(taxlabels)
     nexus = """#nexus
 BEGIN Taxa;
 DIMENSIONS ntax={};
@@ -577,19 +577,10 @@ TAXLABELS
             if lab in matrix[verse]:
                 all_chars.extend(matrix[verse][lab])
             else:
-                #~ # look for firsthand
-                #~ fh = (lab[0], 'firsthand')
-                #~ if fh in matrix[verse]:
-                    #~ all_chars.extend(matrix[verse][fh])
-                #~ else:
-                    #~ print("Couldn't find firsthand for missing {} entry - "
-                          #~ "aborting whole hand".format(lab))
-                    #~ break
-
                 # Add correct num of "missing" signs
                 any_old_lab = matrix[verse].keys()[0]
                 for i in range(len(matrix[verse][any_old_lab])):
-                    all_chars.append('?')
+                    all_chars.append(MISSING)
         else:
             if linelength is not None:
                 assert linelength == len(all_chars), (linelength, len(all_chars))
@@ -602,12 +593,11 @@ DIMENSIONS nchar={};
 
 FORMAT
     datatype=STANDARD
-    missing=?
-    gap=-
+    missing={}
+    gap={}
     symbols="{}"
 ;
-""".format(linelength,
-           ' '.join(syms))
+""".format(linelength, MISSING, GAP, ' '.join(syms))
 
     nexus += matrix_bit
     nexus += """;

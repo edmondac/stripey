@@ -5,7 +5,7 @@
 <script>
     function load_nexus (pre_id, link_id) {
         console.log("Loading nexus data...");
-        var url = "nexus_file.txt?bk={{ book.num }}&ch={{ ch }}&v={{ v }}&al={{ algorithm.name }}&variant={{ nexus_variant }}";
+        var url = "nexus_file.txt?bk={{ book.num }}&ch={{ ch }}&v={{ v }}&al={{ algorithm.name }}&variant={{ nexus_variant }}&frag={{ frag }}";
 
         function callback(responseText, textStatus, xhr) {
             if ( textStatus == "error" ) {
@@ -31,10 +31,13 @@
 
 <a href="chapter.html?bk={{ book.num }}&ch={{ ch }}&v={{ v }}">View text</a><br/>
 <a href="collation.html?bk={{ book.num }}&ch={{ ch }}&v={{ v }}&al={{ algorithm.name }}">View collation</a><br/>
-Change algorithm: {% for alg in algorithms %}{% if alg.name == algorithm.name %}<b>{{ alg.name }}</b>{% else %}<a href="nexus.html?bk={{ book.num }}&ch={{ ch }}&v={{ v }}&al={{ alg.name }}">{{ alg.name }}</a>{% endif %} {% endfor %}<br/>
-<a href="nexus.html?bk={{ book.num }}&ch={{ ch }}&al={{ algorithm.name }}&variant={{ nexus_variant }}">View nexus file of whole chapter (slow)</a><br/>
-<a href="nexus.html?bk={{ book.num }}&al={{ algorithm.name }}&variant={{ nexus_variant }}">View nexus file of whole book (very slow)</a><br/>
-Change NEXUS variant to: {% if nexus_variant != 'mrbayes' %}<a href="nexus.html?bk={{ book.num }}&ch={{ ch }}&v={{ v }}&al={{ algorithm.name }}&variant=mrbayes">Standard MrBayes</a>{% else %}<a href="nexus.html?bk={{ book.num }}&ch={{ ch }}&v={{ v }}&al={{ algorithm.name }}&variant=default">Default (Mesquite, Modified MrBayes)</a>{% endif %}<br/>
+Change algorithm: {% for alg in algorithms %}{% if alg.name == algorithm.name %}<b>{{ alg.name }}</b>{% else %}<a href="nexus.html?bk={{ book.num }}&ch={{ ch }}&v={{ v }}&al={{ alg.name }}&variant={{ nexus_variant }}&frag={{ frag }}">{{ alg.name }}</a>{% endif %} {% endfor %}<br/>
+<a href="nexus.html?bk={{ book.num }}&ch={{ ch }}&al={{ algorithm.name }}&variant={{ nexus_variant }}&frag={{ frag }}">View nexus file of whole chapter (slow)</a><br/>
+<a href="nexus.html?bk={{ book.num }}&al={{ algorithm.name }}&variant={{ nexus_variant }}&frag={{ frag }}">View nexus file of whole book (very slow)</a><br/>
+Change NEXUS variant to: {% if nexus_variant != 'mrbayes' %}<a href="nexus.html?bk={{ book.num }}&ch={{ ch }}&v={{ v }}&al={{ algorithm.name }}&variant=mrbayes&frag={{ frag }}">Standard MrBayes</a>{% else %}<a href="nexus.html?bk={{ book.num }}&ch={{ ch }}&v={{ v }}&al={{ algorithm.name }}&variant=default&frag={{ frag }}">Default (Mesquite, Modified MrBayes)</a>{% endif %}<br/>
+
+Change fragmentation threshold %: {% for x in frag_options %}{% if frag == x %}{{ x }}{% else %}<a href="nexus.html?bk={{ book.num }}&ch={{ ch }}&v={{ v }}&al={{ algorithm.name }}&variant={{ nexus_variant }}&frag={{ x }}">{{ x }}</a>{% endif %} {% endfor %}
+
 <br/>
 <a href="book.html?bk={{ book.num }}">Overview for {{ book.name|title }}</b></a>
 

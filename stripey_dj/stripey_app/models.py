@@ -544,10 +544,13 @@ def _collate_verse(verse, algorithm_obj, base_ms_id):
 
 def collate(book_obj, chapter_obj, verse_obj, algorithm_obj, base_ms_id):
     """
+    @param book obj: the book to collate
     @param chapter_obj: This is optional - if set to None this function
     will return all chapters in the book
     @param verse_obj: This is optional - if set to None this function
     will return all verses in the chaper.
+    @param algorithm_obj: the algorithm to use
+    @param base_ms_id: id of the base ms for the collation
 
     Collect data verse by verse - like this:
     [(<Verse: Verse john 1:1>,
@@ -558,11 +561,12 @@ def collate(book_obj, chapter_obj, verse_obj, algorithm_obj, base_ms_id):
         ]),
      (<Verse: Verse john 1:2>...
     """
-    print "Creating collation for {}:{}:{}:{}:{}".format(book_obj.name,
-                                                         chapter_obj,
-                                                         verse_obj,
-                                                         algorithm_obj.name,
-                                                         base_ms_id)
+    print ("Creating collation for {}:{}:{}:{}:{}"
+           .format(book_obj.name,
+                   chapter_obj,
+                   verse_obj,
+                   algorithm_obj.name,
+                   base_ms_id))
 
     if chapter_obj:
         chapters = [chapter_obj]
