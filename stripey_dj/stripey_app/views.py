@@ -532,8 +532,6 @@ def _nexus_file(bk, ch, v, al, base_ms_id, variant="default", frag=0):
                 hand = ms.ms_verse.hand
                 ident = (hand.manuscript.ga,
                          hand.name.replace('(', '').replace(')', '').replace(':', '_'))
-                if hand.manuscript.ga == 'P59':
-                    print stripe_labels
                 if ident in matrix[verse]:
                     # Can't handle multiple instances of the same passage
                     # in a given hand. Ignore the rest...
