@@ -80,6 +80,7 @@
     Change algorithm: {% for alg in algorithms %}{% if alg.name == algorithm.name %}<b>{{ alg.name }}</b>{% else %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v }}&al={{ alg.name }}">{{ alg.name }}</a>{% endif %} {% endfor %}<br/>
     <a href="nexus.html?bk={{ book.num }}&ch={{ chapter.num }}&v={{ v }}&al={{ algorithm.name }}">View nexus file of this collation</a><br/>
     <a href="collation.html?bk={{ book.num }}&ch={{ chapter.num }}&al={{ algorithm.name }}">View collation of whole chapter (slow)</a><br/>
+
     <br/>
     <a href="book.html?bk={{ book.num }}">Overview for {{ book.name|title }}</b></a>
 

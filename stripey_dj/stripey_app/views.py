@@ -1,5 +1,6 @@
 import json
 import string
+import re
 from collections import defaultdict
 import logging
 from django.shortcuts import render_to_response, get_object_or_404
@@ -433,10 +434,17 @@ def nexus(request):
     algorithm_obj = Algorithm.objects.get(name=request.GET.get('al'))
     algos = Algorithm.objects.all()
     nexus_variant = request.GET.get('variant', 'default')
-    nexus_filename = "stripey_{}{}{}_{}.nex".format(book_obj.name.replace(' ', '_'),
-                                                    '_{}'.format(ch) if ch else '',
-                                                    '_{}'.format(v) if v else '',
-                                                    algorithm_obj.name)
+    ga_regex = request.GET.get('ga_regex', '')
+
+    restricted_bit = 'all'
+    if ga_regex:
+        restricted_bit = hash(ga_regex)
+
+    nexus_filename = "stripey_{}{}{}_{}.{}.nex".format(book_obj.name.replace(' ', '_'),
+                                                       '_{}'.format(ch) if ch else '',
+                                                       '_{}'.format(v) if v else '',
+                                                       restricted_bit,
+                                                       algorithm_obj.name)
 
     return default_response(request,
                             'nexus.html',
@@ -448,7 +456,8 @@ def nexus(request):
                              'nexus_variant': nexus_variant,
                              'nexus_filename': nexus_filename,
                              'frag': frag,
-                             'frag_options': [0, 10, 20]})
+                             'frag_options': [0, 10, 20],
+                             'ga_regex': ga_regex})
 
 
 def nexus_file(request):
@@ -462,12 +471,14 @@ def nexus_file(request):
     frag = _int_from_val(request.GET.get('frag'), 0)
     al = request.GET.get('al')
     nexus_variant = request.GET.get('variant', None)
-    nexus = _nexus_file(bk, ch, v, al, base_ms_id, nexus_variant, frag)
+    ga_regex = request.GET.get('ga_regex', '')
+
+    nexus = _nexus_file(bk, ch, v, al, base_ms_id, nexus_variant, frag, ga_regex)
     return HttpResponse(nexus, mimetype='text/plain')
 
 
 @memoize
-def _nexus_file(bk, ch, v, al, base_ms_id, variant="default", frag=0):
+def _nexus_file(bk, ch, v, al, base_ms_id, variant="default", frag=0, ga_regex=None):
     """
     Memoized innards of the nexus file creation
     @param bk: book num
@@ -481,6 +492,7 @@ def _nexus_file(bk, ch, v, al, base_ms_id, variant="default", frag=0):
     @param frag: the threshold (percentage) of variant units that a witness
              needs to have so as not to be considered "fragmentary" and thus
              be excluded.
+    @param ga_regex: (optional) a regular expression used to restrict the witnesses
     """
     book_obj = Book.objects.get(num=bk)
     if ch is not None:
@@ -496,6 +508,10 @@ def _nexus_file(bk, ch, v, al, base_ms_id, variant="default", frag=0):
         verse_obj = None
 
     algorithm_obj = Algorithm.objects.get(name=al)
+
+    ga_regex_re = None
+    if ga_regex:
+        ga_regex_re = re.compile(ga_regex)
 
     # Get our memoized collation data
     collation = collate(book_obj, chapter_obj, verse_obj, algorithm_obj, base_ms_id)
@@ -516,6 +532,12 @@ def _nexus_file(bk, ch, v, al, base_ms_id, variant="default", frag=0):
     for verse, data in collation:
         matrix[verse] = {}
         for stripe, mss in data:
+            if ga_regex_re:
+                mss = [x for x in mss if ga_regex_re.match(x.ms_verse.hand.manuscript.ga)]
+                if not mss:
+                    continue
+                #~ print "Restricting by {} to {} mss".format(ga_regex, len(mss))
+
             stripe_labels = []
             for r in stripe.readings.all():
                 if r.label == 0:
