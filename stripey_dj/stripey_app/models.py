@@ -50,7 +50,7 @@ class ManuscriptTranscription(models.Model):
     ga = models.CharField(max_length=10, blank=True)
     liste_id = models.IntegerField(blank=True)
 
-    def load(self, filename):
+    def load_xml(self, filename):
         """
         Load the XML, parse it, and create mschapter, chapter,
         verse, msverse and hand objects.

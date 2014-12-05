@@ -44,7 +44,7 @@ def load_ms(folder, f):
             logger.debug("Already loaded book {} for ms {} - skipping".format(book_num, name))
             return
 
-    m.load(os.path.join(folder, f))
+    m.load_xml(os.path.join(folder, f))
 
 
 def load_all(folder):
