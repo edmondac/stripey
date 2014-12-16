@@ -167,9 +167,6 @@ class ManuscriptTranscription(models.Model):
         if self.ga.startswith('P'):
             return u'𝔓{}'.format(self.ga[1:])
 
-        if self.tischendorf:
-            return self.tischendorf
-
         if self.ga:
             return self.ga
 
