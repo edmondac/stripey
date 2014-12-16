@@ -46,7 +46,7 @@ class Snippet(object):
 
         key = (hand_name, hand_type)
         if key in self._readings:
-            # Duplicate hand discovered - recurse adding ":dup"
+            # Duplicate hand discovered - recurse
             return self.add_reading(text, hand_name, "{}:dup".format(hand_type))
 
         self._readings[key] = text
@@ -167,11 +167,10 @@ class Snippet(object):
                 # have the hand_type, so we can't use that right now...
                 present_hands_keys = self._readings.keys()
                 present_hands = [x[0] for x in present_hands_keys]
-
-                present_hands_not_firsthand = [x for x in present_hands if x != 'firsthand']
-                assert len(present_hands_not_firsthand) == len(set(present_hands_not_firsthand)), ("duplicate hand names detected - help!", self._readings)
-
-                for hand in reversed(order_of_hands[:hand_idx]):
+                hands_to_try = list(reversed(order_of_hands[:hand_idx]))
+                if not hands_to_try:
+                    hands_to_try = ['firsthand']
+                for hand in hands_to_try:
                     if hand in present_hands:
                         if hand == 'firsthand':
                             # look for firsthand_corr first...
@@ -184,6 +183,8 @@ class Snippet(object):
                         ret = self._readings[key]
                         break
                 else:
+                    import pdb
+                    pdb.set_trace()
                     print "NO BREAK"
 
             # Run any required post processing on the text
@@ -453,6 +454,7 @@ class Manuscript(object):
         for listwit in root.iter('{http://www.tei-c.org/ns/1.0}listWit'):
             for witness in listwit.findall('{http://www.tei-c.org/ns/1.0}witness'):
                 self.order_of_hands.append(witness.attrib['{http://www.w3.org/XML/1998/namespace}id'])
+
         if self.order_of_hands == []:
             self.order_of_hands = ['firsthand']
         print "{} hands defined: {}".format(len(self.order_of_hands), ', '.join(self.order_of_hands))
