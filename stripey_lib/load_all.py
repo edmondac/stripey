@@ -63,7 +63,7 @@ def load_all(folder):
             except Exception as e:
                 logger.exception("{} failed to load: {}".format(f, e))
                 failures.append("{} ({})".format(f, e))
-                #raise
+                raise
 
     if failures:
         logger.error("Load failed for: \n{}".format('\n\t'.join(failures)))

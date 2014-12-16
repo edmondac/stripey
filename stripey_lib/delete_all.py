@@ -23,10 +23,17 @@ mods = [models.MsStripe,
         models.ManuscriptTranscription,
         ]
 
+
 def delete(model):
     print "Truncating table {}".format(model)
     cmd = "TRUNCATE TABLE {} CASCADE".format(model._meta.db_table)
     subprocess.check_call("psql -p 5433 -U django django -c \"{}\"".format(cmd), shell=True)
+
+
+def vacuum():
+    cmd = "VACUUM FULL"
+    subprocess.check_call("psql -p 5433 -U django django -c \"{}\"".format(cmd), shell=True)
+
 
 print "WARNING: Using hardcoded postgres command line 'psql -p 5433 -U django django'"
 print "Really delete everything in the stripey tables? [N/y]"
@@ -35,7 +42,11 @@ if ok.strip().lower() == 'y':
     for model in mods:
         delete(model)
 
+    print "Vacuum full? [Y/n]"
+    ok = raw_input()
+    if ok.strip().lower() != 'n':
+        vacuum()
+
     print "Done"
 else:
     print "Aborting"
-

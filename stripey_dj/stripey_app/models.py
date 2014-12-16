@@ -79,7 +79,13 @@ class ManuscriptTranscription(models.Model):
             elif new:
                 setattr(self, k, new)
 
-        if self.liste_id in ('3NA27', '300TR'):
+        if 'NA28' in filename and not self.ms_name:
+            self.ms_name = 'NA28'
+
+        if self.ms_name == 'Textus Receptus':
+            self.ms_name = 'TR'
+
+        if self.ms_name in ('TR', 'NA28'):
             # Special case "manuscripts"
             self.liste_id = -1
             if not self.ms_name:
@@ -355,7 +361,7 @@ def _get_book(name, num):
     Retrieve or create the specified book
     """
     try:
-        db_book = Book.objects.get(name=name)
+        db_book = Book.objects.get(num=num)
     except ObjectDoesNotExist:
         logger.debug("Creating book object for {}".format(name))
         db_book = Book()

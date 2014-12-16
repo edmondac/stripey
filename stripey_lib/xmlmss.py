@@ -127,19 +127,20 @@ class Snippet(object):
         #~ """
         #~ return (hand_name, hand_type) in self.get_hands()
 
-    def get_text(self, hand_name='firsthand', hand_type='orig'):
+    def get_text(self, hand_name='firsthand', hand_type='orig', order_of_hands=['firsthand']):
         """
         Return the text of a particular hand. If the hand isn't present in this
-        place, then the firsthand:orig reading is returned.
-
-        I know this isn't perfect - but without an encoded order of correctors
-        it's the best we can do at this stage...
+        place, then we search backwards from that hand in order_of_hands to find
+        a hand that is present, and return that text.
         """
+        assert hand_name in order_of_hands, (hand_name, hand_type, order_of_hands)
+        #~ print "Get text: {}, {}, {}".format(hand_name, hand_type, order_of_hands)
+
         if self._snippets:
             # Find our text recursively
             ret = []
             for s in self._snippets:
-                ret.append(s.get_text(hand_name, hand_type))
+                ret.append(s.get_text(hand_name, hand_type, order_of_hands))
             return self._post_process(''.join(ret))
 
         elif not self._readings:
@@ -150,15 +151,40 @@ class Snippet(object):
             # Return the required reading's text
             key = (hand_name, hand_type)
             if key in self._readings:
+                # This hand exists here
                 ret = self._readings[key]
             else:
-                all_orig = [x for x in self._readings.keys()
-                            if x[1] == 'orig']
-                if len(all_orig) == 1:
-                    fh_key = all_orig[0]
-                    ret = self._readings[fh_key]
+                #~ print "Looking for earlier readings than {}:{}".format(hand_name, hand_type)
+                # Special case for firsthand corrections...
+                if hand_name == 'firsthand':
+                    if hand_type == 'alt':
+                        return self.get_text(hand_name, 'corr', order_of_hands)
+                    elif hand_type == 'corr':
+                        return self.get_text(hand_name, 'orig', order_of_hands)
+
+                hand_idx = order_of_hands.index(hand_name)
+                # Find hand names that exist here... Note, order_of_hands doesn't
+                # have the hand_type, so we can't use that right now...
+                present_hands_keys = self._readings.keys()
+                present_hands = [x[0] for x in present_hands_keys]
+
+                present_hands_not_firsthand = [x for x in present_hands if x != 'firsthand']
+                assert len(present_hands_not_firsthand) == len(set(present_hands_not_firsthand)), ("duplicate hand names detected - help!", self._readings)
+
+                for hand in reversed(order_of_hands[:hand_idx]):
+                    if hand in present_hands:
+                        if hand == 'firsthand':
+                            # look for firsthand_corr first...
+                            key = ('firsthand', 'corr')
+                            if key not in present_hands_keys:
+                                key = ('firsthand', 'orig')
+                        else:
+                            key = present_hands_keys[present_hands.index(hand)]
+
+                        ret = self._readings[key]
+                        break
                 else:
-                    raise ValueError("n!=1 original readings: {}".format(self._readings))
+                    print "NO BREAK"
 
             # Run any required post processing on the text
             ret = self._post_process(ret)
@@ -209,7 +235,7 @@ class Verse(object):  # flake8: noqa
             else:
                 hand = n
             assert hand
-            reading = self.snippet.get_text(n, t).strip()
+            reading = self.snippet.get_text(n, t, self.chapter.manuscript.order_of_hands).strip()
             if reading:
                 ret.append((reading, hand))
 
@@ -263,7 +289,7 @@ class Verse(object):  # flake8: noqa
             # nested word tags without numbers should be ignored
             if el.attrib.get('n'):
                 logger.warning("Nested <w> tags at {}:{}".format(
-                    self.chapter, self.num))
+                    self.chapter.num, self.num))
             return ret
 
         if tag not in word_ignore_tags:
@@ -307,7 +333,7 @@ class Verse(object):  # flake8: noqa
         """
         ret = self._word_reader(el, top=True)
         if el.tail and el.tail.strip():
-            print "WARNING: Word {} ({}:{}) has a tail".format(el.attrib.get('n'), self.chapter, self.num)
+            print "WARNING: Word {} ({}:{}) has a tail".format(el.attrib.get('n'), self.chapter.num, self.num)
 
         return ret
 
@@ -332,7 +358,7 @@ class Verse(object):  # flake8: noqa
                 # Occasionally firsthand is named '*' in the XML
                 hand = 'firsthand'
             typ = ch.attrib.get('type')
-            text = ch_snippet.get_text()
+            text = ch_snippet.get_text(order_of_hands = self.chapter.manuscript.order_of_hands)
             if text == "" and hand == typ == None:
                 print "WARNING: Empty rdg tag"
             else:
@@ -348,9 +374,10 @@ class Chapter(object):
     useful methods for interrogating it.
     """
 
-    def __init__(self, element, num):
+    def __init__(self, element, num, manuscript):
         self.verses = {}
         self.num = num
+        self.manuscript = manuscript
         self.parse_element(element)
 
     def parse_element(self, element):
@@ -367,7 +394,7 @@ class Chapter(object):
                     # e.g. B04K12V17
                     v = v.split('V')[-1]
                 v = int(v)
-                v_obj = Verse(i, v, self.num)
+                v_obj = Verse(i, v, self)
                 already = self.verses.get(v, [])
                 already.append(v_obj)
                 self.verses[v] = already
@@ -383,6 +410,7 @@ class Manuscript(object):
         self.tree = None
         self.chapters = {}
         self.ms_desc = {}
+        self.order_of_hands = []
 
         # Book identification - FIXME, am I limited to one book per ms?
         self.book = None
@@ -421,6 +449,15 @@ class Manuscript(object):
                 # This is the book number
                 self.num = title.attrib.get('n')
 
+        # Correctors information
+        for listwit in root.iter('{http://www.tei-c.org/ns/1.0}listWit'):
+            for witness in listwit.findall('{http://www.tei-c.org/ns/1.0}witness'):
+                self.order_of_hands.append(witness.attrib['{http://www.w3.org/XML/1998/namespace}id'])
+        if self.order_of_hands == []:
+            self.order_of_hands = ['firsthand']
+        print "{} hands defined: {}".format(len(self.order_of_hands), ', '.join(self.order_of_hands))
+
+        # Text
         for child in root.iter("{http://www.tei-c.org/ns/1.0}div"):
             if child.attrib.get('type') == 'chapter':
                 my_ch = child.attrib['n']
@@ -432,7 +469,7 @@ class Manuscript(object):
                     logger.debug("Duplicate chapter - adding verses")
                     self.chapters[my_ch].parse_element(child)
                 else:
-                    self.chapters[my_ch] = Chapter(child, my_ch)
+                    self.chapters[my_ch] = Chapter(child, my_ch, self)
 
         logger.debug("Finished parsing %s" % (self.name, ))
 

@@ -22,7 +22,11 @@
                 <b>{{ sec.0 }} ({{ sec.1|length }})</b><hr/>
                 {% for ms in sec.1 %}
                     <a href="manuscript.html?ms_id={{ ms.id }}">{{ ms.display_ref }}</a>
-                    ({% for b in ms.books %}{{ b.book.name|title }}{% if not forloop.last %}, {% endif %}{% endfor %})
+                    {% ifequal ms.books|length 27 %}
+                        (Whole NT)
+                    {% else %}
+                        ({% for b in ms.books %}{{ b.book.name|title }}{% if not forloop.last %}, {% endif %}{% endfor %})
+                    {% endifequal %}
                     <br/>
                 {% endfor %}
                 </td>
