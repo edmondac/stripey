@@ -5,14 +5,17 @@ import os
 import sys
 import re
 import MySQLdb
+from collections import defaultdict
+from functools import partial
+import unicodedata
 
 # Sort out the paths so we can import the django stuff
 sys.path.append('../stripey_dj/')
 os.environ['DJANGO_SETTINGS_MODULE'] = 'stripey_dj.settings'
 
-from stripey_app.models import ManuscriptTranscription, MsBook
-from django.core.exceptions import ObjectDoesNotExist
-from django.db import transaction
+#~ from stripey_app.models import ManuscriptTranscription, MsBook
+#~ from django.core.exceptions import ObjectDoesNotExist
+#~ from django.db import transaction
 
 from stripey_lib import xmlmss
 
@@ -78,16 +81,54 @@ ms_re = re.compile("([0-9]+)_([LPNATRS0-9]+)\.xml")
 class Translator(object):
     def __init__(self):
         self.uni_from = u'.[] abgdezhqiklmnxoprs~tufcyw'
-        self.uni_to   = u'.[] αβγδεζηθικλμνξοπρσςτυφχψω'
+        self.uni_to = u'___ αβγδεζηθικλμνξοπρσςτυφχψω'
         self.translate_table = {ord(frm): self.uni_to[i]
                                 for i, frm in enumerate(self.uni_from)}
 
     def __call__(self, unicode_in):
         for x in unicode_in:
             if x not in self.uni_from:
+                print x
+                print unicode_in
                 raise ValueError((x, unicode_in))
-        return unicode_in.translate(self.translate_table)
+        ret = unicode_in.translate(self.translate_table)
+        ret = ret.replace(u'_', u'')
+        return ret
+
 translate = Translator()
+
+
+class Witness(object):
+    def __init__(self, name):
+        self.name = name
+        self.chapters = defaultdict(partial(defaultdict, dict))
+
+    def add_word(self, chapter, verse, word, greek):
+        vs = self.chapters[int(chapter)][int(verse)]
+        if int(word) in vs:
+            # Already got this word - check it's the same
+            if greek != vs[int(word)]:
+                #~ # OK - if we're just one word out then accept it...
+                #~ if (greek == vs.get(int(word) + 2) or
+                        #~ greek == vs.get(int(word) - 2)):
+                    #~ print "Off by one for word - accepting"
+                    #~ return
+#~
+                #~ if ((greek[-1] == u'ν' and
+                        #~ greek[:-1] == vs[int(word)]) or
+                    #~ (vs[int(word)][-1] == u'ν' and
+                        #~ greek == vs[int(word)][:-1])):
+                    #~ print "Difference in final nu - accepting"
+                    #~ return
+
+                print "ERROR - already got this word but it's different:"
+                print " >> {}:{}/{}".format(chapter, verse, word)
+                print u" >> old: {}".format(vs[int(word)])
+                print u" >> new: {}".format(greek)
+                raise ValueError
+            return
+
+        vs[int(word)] = greek
 
 
 class BaseText(object):
@@ -120,22 +161,45 @@ class BaseText(object):
                     assert len(texts) == 1, (ch.num, vs.num, texts)
                     text = texts[0][0]
                     for i, word in enumerate(text.split()):
-                        verse[(i + 1) * 2] = word
+                        verse[(i + 1) * 2] = cls._unaccent(word)
+
+    @classmethod
+    def _unaccent(cls, s):
+        """
+        Remove accents (and some other chars) from greek text
+        """
+        ret = u''.join(c for c in unicodedata.normalize('NFD', s)
+                       if unicodedata.category(c) != 'Mn')
+        ret = ret.replace(u'’', u'')
+        return ret
+
+    @classmethod
+    def get_text(cls, ch, vs, start, end=None):
+        """
+        Return the greek text from the specified word or range
+        """
+        verse = cls.chapters[ch][vs]
+        if end != start:
+            words = []
+            for i in range(start, end):
+                if i in verse:
+                    words.append(verse[i])
+            return ' '.join(words)
+
+        return verse.get(start, '')
 
 
 def load_witness(witness, cur):
     """
     Load a particular witness from the db
     """
+    witness_obj = Witness(witness)
     base_text = BaseText()
 
     # We trust that the rows come out in the order they went in...
     cur.execute("SELECT * FROM Ch18Att WHERE HS = %s", (witness, ))
     field_names = [i[0] for i in cur.description]
 
-    current_verse = None
-    current_word = None
-    verse_text = []
     while True:
         row = cur.fetchone()
         if row is None:
@@ -147,6 +211,10 @@ def load_witness(witness, cur):
         assert obj['B'] == 4, obj
         assert obj['BCH'] == 18, obj
 
+        #~ if obj['RNR'] == -1:
+            #~ # Nestle agrees with Majorty text in this variant unit
+            #~ continue
+
         rdg = obj['RDG'].strip()
 
         # Square brackets...
@@ -154,19 +222,13 @@ def load_witness(witness, cur):
         rdg = rdg.replace(r'»', '[')
         rdg = rdg.replace(r'¼', ']')
 
-        # Text not there...
-        if rdg == 'DEF':
-            rdg = ''
-
         if ':' in rdg:
             print "Found verse def: {}".format(rdg), obj
             continue
         if '(' in rdg:
             print "Found bracket: {}".format(rdg), obj
             continue
-        if rdg.lower() != rdg:
-            print "Found upper case letters: {}".format(rdg), obj
-            continue
+
         if obj['BV'] != obj['EV']:
             print "Reading bridges verse boundary: {}".format(rdg), obj
             continue
@@ -174,23 +236,44 @@ def load_witness(witness, cur):
             print "Wierd: {}".format(obj['RDG'])
             continue
         if obj['SUFF'] == '*':
-            print "Is this a deletion?", obj
+            # Original firsthand reading (before he corrected it)
             continue
 
         assert obj['SUFF'].strip() == '', obj
         assert obj['BV'] == obj['EV'], obj
 
-        greek = translate(unicode(rdg))
+        # Text not there...
+        if rdg == 'DEF':
+            greek = base_text.get_text(obj['BCH'], obj['BV'], obj['BW'], obj['EW'])
+
+        elif rdg.lower() != rdg:
+            print "Found upper case letters: {}".format(rdg), obj
+            continue
+
+        else:
+            # Remove numerical ranges
+            rdg = re.sub('[0-9]+\-[0-9]+', '', rdg)
+
+            # Translate to unicode greek
+            greek = translate(unicode(rdg))
+
         print witness, obj['BV'], obj['BW'], obj['EW'], greek
 
-        """
-        It seems that things with RNR == -1 aren't actually in that witness.
+        if obj['BW'] == obj['EW']:
+            # simple case
+            witness_obj.add_word(obj['BCH'], obj['BV'], obj['BW'], greek)
 
-        Therefore there must be a base text and only provided words with RNR!=-1
-        are changes from that base text...
+        else:
+            range_length = 1 + (obj['EW'] - obj['BW']) / 2
 
-        Emailed Klaus to ask him...
-        """
+            if range_length == len(greek.split()):
+                word = obj['BW']
+                for gw in greek.split():
+                    witness_obj.add_word(obj['BCH'], obj['BV'], word, gw)
+                    word += 2
+
+
+
 
         #~ if current_verse != obj['BV']:
             #~ if current_verse is not None:
