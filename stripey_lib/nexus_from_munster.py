@@ -21,7 +21,7 @@ def nexus(host, db, user, password, filename):
     vus = sorted([x[0] for x in cur.fetchall()])
 
     cur.execute("SELECT DISTINCT(witness) FROM ed_map")
-    witnesses = [x[0] for x in cur.fetchall()][:20]
+    witnesses = [x[0] for x in cur.fetchall()]
     symbols = set()
     matrix = []
     print
