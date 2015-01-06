@@ -14,8 +14,12 @@ from stripey_app.models import ManuscriptTranscription, MsBook
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 
+from stripey_lib import xmlmss
+
 import logging
-logger = logging.getLogger('load_all.py')
+logger = logging.getLogger('import_from_munster_mysql.py')
+
+DEFAULT_BASE_TEXT = "/home/ed/itsee_coding/itsee_git_repos/data/transcriptions/ITSEE/NT/GRC/editions/NA28/04_NA28.xml"
 
 ms_re = re.compile("([0-9]+)_([LPNATRS0-9]+)\.xml")
 
@@ -86,10 +90,45 @@ class Translator(object):
 translate = Translator()
 
 
+class BaseText(object):
+    chapters = {}
+    base_text = None  # set me somewhere...
+
+    def __init__(self):
+        cls = self.__class__
+        if not cls.chapters:
+            cls._load_xml()
+
+    @classmethod
+    def _load_xml(cls):
+        """
+        Load the NA28 text from the supplied filename
+        """
+        obj = xmlmss.Manuscript("BASE", cls.base_text)
+        for ch in obj.chapters.values():
+            chapter = {}
+            cls.chapters[int(ch.num)] = chapter
+            for verse_list in ch.verses.values():
+                for vs in verse_list:
+                    verse = {}
+                    chapter[int(vs.num)] = verse
+                    texts = vs.get_texts()
+                    if not texts:
+                        # No text in this verse (e.g. John 5:4)
+                        continue
+
+                    assert len(texts) == 1, (ch.num, vs.num, texts)
+                    text = texts[0][0]
+                    for i, word in enumerate(text.split()):
+                        verse[(i + 1) * 2] = word
+
+
 def load_witness(witness, cur):
     """
     Load a particular witness from the db
     """
+    base_text = BaseText()
+
     # We trust that the rows come out in the order they went in...
     cur.execute("SELECT * FROM Ch18Att WHERE HS = %s", (witness, ))
     field_names = [i[0] for i in cur.description]
@@ -168,7 +207,6 @@ def load_witness(witness, cur):
         #~ verse_text.append(greek)
 
 
-
 def load_all(host, db, user, password):
     """
     Connect to the mysql db and loop through what we find
@@ -185,7 +223,7 @@ def load_all(host, db, user, password):
         witnesses.add(row[0])
 
     for wit in witnesses:
-        wit = 'P66'
+        wit = 'P66'  #FIXME
         load_witness(wit, cur)
         raise SystemExit
 
@@ -197,8 +235,13 @@ def main():
     parser.add_argument('-p', '--mysql-password', required=True, help='User to connect to mysql with')
     parser.add_argument('-s', '--mysql-host', required=True, help='User to connect to mysql with')
     parser.add_argument('-d', '--mysql-db', required=True, help='User to connect to mysql with')
+    parser.add_argument('-b', '--base-text', default=DEFAULT_BASE_TEXT,
+                        help='XML filename of base text (default {})'.format(DEFAULT_BASE_TEXT))
     parser.add_argument('-t', '--test', help="Just run tests and exit", default=False, action='store_true')
     args = parser.parse_args()
+
+    BaseText.base_text = args.base_text
+
     load_all(args.mysql_host,
              args.mysql_db,
              args.mysql_user,

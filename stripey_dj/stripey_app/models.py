@@ -82,10 +82,13 @@ class ManuscriptTranscription(models.Model):
         if 'NA28' in filename and not self.ms_name:
             self.ms_name = 'NA28'
 
-        if self.ms_name == 'Textus Receptus':
+        if 'NA27' in filename and not self.ms_name:
+            self.ms_name = 'NA27'
+
+        if obj.name == 'TR':
             self.ms_name = 'TR'
 
-        if self.ms_name in ('TR', 'NA28'):
+        if self.ms_name in ('TR', 'NA27', 'NA28'):
             # Special case "manuscripts"
             self.liste_id = -1
             if not self.ms_name:
