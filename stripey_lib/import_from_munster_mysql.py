@@ -5,10 +5,6 @@ import sys
 import re
 import MySQLdb
 
-DEFAULT_BASE_TEXT = "/home/ed/itsee_coding/itsee_git_repos/data/transcriptions/ITSEE/NT/GRC/editions/NA28/04_NA28.xml"
-
-ms_re = re.compile("([0-9]+)_([LPNATRS0-9]+)\.xml")
-
 
 class Translator(object):
     def __init__(self):
@@ -160,28 +156,25 @@ def load_all(host, db, user, password):
 
     print
     for i, wit in enumerate(witnesses):
-        sys.stdout.write("\r{} / {}: {}".format(i + 1, len(witnesses), wit))
+        sys.stdout.write("\r{} / {}: {}     ".format(i + 1, len(witnesses), wit))
         sys.stdout.flush()
         try:
             load_witness(wit, cur)
         except Exception as e:
             print e
             print
+        else:
+            db.commit()
 
 
 def main():
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('-u', '--mysql-user', required=True, help='User to connect to mysql with')
-    parser.add_argument('-p', '--mysql-password', required=True, help='User to connect to mysql with')
-    parser.add_argument('-s', '--mysql-host', required=True, help='User to connect to mysql with')
-    parser.add_argument('-d', '--mysql-db', required=True, help='User to connect to mysql with')
-    #~ parser.add_argument('-b', '--base-text', default=DEFAULT_BASE_TEXT,
-                        #~ help='XML filename of base text (default {})'.format(DEFAULT_BASE_TEXT))
-    parser.add_argument('-t', '--test', help="Just run tests and exit", default=False, action='store_true')
+    parser.add_argument('-p', '--mysql-password', required=True, help='Password to connect to mysql with')
+    parser.add_argument('-s', '--mysql-host', required=True, help='Host to connect to')
+    parser.add_argument('-d', '--mysql-db', required=True, help='Database to connect to')
     args = parser.parse_args()
-
-    #~ BaseText.base_text = args.base_text
 
     load_all(args.mysql_host,
              args.mysql_db,
