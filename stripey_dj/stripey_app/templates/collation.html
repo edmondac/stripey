@@ -90,6 +90,7 @@
 
 <h1>{% if chapter.num > 1 %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num|add:'-1' }}&v=1&al={{ algorithm.name }}">-1</a>{% endif %} Collation of {{ book.name|title }} {{ chapter.num }} ({{ algorithm.name }}) {% if not is_last_chapter %}<a href="collation.html?bk={{ book.num }}&ch={{ chapter.num|add:'+1' }}&v=1&al={{ algorithm.name }}">+1</a>{% endif %}</h1>
 
+
 {% for verse, stripes in collation %}
     <h2>
         {% if v %}

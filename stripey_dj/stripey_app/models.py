@@ -530,7 +530,10 @@ def _collate_verse(verse, algorithm_obj, base_ms_id):
     Collate a single verse - this is an internal function used
     by collate() - which should be called instead.
     """
+    print verse
+    print algorithm_obj
     stripes = Stripe.objects.filter(verse=verse, algorithm=algorithm_obj)
+
     my_data = []
     for st in stripes:
         ms_stripes = sorted(MsStripe.objects.filter(stripe=st),

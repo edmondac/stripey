@@ -16,7 +16,16 @@ def default_response(request, url, data):
     if 'base_ms_id' not in data:
         data['base_ms_id'] = int(request.COOKIES.get('base_ms', '0'))
     if 'all_mss' not in data:
-        data['all_mss'] = ManuscriptTranscription.objects.all().order_by('liste_id')
+        misc_mss = ManuscriptTranscription.objects.filter(liste_id__lt=10000).order_by('liste_id')
+        pap_mss = ManuscriptTranscription.objects.filter(liste_id__lt=20000).filter(liste_id__gte=10000).order_by('liste_id')
+        maj_mss = ManuscriptTranscription.objects.filter(liste_id__lt=30000).filter(liste_id__gte=20000).order_by('liste_id')
+        min_mss = ManuscriptTranscription.objects.filter(liste_id__lt=40000).filter(liste_id__gte=30000).order_by('liste_id')
+        lec_mss = ManuscriptTranscription.objects.filter(liste_id__gte=40000).order_by('liste_id')
+        data['all_mss'] = (('Special', misc_mss),
+                           ('Papyri', pap_mss),
+                           ('Majuscules', maj_mss),
+                           ('Minuscules', min_mss),
+                           ('Lectionaries', lec_mss))
 
     return render_to_response(url, data)
 

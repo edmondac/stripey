@@ -65,6 +65,9 @@ class picklify(object):
                 with open(self.mapping[args], 'rb') as pf:
                     print " - unpickle <- {}".format(self.mapping[args])
                     return pickle.load(pf)
+            else:
+                # Too old - delete it
+                os.unlink(pickle_file)
 
         # We're still here - so get fresh data and store it
         with self.lock:
