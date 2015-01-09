@@ -81,6 +81,7 @@ class ManuscriptTranscription(models.Model):
 
         if 'NA28' in filename and not self.ms_name:
             self.ms_name = 'NA28'
+            self.ga = 'NA28'
 
         if 'NA27' in filename and not self.ms_name:
             self.ms_name = 'NA27'
