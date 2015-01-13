@@ -2,7 +2,6 @@
 #!/usr/bin/python
 
 import sys
-import re
 import MySQLdb
 
 
@@ -36,7 +35,7 @@ def load_witness(witness, cur, table):
     """
     Load a particular witness from the db
     """
-    cur.execute("SELECT * FROM %s WHERE HS = %s", (table, witness, ))
+    cur.execute("SELECT * FROM {} WHERE HS = %s".format(table), (witness, ))
     field_names = [i[0] for i in cur.description]
     attestations = []
     while True:
@@ -109,7 +108,6 @@ def load_witness(witness, cur, table):
                 else:
                     ident = row[0] + 1
 
-
         cur.execute(u"""INSERT INTO ed_map (witness, vu_id, greek, ident)
                         VALUES (%s, %s, %s, %s);""",
                     (witness, vu_id, greek, ident))
@@ -135,7 +133,7 @@ def load_all(host, db, user, password, table):
                         BW INT,
                         EW INT);""")
 
-    cur.execute("INSERT INTO ed_vus (BV, EV, BW, EW) SELECT BV, EV, BW, EW FROM %s GROUP BY BV, EV, BW, EW;", (table, ))
+    cur.execute("INSERT INTO ed_vus (BV, EV, BW, EW) SELECT BV, EV, BW, EW FROM {} GROUP BY BV, EV, BW, EW;".format(table))
 
     cur.execute("""CREATE TABLE ed_map (
                         witness TEXT NOT NULL,
@@ -148,7 +146,7 @@ def load_all(host, db, user, password, table):
                         );""")
 
     # Phase 2: load readings
-    cur.execute("SELECT DISTINCT HS FROM %s;", (table, ))
+    cur.execute("SELECT DISTINCT HS FROM {};".format(table))
 
     witnesses = set()
     for row in cur.fetchall():
