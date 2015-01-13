@@ -32,11 +32,11 @@ class Translator(object):
 translate = Translator()
 
 
-def load_witness(witness, cur):
+def load_witness(witness, cur, table):
     """
     Load a particular witness from the db
     """
-    cur.execute("SELECT * FROM Ch18Att WHERE HS = %s", (witness, ))
+    cur.execute("SELECT * FROM %s WHERE HS = %s", (table, witness, ))
     field_names = [i[0] for i in cur.description]
     attestations = []
     while True:
@@ -117,7 +117,7 @@ def load_witness(witness, cur):
         #~ print witness, obj['BV'], obj['EV'], obj['BW'], obj['EW'], greek, ident
 
 
-def load_all(host, db, user, password):
+def load_all(host, db, user, password, table):
     """
     Connect to the mysql db and loop through what we find
     """
@@ -135,7 +135,7 @@ def load_all(host, db, user, password):
                         BW INT,
                         EW INT);""")
 
-    cur.execute("INSERT INTO ed_vus (BV, EV, BW, EW) SELECT BV, EV, BW, EW FROM `Ch18Att` GROUP BY BV, EV, BW, EW;")
+    cur.execute("INSERT INTO ed_vus (BV, EV, BW, EW) SELECT BV, EV, BW, EW FROM %s GROUP BY BV, EV, BW, EW;", (table, ))
 
     cur.execute("""CREATE TABLE ed_map (
                         witness TEXT NOT NULL,
@@ -148,7 +148,7 @@ def load_all(host, db, user, password):
                         );""")
 
     # Phase 2: load readings
-    cur.execute("SELECT DISTINCT HS FROM Ch18Att;")
+    cur.execute("SELECT DISTINCT HS FROM %s;", (table, ))
 
     witnesses = set()
     for row in cur.fetchall():
@@ -159,7 +159,7 @@ def load_all(host, db, user, password):
         sys.stdout.write("\r{} / {}: {}     ".format(i + 1, len(witnesses), wit))
         sys.stdout.flush()
         try:
-            load_witness(wit, cur)
+            load_witness(wit, cur, table)
         except Exception as e:
             print e
             print
@@ -174,12 +174,14 @@ def main():
     parser.add_argument('-p', '--mysql-password', required=True, help='Password to connect to mysql with')
     parser.add_argument('-s', '--mysql-host', required=True, help='Host to connect to')
     parser.add_argument('-d', '--mysql-db', required=True, help='Database to connect to')
+    parser.add_argument('-t', '--table', required=True, help='Table name to get data from')
     args = parser.parse_args()
 
     load_all(args.mysql_host,
              args.mysql_db,
              args.mysql_user,
-             args.mysql_password)
+             args.mysql_password,
+             args.table)
 
 
 if __name__ == "__main__":
