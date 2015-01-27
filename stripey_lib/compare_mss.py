@@ -15,7 +15,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 
 
-def compare(book, chapter, witnesses):
+def compare(book, chapter, witnesses, hide_identical):
     print "Comparison of {} in book {}, chapter {}".format(', '.join(witnesses), book, chapter)
 
     try:
@@ -31,8 +31,8 @@ def compare(book, chapter, witnesses):
         #~ print verse
 
     for verse in Verse.objects.filter(chapter=chapter_obj).order_by('num'):
-        print verse
-        base_text = None
+        texts = {}
+        output = u"{}\n".format(verse)
         for wit in witnesses:
             readings = MsVerse.objects.filter(verse=verse).filter(hand__manuscript__ga=wit)
             for reading in readings:
@@ -40,12 +40,19 @@ def compare(book, chapter, witnesses):
                     ref = wit
                 else:
                     ref = '{} ({})'.format(ref, reading.hand.name)
-                if base_text == reading.raw_text:
-                    print u"  > {} is identical".format(ref)
+                my_text = reading.raw_text.strip()
+                if my_text in texts:
+                    output += u"  > {} is identical to {}\n".format(ref, texts[my_text])
                 else:
-                    print u"  > {}: {}".format(ref, reading.raw_text)
-                if base_text is None:
-                    base_text = reading.raw_text
+                    texts[my_text] = ref
+                    output += u"  > {: <25}:{}\n".format(ref, my_text)
+
+        if hide_identical and len(texts) == 1:
+            continue
+
+        print output
+
+
 
 
 
@@ -58,8 +65,10 @@ if __name__ == "__main__":
                         required=True, help='Book to display')
     parser.add_argument('-c', '--chapter',
                         required=True, help='Chapter to display')
+    parser.add_argument('-i', '--hide-identical-readings', action="store_true",
+                        default=False, help='Hide verses where all readings are identical (default False)')
     parser.add_argument('witness', nargs='+',
                         help='Witnesses to compare')
 
     args = parser.parse_args()
-    compare(args.book, args.chapter, args.witness)
+    compare(args.book, args.chapter, args.witness, args.hide_identical_readings)
