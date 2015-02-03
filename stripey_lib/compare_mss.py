@@ -30,6 +30,7 @@ def compare(book, chapter, witnesses, hide_identical):
     #~ for verse in MsVerse.objects.filter(verse__chapter=chapter_obj).filter(hand__manuscript__ga=:
         #~ print verse
 
+    n = 0
     for verse in Verse.objects.filter(chapter=chapter_obj).order_by('num'):
         texts = {}
         output = u"{}\n".format(verse)
@@ -50,7 +51,10 @@ def compare(book, chapter, witnesses, hide_identical):
         if hide_identical and len(texts) == 1:
             continue
 
+        n += 1
         print output
+
+    print "Showing {} differences".format(n)
 
 
 
