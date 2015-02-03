@@ -40,7 +40,7 @@ def compare(book, chapter, witnesses, hide_identical):
                 if reading.hand.name == 'firsthand':
                     ref = wit
                 else:
-                    ref = '{} ({})'.format(ref, reading.hand.name)
+                    ref = '{} ({})'.format(wit, reading.hand.name)
                 my_text = reading.raw_text.strip()
                 if my_text in texts:
                     output += u"  > {} is identical to {}\n".format(ref, texts[my_text])
