@@ -84,8 +84,8 @@ def load_witness(witness, cur, table):
             ident = None
 
         # Find ident or make a new one
-        cur.execute(u"""SELECT id FROM ed_vus WHERE
-                        BV=%s AND EV=%s AND BW=%s AND EW=%s""",
+        cur.execute(u"""SELECT id FROM {}_ed_vus WHERE
+                        BV=%s AND EV=%s AND BW=%s AND EW=%s""".format(table),
                     (obj['BV'], obj['EV'], obj['BW'], obj['EW']))
         for row in cur.fetchall():
             vu_id = row[0]
@@ -94,13 +94,13 @@ def load_witness(witness, cur, table):
             raise ValueError("Can't find vu")
 
         if ident is None:
-            cur.execute(u"SELECT ident FROM ed_map WHERE vu_id=%s AND greek=%s",
+            cur.execute(u"SELECT ident FROM {}_ed_map WHERE vu_id=%s AND greek=%s".format(table),
                         (vu_id, greek))
             for row in cur.fetchall():
                 ident = row[0]
                 break
             else:
-                cur.execute(u"SELECT MAX(ident) FROM ed_map WHERE vu_id=%s",
+                cur.execute(u"SELECT MAX(ident) FROM {}_ed_map WHERE vu_id=%s".format(table),
                             (vu_id, ))
                 row = cur.fetchone()
                 if row[0] is None:
@@ -108,8 +108,8 @@ def load_witness(witness, cur, table):
                 else:
                     ident = row[0] + 1
 
-        cur.execute(u"""INSERT INTO ed_map (witness, vu_id, greek, ident)
-                        VALUES (%s, %s, %s, %s);""",
+        cur.execute(u"""INSERT INTO {}_ed_map (witness, vu_id, greek, ident)
+                        VALUES (%s, %s, %s, %s);""".format(table),
                     (witness, vu_id, greek, ident))
 
         #~ print witness, obj['BV'], obj['EV'], obj['BW'], obj['EW'], greek, ident
@@ -124,26 +124,30 @@ def load_all(host, db, user, password, table):
 
     cur.execute("DROP TABLE IF EXISTS ed_map;")
     cur.execute("DROP TABLE IF EXISTS ed_vus;")
+    cur.execute("DROP TABLE IF EXISTS {}_ed_map;".format(table))
+    cur.execute("DROP TABLE IF EXISTS {}_ed_vus;".format(table))
 
     # Phase 1: load variant units
-    cur.execute("""CREATE TABLE ed_vus (
+    cur.execute("""CREATE TABLE {}_ed_vus (
                         id INT AUTO_INCREMENT KEY,
                         BV INT,
                         EV INT,
                         BW INT,
-                        EW INT);""")
+                        EW INT);""".format(table))
 
-    cur.execute("INSERT INTO ed_vus (BV, EV, BW, EW) SELECT BV, EV, BW, EW FROM {} GROUP BY BV, EV, BW, EW;".format(table))
+    cur.execute("""INSERT INTO {}_ed_vus (BV, EV, BW, EW)
+                       SELECT BV, EV, BW, EW
+                       FROM {} GROUP BY BV, EV, BW, EW;""".format(table, table))
 
-    cur.execute("""CREATE TABLE ed_map (
-                        witness TEXT NOT NULL,
-                        vu_id INT NOT NULL,
-                        greek TEXT CHARACTER SET UTF8,
-                        ident INT NOT NULL,
+    cur.execute("""CREATE TABLE {}_ed_map (
+                    witness TEXT NOT NULL,
+                    vu_id INT NOT NULL,
+                    greek TEXT CHARACTER SET UTF8,
+                    ident INT NOT NULL,
 
-                        FOREIGN KEY (vu_id)
-                            REFERENCES ed_vus(id)
-                        );""")
+                    FOREIGN KEY (vu_id)
+                        REFERENCES {}_ed_vus(id)
+                    );""".format(table, table))
 
     # Phase 2: load readings
     cur.execute("SELECT DISTINCT HS FROM {};".format(table))

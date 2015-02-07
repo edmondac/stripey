@@ -6,7 +6,7 @@ Compare the text of two (or more) manuscripts in a Muenster mysql database
 import MySQLdb
 
 
-def compare(host, db, user, password, witnesses):
+def compare(host, db, user, password, table, witnesses):
     """
     Connect to the mysql db and loop through what we find
     """
@@ -16,12 +16,12 @@ def compare(host, db, user, password, witnesses):
     db = MySQLdb.connect(host=host, user=user, passwd=password, db=db, charset='utf8')
     cur = db.cursor()
 
-    cur.execute("""SELECT A.vu_id, A.greek, B.greek FROM ed_map A
+    cur.execute("""SELECT A.vu_id, A.greek, B.greek FROM {}_ed_map A
                    INNER JOIN ed_map B
                    ON A.vu_id=B.vu_id
                    AND A.witness=%s
                    AND B.witness=%s
-                   AND A.ident != B.ident""", witnesses)
+                   AND A.ident != B.ident""".format(table), witnesses)
     n = 0
     for row in cur.fetchall():
         if not row:
@@ -41,10 +41,13 @@ if __name__ == "__main__":
     parser.add_argument('-p', '--mysql-password', required=True, help='Password to connect to mysql with')
     parser.add_argument('-s', '--mysql-host', required=True, help='Host to connect to')
     parser.add_argument('-d', '--mysql-db', required=True, help='Database to connect to')
+    parser.add_argument('-t', '--table', required=True, help='Table name to get data from')
+
     args = parser.parse_args()
 
     compare(args.mysql_host,
             args.mysql_db,
             args.mysql_user,
             args.mysql_password,
+            args.table,
             args.witness)

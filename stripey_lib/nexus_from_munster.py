@@ -10,17 +10,17 @@ MISSING = "-"
 GAP = "?"
 
 
-def nexus(host, db, user, password, filename):
+def nexus(host, db, user, password, table, filename):
     """
     Connect to the mysql db and loop through what we find
     """
     db = MySQLdb.connect(host=host, user=user, passwd=password, db=db, charset='utf8')
     cur = db.cursor()
 
-    cur.execute("SELECT id FROM ed_vus ORDER BY id")
+    cur.execute("SELECT id FROM {}_ed_vus ORDER BY id".format(table))
     vus = sorted([x[0] for x in cur.fetchall()])
 
-    cur.execute("SELECT DISTINCT(witness) FROM ed_map")
+    cur.execute("SELECT DISTINCT(witness) FROM {}_ed_map".format(table))
     witnesses = [x[0] for x in cur.fetchall()]
     symbols = set()
     matrix = []
@@ -29,7 +29,7 @@ def nexus(host, db, user, password, filename):
         sys.stdout.write("\r{}/{}: {}    ".format(i + 1, len(witnesses), wit))
         sys.stdout.flush()
 
-        cur.execute("SELECT vu_id, ident FROM ed_map WHERE witness = %s",
+        cur.execute("SELECT vu_id, ident FROM {}_ed_map WHERE witness = %s".format(table),
                     (wit, ))
         wit_map = {}
         for row in cur.fetchall():
@@ -91,6 +91,7 @@ def main():
     parser.add_argument('-p', '--mysql-password', required=True, help='Password to connect to mysql with')
     parser.add_argument('-s', '--mysql-host', required=True, help='Host to connect to')
     parser.add_argument('-d', '--mysql-db', required=True, help='Database to connect to')
+    parser.add_argument('-t', '--table', required=True, help='Table name to get data from')
     parser.add_argument('output_file', help='Filename to save nexus data to')
     args = parser.parse_args()
 
@@ -98,6 +99,7 @@ def main():
           args.mysql_db,
           args.mysql_user,
           args.mysql_password,
+          args.table,
           args.output_file)
 
 
