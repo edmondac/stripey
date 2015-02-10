@@ -4,6 +4,7 @@ Compare the text of two (or more) manuscripts in a Muenster mysql database
 """
 
 import MySQLdb
+import itertools
 
 
 def compare(host, db, user, password, table, witnesses):
@@ -11,7 +12,7 @@ def compare(host, db, user, password, table, witnesses):
     Connect to the mysql db and loop through what we find
     """
     assert len(witnesses) == 2
-    print "Comparison of {} in db {}:{}".format(', '.join(witnesses), db, table)
+    print "\nComparison of {} in db {}:{}".format(', '.join(witnesses), db, table)
 
     db = MySQLdb.connect(host=host, user=user, passwd=password, db=db, charset='utf8')
     cur = db.cursor()
@@ -24,15 +25,29 @@ def compare(host, db, user, password, table, witnesses):
                AND A.ident != B.ident""".format(table, table)
     cur.execute(query, witnesses)
     n = 0
+    w1_missing = 0
+    w2_missing = 0
     for row in cur.fetchall():
         if not row:
             break
 
+        if row[1] is None:
+            w1_missing += 1
+            continue
+        if row[2] is None:
+            w2_missing += 1
+            continue
+
         print u"VU {}: \n\t{}:\t{}\n\t{}:\t{}".format(row[0], witnesses[0], row[1], witnesses[1], row[2])
         n += 1
 
-    print "Showing {} differences".format(n)
+    print "***\n> Showing {} differences between {} and {}".format(n, witnesses[0], witnesses[1])
+    if w1_missing:
+        print " > {} is missing in {} places of difference".format(witnesses[0], w1_missing)
+    if w2_missing:
+        print " > {} is missing in {} places of difference".format(witnesses[1], w2_missing)
 
+    return n
 
 if __name__ == "__main__":
     import argparse
@@ -46,9 +61,12 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    compare(args.mysql_host,
-            args.mysql_db,
-            args.mysql_user,
-            args.mysql_password,
-            args.mysql_table,
-            args.witness)
+    diffs = []
+    for pair in itertools.combinations(args.witness, 2):
+        diffs.append(compare(args.mysql_host,
+                             args.mysql_db,
+                             args.mysql_user,
+                             args.mysql_password,
+                             args.mysql_table,
+                             [x.replace(',', '') for x in pair]))
+    print "Summary of differences of pairs: " + ', '.join(str(x) for x in diffs)
