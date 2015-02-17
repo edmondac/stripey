@@ -22,6 +22,7 @@ def nexus(host, db, user, password, table, filename):
 
     cur.execute("SELECT DISTINCT(witness) FROM {}_ed_map".format(table))
     witnesses = [x[0] for x in cur.fetchall()]
+
     symbols = set()
     matrix = []
     print
