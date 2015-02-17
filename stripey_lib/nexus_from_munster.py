@@ -41,6 +41,7 @@ def nexus(host, db, user, password, table, filename):
             elif ident == -2:
                 # No text where something else has an addition...
                 label = LABELS[0]
+                symbols.add(label)
             else:
                 # General reading
                 label = LABELS[ident + 1]
