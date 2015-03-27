@@ -16,6 +16,20 @@ def compare(host, db, user, password, table, witnesses):
     db = MySQLdb.connect(host=host, user=user, passwd=password, db=db, charset='utf8')
     cur = db.cursor()
 
+    vu_mapping = {}
+    cur.execute("SELECT id, bv, ev, bw, ew FROM {}_ed_vus".format(table))
+    for row in cur.fetchall():
+        i, bv, ev, bw, ew = row
+        ref = "{}/".format(bv)
+        if bv == ev:
+            if bw == ew:
+                ref += str(bw)
+            else:
+                ref += "{}-{}".format(bw, ew)
+        else:
+            ref += "{}-{}/{}".format(bw, ev, ew)
+        vu_mapping[i] = ref
+
     # Let's get all the readings for our first witness
     query = """SELECT vu_id, ident, greek FROM {}_ed_map
                WHERE witness=%s""".format(table)
@@ -35,7 +49,7 @@ def compare(host, db, user, password, table, witnesses):
         sys.stdout.flush()
 
         if support == our_witnesses:
-            print "\nMATCH", vu_id, greek
+            print "\nMATCH", vu_id, vu_mapping[vu_id], greek
             print
 
             #~

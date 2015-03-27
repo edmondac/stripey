@@ -17,7 +17,21 @@ def compare(host, db, user, password, table, witnesses):
     db = MySQLdb.connect(host=host, user=user, passwd=password, db=db, charset='utf8')
     cur = db.cursor()
 
-    query = """SELECT A.vu_id, A.greek, B.greek FROM {}_ed_map A
+    vu_mapping = {}
+    cur.execute("SELECT id, bv, ev, bw, ew FROM {}_ed_vus".format(table))
+    for row in cur.fetchall():
+        i, bv, ev, bw, ew = row
+        ref = "{}/".format(bv)
+        if bv == ev:
+            if bw == ew:
+                ref += str(bw)
+            else:
+                ref += "{}-{}".format(bw, ew)
+        else:
+            ref += "{}-{}/{}".format(bw, ev, ew)
+        vu_mapping[i] = ref
+
+    query = """SELECT A.vu_id, A.greek, B.greek, A.ident, B.ident FROM {}_ed_map A
                INNER JOIN {}_ed_map B
                ON A.vu_id=B.vu_id
                AND A.witness=%s
@@ -38,7 +52,7 @@ def compare(host, db, user, password, table, witnesses):
             w2_missing += 1
             continue
 
-        print u"VU {}: \n\t{}:\t{}\n\t{}:\t{}".format(row[0], witnesses[0], row[1], witnesses[1], row[2])
+        print u"VU {} ({}): \n\t{}:\t{} ({})\n\t{}:\t{} ({})".format(row[0], vu_mapping[row[0]], witnesses[0], row[1], row[3], witnesses[1], row[2], row[4])
         n += 1
 
     print "***\n> Showing {} differences between {} and {}".format(n, witnesses[0], witnesses[1])
