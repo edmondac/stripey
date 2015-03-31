@@ -84,5 +84,5 @@ if __name__ == "__main__":
                              args.mysql_table,
                              [x.replace(',', '') for x in pair]))
     print "Summary of differences of pairs: " + ', '.join(str(x) for x in diffs)
-    print "  > average pairwise difference: ", sum(diffs)/len(diffs)*1.0
+    print "  > average pairwise difference: ", sum(diffs)/(len(diffs)*1.0)
     print "  > min|max pairwise difference: ", min(diffs), max(diffs)

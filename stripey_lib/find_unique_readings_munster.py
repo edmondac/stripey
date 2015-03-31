@@ -76,7 +76,7 @@ if __name__ == "__main__":
     witnesses = [x.replace(',', '') for x in args.witness]
 
     if args.subsets:
-        for size in range(2, len(args.witness)):
+        for size in range(2, len(args.witness) + 1):
             for subset in itertools.combinations(witnesses, size):
                 compare(args.mysql_host,
                         args.mysql_db,
