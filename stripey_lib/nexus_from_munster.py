@@ -5,12 +5,11 @@ import sys
 import string
 import MySQLdb
 
-LABELS = string.ascii_letters
 MISSING = "-"
 GAP = "?"
 
 
-def nexus(host, db, user, password, table, filename):
+def nexus(host, db, user, password, table, perc, filename):
     """
     Connect to the mysql db and loop through what we find
     """
@@ -19,6 +18,8 @@ def nexus(host, db, user, password, table, filename):
 
     cur.execute("SELECT id FROM {}_ed_vus ORDER BY id".format(table))
     vus = sorted([x[0] for x in cur.fetchall()])
+    target = len(vus) * perc / 100.0
+    print "Including only witnesses extant in {} ({}%) variant units".format(target, perc)
 
     cur.execute("SELECT DISTINCT(witness) FROM {}_ed_map".format(table))
     witnesses = [x[0] for x in cur.fetchall()]
@@ -26,8 +27,9 @@ def nexus(host, db, user, password, table, filename):
     symbols = set()
     matrix = []
     print
-    for i, wit in enumerate(witnesses):
-        sys.stdout.write("\r{}/{}: {}    ".format(i + 1, len(witnesses), wit))
+    witnesses_copy = witnesses[:]
+    for i, wit in enumerate(witnesses_copy):
+        sys.stdout.write("\r{}/{}: {}    ".format(i + 1, len(witnesses_copy), wit))
         sys.stdout.flush()
 
         cur.execute("SELECT vu_id, ident FROM {}_ed_map WHERE witness = %s".format(table),
@@ -35,24 +37,24 @@ def nexus(host, db, user, password, table, filename):
         wit_map = {}
         for row in cur.fetchall():
             ident = row[1]
-            if ident == -1:
-                # Missing
+            if len(ident) > 1 and ident.startswith('z'):
+                # For now, we'll treat such things as "Missing"
                 label = MISSING
-            elif ident == -2:
-                # No text where something else has an addition...
-                label = LABELS[0]
-                symbols.add(label)
             else:
-                # General reading
-                label = LABELS[ident + 1]
-                symbols.add(label)
+                label = ident
 
             wit_map[row[0]] = label
 
         stripe = []
         for vu in vus:
             stripe.append(wit_map.get(vu, GAP))
-        matrix.append("{} {}".format(wit, ''.join(stripe)))
+
+        this_count = len([x for x in stripe if x not in (GAP, MISSING)])
+        if this_count > target:
+            matrix.append("{} {}".format(wit, ''.join(stripe)))
+        else:
+            print "Deleting witness {} - it is only extant in {} variant unit(s)".format(wit, this_count)
+            del witnesses[witnesses.index(wit)]
 
     nexus_data = """#nexus
 BEGIN Taxa;
@@ -94,6 +96,7 @@ def main():
     parser.add_argument('-s', '--mysql-host', required=True, help='Host to connect to')
     parser.add_argument('-d', '--mysql-db', required=True, help='Database to connect to')
     parser.add_argument('-t', '--table', required=True, help='Table name to get data from')
+    parser.add_argument('-e', '--extant_perc', default=50, type=int, help='Percentage of variant units a witness must attest to be included')
     parser.add_argument('output_file', help='Filename to save nexus data to')
     args = parser.parse_args()
 
@@ -102,8 +105,9 @@ def main():
           args.mysql_user,
           args.mysql_password,
           args.table,
+          args.extant_perc,
           args.output_file)
-
+    print
 
 if __name__ == "__main__":
     main()
