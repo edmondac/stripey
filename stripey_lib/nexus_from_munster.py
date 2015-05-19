@@ -100,7 +100,7 @@ def main():
     parser.add_argument('-d', '--mysql-db', required=True, help='Database to connect to')
     parser.add_argument('-t', '--table', required=True, help='Table name to get data from')
     parser.add_argument('-b', '--book', default=0, type=int, help='Restrict to the specified book number')
-    parser.add_argument('-e', '--extant_perc', default=50, type=int, help='Percentage of variant units a witness must attest to be included')
+    parser.add_argument('-e', '--extant_perc', default=5, type=int, help='Percentage of variant units a witness must attest to be included')
     parser.add_argument('output_file', help='Filename to save nexus data to')
     args = parser.parse_args()
 

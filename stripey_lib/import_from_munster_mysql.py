@@ -35,8 +35,8 @@ def load_witness(witness, cur, table, dialect):
     """
     Load a particular witness from the db
     """
-    cur.execute("SELECT * FROM {table} WHERE {WITN} = %s".format(**dialect), (witness, ))
-    reverse = {v:k for k, v in dialect.items()}
+    cur.execute("SELECT * FROM {table} WHERE {HSNR} = %s".format(**dialect), (witness, ))
+    reverse = {v: k for k, v in dialect.items()}
     field_names = [reverse.get(i[0]) for i in cur.description]
     attestations = []
     while True:
@@ -48,7 +48,7 @@ def load_witness(witness, cur, table, dialect):
     for row in attestations:
         obj = {field_names[i]: val for i, val in enumerate(row)
                if field_names[i]}
-        assert obj['CHBEG'] == obj['CHEND'], obj
+        #~ assert obj['CHBEG'] == obj['CHEND'], obj
 
         #~ rdg = obj['RDG'].strip()
 #~
@@ -83,7 +83,7 @@ def load_witness(witness, cur, table, dialect):
             #~ greek = translate(unicode(rdg.lower()))
             #~ ident = None
 
-        greek = 'unavailable'
+        greek = obj['LESART'] if 'LESART' in obj else 'unavailable'
         ident = obj['VARID2']  # assumption is that this is ECM2's variant id
 
         # Find ident or make a nWEND one
@@ -115,9 +115,31 @@ def load_witness(witness, cur, table, dialect):
 
         cur.execute(u"""INSERT INTO {}_ed_map (witness, vu_id, greek, ident)
                         VALUES (%s, %s, %s, %s);""".format(table),
-                    (witness, vu_id, greek, ident))
+                    (get_ga(witness), vu_id, greek, ident))
 
         #~ print witness, obj['VBEG'], obj['VEND'], obj['WBEG'], obj['WEND'], greek, ident
+
+
+def get_ga(wit):
+    """
+    Convert a Munster witness id into a GA number
+    """
+    wit = int(wit)
+
+    if 100000 < wit < 200000:
+        ret = "P{}".format(int(str(wit)[2:-1]))
+    elif 200000 < wit < 300000:
+        ret = "0{}".format(int(str(wit)[2:-1]))
+    elif 300000 < wit < 400000:
+        ret = str(int(str(wit)[2:-1]))
+    elif 400000 < wit < 500000:
+        ret = "L{}".format(int(str(wit)[2:-1]))
+    else:
+        raise ValueError("Can't handle {}".format(wit))
+
+    if str(wit).endswith('1'):
+        ret += 'S'
+    return ret
 
 
 def get_dialect(db, table):
@@ -129,10 +151,14 @@ def get_dialect(db, table):
     cur.execute("SELECT * FROM {}".format(table))
     field_names = [i[0] for i in cur.description]
 
-    default = ("BOOK", "CHBEG", "CHEND", "VBEG", "VEND", "WBEG", "WEND", "VARID2", 'WITN')
+    default = ("BOOK", "CHBEG", "CHEND", "VBEG", "VEND", "WBEG", "WEND", "VARID2", 'HSNR', 'LESART')
 
-    dialects = [default,
-                ("BUCH", "KAPANF", "KAPEND", "VERSANF", "VERSEND", "WORTANF", "WORTEND", "LABEZ", "HSS")]
+    dialects = [("BOOK", "CHBEG", "CHEND", "VBEG", "VEND", "WBEG", "WEND", "VARID2", 'MSNR', None),
+                ("BUCH", "KAPANF", "KAPEND", "VERSANF", "VERSEND", "WORTANF", "WORTEND", "LABEZ", "HSNR", None),
+                ("BUCH", "KAPANF", "KAPEND", "VERSANF", "VERSEND", "WORTANF", "WORTEND", "VARID2", "HSNR", 'LESART'),
+                ("BUCH", "CHBEG", "CHEND", "VBEG", "VEND", "WBEG", "WEND", "VARID2", "HSNR", None),
+                ("BUCH", "CHBEG", "CHEND", "VBEG", "VEND", "WBEG", "WEND", "VARID2", "HSNR", 'LESART'),
+                ]
 
     class NoMatch(Exception):
         pass
@@ -141,7 +167,7 @@ def get_dialect(db, table):
     for dialect in dialects:
         try:
             for x in dialect:
-                if x not in field_names:
+                if x is not None and x not in field_names:
                     raise NoMatch
         except NoMatch:
             continue
@@ -201,7 +227,7 @@ def load_all(host, db, user, password, table):
                     );""".format(table, table))
 
     # Phase 2: load readings
-    cur.execute("SELECT DISTINCT {WITN} FROM {table};".format(**d))
+    cur.execute("SELECT DISTINCT {HSNR} FROM {table};".format(**d))
 
     witnesses = set()
     for row in cur.fetchall():
