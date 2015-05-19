@@ -9,14 +9,17 @@ MISSING = "-"
 GAP = "?"
 
 
-def nexus(host, db, user, password, table, perc, filename):
+def nexus(host, db, user, password, table, book, perc, filename):
     """
     Connect to the mysql db and loop through what we find
     """
     db = MySQLdb.connect(host=host, user=user, passwd=password, db=db, charset='utf8')
     cur = db.cursor()
 
-    cur.execute("SELECT id FROM {}_ed_vus ORDER BY id".format(table))
+    if book:
+        cur.execute("SELECT id FROM {}_ed_vus WHERE BOOK=%s ORDER BY id".format(table), (book, ))
+    else:
+        cur.execute("SELECT id FROM {}_ed_vus ORDER BY id".format(table))
     vus = sorted([x[0] for x in cur.fetchall()])
     target = len(vus) * perc / 100.0
     print "Including only witnesses extant in {} ({}%) variant units".format(target, perc)
@@ -96,6 +99,7 @@ def main():
     parser.add_argument('-s', '--mysql-host', required=True, help='Host to connect to')
     parser.add_argument('-d', '--mysql-db', required=True, help='Database to connect to')
     parser.add_argument('-t', '--table', required=True, help='Table name to get data from')
+    parser.add_argument('-t', '--book', default=0, type=int, help='Restrict to the specified book number')
     parser.add_argument('-e', '--extant_perc', default=50, type=int, help='Percentage of variant units a witness must attest to be included')
     parser.add_argument('output_file', help='Filename to save nexus data to')
     args = parser.parse_args()
@@ -105,6 +109,7 @@ def main():
           args.mysql_user,
           args.mysql_password,
           args.table,
+          args.book,
           args.extant_perc,
           args.output_file)
     print

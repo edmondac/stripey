@@ -36,7 +36,8 @@ def load_witness(witness, cur, table, dialect):
     Load a particular witness from the db
     """
     cur.execute("SELECT * FROM {table} WHERE {WITN} = %s".format(**dialect), (witness, ))
-    field_names = [dialect.get(i[0]) for i in cur.description]
+    reverse = {v:k for k, v in dialect.items()}
+    field_names = [reverse.get(i[0]) for i in cur.description]
     attestations = []
     while True:
         row = cur.fetchone()
@@ -86,9 +87,11 @@ def load_witness(witness, cur, table, dialect):
         ident = obj['VARID2']  # assumption is that this is ECM2's variant id
 
         # Find ident or make a nWEND one
-        cur.execute(u"""SELECT id FROM {}_ed_vus WHERE CHBEG=%s AND CHEND=%s AND
-                        VBEG=%s AND VEND=%s AND WBEG=%s AND WEND=%s""".format(table),
-                    (obj['CHBEG'], obj['CHEND'], obj['VBEG'], obj['VEND'], obj['WBEG'], obj['WEND']))
+        cur.execute(u"""SELECT id FROM {}_ed_vus WHERE BOOK=%s AND CHBEG=%s
+                        AND CHEND=%s AND VBEG=%s AND VEND=%s AND WBEG=%s
+                        AND WEND=%s""".format(table),
+                    (obj['BOOK'], obj['CHBEG'], obj['CHEND'], obj['VBEG'],
+                     obj['VEND'], obj['WBEG'], obj['WEND']))
         for row in cur.fetchall():
             vu_id = row[0]
             break
@@ -126,10 +129,10 @@ def get_dialect(db, table):
     cur.execute("SELECT * FROM {}".format(table))
     field_names = [i[0] for i in cur.description]
 
-    default = ("CHBEG", "CHEND", "VBEG", "VEND", "WBEG", "WEND", "VARID2", 'WITN')
+    default = ("BOOK", "CHBEG", "CHEND", "VBEG", "VEND", "WBEG", "WEND", "VARID2", 'WITN')
 
     dialects = [default,
-                ]
+                ("BUCH", "KAPANF", "KAPEND", "VERSANF", "VERSEND", "WORTANF", "WORTEND", "LABEZ", "HSS")]
 
     class NoMatch(Exception):
         pass
@@ -169,6 +172,7 @@ def load_all(host, db, user, password, table):
     # Phase 1: load variant units
     cur.execute("""CREATE TABLE {}_ed_vus (
                         id INT AUTO_INCREMENT KEY,
+                        BOOK INT,
                         CHBEG INT,
                         CHEND INT,
                         VBEG INT,
@@ -180,10 +184,10 @@ def load_all(host, db, user, password, table):
 
     d = {'table': table}
     d.update(forward_dialect)
-    cur.execute("""INSERT INTO {table}_ed_vus (CHBEG, CHEND, VBEG, VEND, WBEG, WEND)
-                       SELECT {CHBEG}, {CHEND}, {VBEG}, {VEND}, {WBEG}, {WEND}
+    cur.execute("""INSERT INTO {table}_ed_vus (BOOK, CHBEG, CHEND, VBEG, VEND, WBEG, WEND)
+                       SELECT {BOOK}, {CHBEG}, {CHEND}, {VBEG}, {VEND}, {WBEG}, {WEND}
                        FROM {table}
-                       GROUP BY {CHBEG}, {CHEND}, {VBEG}, {VEND}, {WBEG}, {WEND};"""
+                       GROUP BY {BOOK}, {CHBEG}, {CHEND}, {VBEG}, {VEND}, {WBEG}, {WEND};"""
                 .format(**d))
 
     cur.execute("""CREATE TABLE {}_ed_map (
