@@ -134,6 +134,10 @@ def get_ga(wit):
         ret = str(int(str(wit)[2:-1]))
     elif 400000 < wit < 500000:
         ret = "L{}".format(int(str(wit)[2:-1]))
+    elif wit == 1:
+        # Special case
+        # XXX - maybe ZEUGE would be a better column than HSNR?
+        ret = "A"
     else:
         raise ValueError("Can't handle {}".format(wit))
 
