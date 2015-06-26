@@ -245,7 +245,7 @@ def manuscript_correctors_json(request):
     ret = {'packageNames': [h.name for h in hands] + [b.name.title() for b in my_books],
            'matrix': matrix}
 
-    return HttpResponse(json.dumps(ret), mimetype='application/json')
+    return HttpResponse(json.dumps(ret), content_type='application/json')
 
 
 def book_correctors_json(request):
@@ -282,7 +282,7 @@ def book_correctors_json(request):
     ret = {'packageNames': [h.name for h in hands] + ["Ch {}".format(c.num) for c in chapters],
            'matrix': matrix}
 
-    return HttpResponse(json.dumps(ret), mimetype='application/json')
+    return HttpResponse(json.dumps(ret), content_type='application/json')
 
 
 def chapter_correctors_json(request):
@@ -313,7 +313,7 @@ def chapter_correctors_json(request):
            'verses': verses_l}
            #~ 'verses': [(v.verse.num, [x.name for x in v.hand])
                       #~ for v in chapter.verses]}
-    return HttpResponse(json.dumps(ret), mimetype='application/json')
+    return HttpResponse(json.dumps(ret), content_type='application/json')
 
 
 def collation(request):
@@ -483,7 +483,7 @@ def nexus_file(request):
     ga_regex = request.GET.get('ga_regex', '')
 
     nexus = _nexus_file(bk, ch, v, al, base_ms_id, nexus_variant, frag, ga_regex)
-    return HttpResponse(nexus, mimetype='text/plain')
+    return HttpResponse(nexus, content_type='text/plain')
 
 
 @memoize

@@ -21,6 +21,9 @@ FUZZY_EDIT_DISTANCE = 3
 sys.path.append('../stripey_dj/')
 os.environ['DJANGO_SETTINGS_MODULE'] = 'stripey_dj.settings'
 
+import django
+django.setup()
+
 from stripey_app.models import (Chapter, Verse, MsVerse, Book,
                                 get_all_verses, Variant, Reading,
                                 Stripe, MsStripe, Algorithm)
