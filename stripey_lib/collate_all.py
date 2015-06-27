@@ -266,17 +266,13 @@ class CollateXService(object):
         time.sleep(5)
 
     def _stop_service(self):
-        logger.info("Stopping CollateX service")
-        self.__class__._popen.terminate()
-        for i in range(5):
-            self.__class__._popen.poll()
-            if self.__class__._popen.returncode is None:
-                time.sleep(1)
-            else:
-                break
-        else:
-            logger.warning("CollateX service didn't stop - killing it")
+        logger.info("Killing CollateX service immediately")
+        self.__class__._popen.poll()
+        while self.__class__._popen.returncode is None:
+            logger.info("Kill...")
             self._popen.kill()
+            time.sleep(1)
+            self.__class__._popen.poll()
 
         self.__class__._popen = None
 
