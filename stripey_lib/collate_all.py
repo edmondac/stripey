@@ -54,8 +54,7 @@ def collate_verse(chapter_obj, verse_obj, mss, algo):
     except Exception as e:
         # Collate failed
         logger.error("Collate has failed us: {}".format(str(e)))
-        logger.debug("Waiting for 5s for it to sort itself out...")
-        time.sleep(5)
+        cx.restart()
         return
 
     logger.debug(" .. collatex produced {} entries for {} witnesses".format(
@@ -276,6 +275,12 @@ class CollateXService(object):
 
         self.__class__._popen = None
 
+    def restart(self):
+        logger.info("Restarting...")
+        self._stop_service()
+        time.sleep(5)
+        self._start_service()
+
     def _test(self):
         """
         Test the running collatex service.
@@ -301,9 +306,7 @@ class CollateXService(object):
 
         if not self._test():
             logger.warning("CollateX service failed the test - restarting it")
-            self._stop_service()
-            time.sleep(5)
-            self._start_service()
+            self.restart()
             if not self._test():
                 raise IOError("Even after restarting CollateX failed the test - aborting")
 
