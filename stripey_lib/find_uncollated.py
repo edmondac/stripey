@@ -23,7 +23,7 @@ def query(sql):
 
 def find_uncollated():
     for algo in Algorithm.objects.all():
-        sql = "SELECT chapter_id, num FROM stripey_app_verse WHERE NOT EXISTS (SELECT * FROM stripey_app_stripe WHERE verse_id = stripey_app_verse.id AND algorithm_id = {});".format(algo.id)
+        sql = "SELECT stripey_app_chapter.num, stripey_app_verse.num FROM stripey_app_verse, stripey_app_chapter WHERE stripey_app_verse.chapter_id = stripey_app_chapter.id AND NOT EXISTS (SELECT * FROM stripey_app_variant WHERE verse_id = stripey_app_verse.id AND algorithm_id = {}) ORDER BY stripey_app_chapter.num ASC , stripey_app_verse.num ASC;".format(algo.id)
         uncol = [x for x in query(sql) if x is not None]
         print "Algorithm {} is missing {} verses".format(algo.name, len(uncol))
         if uncol:

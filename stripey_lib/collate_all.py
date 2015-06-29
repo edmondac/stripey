@@ -13,6 +13,7 @@ from contextlib import contextmanager
 COLLATEX_SERVICE = "collatex-tools-1.5/bin/collatex-server"
 COLLATEX_PORT = 7369
 SUPPORTED_ALGORITHMS = ('dekker', 'needleman-wunsch', 'medite')
+TIMEOUT = 900
 # levenstein distance: the edit distance threshold for optional fuzzy matching
 #                      of tokens; the default is exact matching
 FUZZY_EDIT_DISTANCE = 3
@@ -138,6 +139,8 @@ def collate_verse(chapter_obj, verse_obj, mss, algo):
     logger.debug("  .. added {} manuscript stripes".format(len(mv_readings)))
     logger.debug("  .. added {} entries in {} secs".format(count, round(t, 3)))
 
+    cx.quit()
+
 
 def collate_book(book_obj, algo, chapter_ref=None):
     """
@@ -154,6 +157,9 @@ def collate_book(book_obj, algo, chapter_ref=None):
             all_verses = get_all_verses(book_obj, chapter_obj)
             for v, mss in all_verses:
                 verse_obj = Verse.objects.get(chapter=chapter_obj, num=v)
+                #~ print verse_obj
+                #~ print Variant.objects.filter(verse=verse_obj, algorithm=algo)
+                #~ print Stripe.objects.filter(verse=verse_obj, algorithm=algo)
                 # 1. check we've not already done this one
                 if Variant.objects.filter(verse=verse_obj, algorithm=algo):
                     continue
@@ -281,6 +287,10 @@ class CollateXService(object):
         time.sleep(5)
         self._start_service()
 
+    def quit(self):
+        logger.info("Quitting...")
+        self._stop_service()
+
     def _test(self):
         """
         Test the running collatex service.
@@ -356,7 +366,7 @@ class CollateXService(object):
         if not quiet:
             logger.debug("Start time {}".format(time.ctime()))
         start = time.time()
-        with timeout(300):
+        with timeout(TIMEOUT):
             req = urllib2.Request(url, data, headers)
             #print req.get_method(), data
             resp = urllib2.urlopen(req)
