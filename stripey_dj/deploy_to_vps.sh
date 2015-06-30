@@ -7,41 +7,47 @@ function fatal {
 
 echo "Commit locally and deploy to VPS? [Y/n]"
 read ok
-[[ ${ok} == 'n' ]] && fatal "Aborting"
+if [[ ${ok} != 'n' ]]; then
+    hg commit -m "Deploying to VPS" || echo "Continuing..."
 
-hg commit -m "Deploying to VPS" || echo "Continuing..."
+    msg="$(hg summary | head -1)"
 
-msg="$(hg summary | head -1)"
-
-scp -r stripey_app django@***REMOVED***:***REMOVED***/.
+    scp -r stripey_app django@***REMOVED***:***REMOVED***/.
+fi
 
 echo "Copy postgres database to VPS? [y/N]"
 read ok
-[[ ${ok} != 'n' ]] && fatal "Aborting"
+if [[ ${ok} == 'y' ]]; then
+    dumpfile="django_$(date +%s).sql"
+    # Dump all stripey_app* tables:
+    echo "Please enter local postgres user django's password:"
+    pg_dump -U django -W -p 5434 -d django -t 'stripey_app_*' > /tmp/${dumpfile}
 
-dumpfile="django_$(date +%s).sql"
+    scp /tmp/${dumpfile} django@***REMOVED***:
 
-# Dump all stripey_app* tables:
-echo "Please enter postgres user django's password:"
-pg_dump -U django -W -p 5434 -d django -t stripey_app* > /tmp/${dumpfile}
-
-scp /tmp/${dumpfile} django@***REMOVED***:
-
-cat > import.sh << EOF
+    cat > import.py << EOF
 # Import script for ${dumpfile}
-set -x
-set -e
-echo "Finding stripey_app* tables"
-psql django -c "SELECT table_name FROM information_schema.tables WHERE table_name ILIKE 'stripey_app%';" | grep stripey > stripey_app.tables
+import subprocess
+print "Finding stripey_app* tables"
+sqltables = subprocess.check_output("psql django -c \"SELECT table_name FROM information_schema.tables WHERE table_name ILIKE 'stripey_app%';\"", shell=True)
+tables = [x.strip() for x in sqltables.splitlines() if x.strip().startswith('stripey_app')]
+print "Found tables: ", tables
 
-echo "Dropping stripey_app* tables"
-psql django -c "DROP TABLE \$(perl -pe 's/\n/\$1,/' stripey_app.tables))"
+if tables:
+    print "Dropping stripey_app* tables"
+    subprocess.check_call('psql django -c "DROP TABLE {}"'.format(', '.join(tables)), shell=True)
 
-echo "Importing new data"
-psql django < ${dumpfile}
+print "Vacuuming..."
+subprocess.check_call('psql django -c "VACUUM FULL"', shell=True)
+
+print "Importing new data"
+subprocess.check_call('psql django < ${dumpfile}', shell=True)
+
+print "Analyzing..."
+subprocess.check_call('psql django -c "VACUUM ANALYZE"', shell=True)
 EOF
 
-scp import.sh django@***REMOVED***:
-rm import.sh
-ssh django@***REMOVED*** "bash import.sh"
-
+    scp import.py django@***REMOVED***:
+    rm import.py
+    ssh django@***REMOVED*** "python import.py 2>&1"
+fi
