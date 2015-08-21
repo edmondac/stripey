@@ -29,6 +29,7 @@ def default_response(request, url, data):
                            ('Lectionaries', lec_mss))
     data['query'] = request.GET.get('query') or ''
     data['absurl'] = request.build_absolute_uri('/').split('//', 1)[1]
+    data['user'] = request.META['REMOTE_USER']
     return render_to_response(url, data)
 
 
