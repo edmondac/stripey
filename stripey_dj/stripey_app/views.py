@@ -28,7 +28,7 @@ def default_response(request, url, data):
                            ('Minuscules', min_mss),
                            ('Lectionaries', lec_mss))
     data['query'] = request.GET.get('query') or ''
-
+    data['absurl'] = request.build_absolute_uri('/').split('//', 1)[1]
     return render_to_response(url, data)
 
 

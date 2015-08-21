@@ -17,7 +17,3 @@ urlpatterns = patterns(
     url(r'nexus.html', 'nexus'),
     url(r'nexus_file.txt', 'nexus_file'),
 )
-
-urlpatterns += patterns(
-    '',
-    url(r'^logout/$', 'django.contrib.auth.views.logout', {'next_page': '/'}))
