@@ -8,6 +8,7 @@
         {% if results %}
 
             {% regroup results by verse as verse_list %}
+            Found results in {{ verse_list|length }} verses.
             <ol>
             {% for verse in verse_list %}
                 <li>{{ verse.grouper }}

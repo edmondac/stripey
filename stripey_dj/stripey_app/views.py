@@ -29,7 +29,7 @@ def default_response(request, url, data):
                            ('Lectionaries', lec_mss))
     data['query'] = request.GET.get('query') or ''
     data['absurl'] = request.build_absolute_uri('/').split('//', 1)[1]
-    data['user'] = request.META['REMOTE_USER']
+    data['user'] = request.META.get('REMOTE_USER')
     return render_to_response(url, data)
 
 
@@ -73,8 +73,6 @@ def search(request):
         'verse__chapter__num',
         'verse__num',
         'hand__manuscript__liste_id')
-
-    logger.warning(res)
 
     return default_response(request,
                             'search.html',
