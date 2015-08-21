@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="block">
+        <h1>Search results for '{{ query }}'</h1>
+        {% if results %}
+
+            {% regroup results by verse as verse_list %}
+            <ol>
+            {% for verse in verse_list %}
+                <li>{{ verse.grouper }}
+                <ol>
+                    {% for item in verse.list %}
+                      <li>{{ item.hand }}: {{ item.raw_text }}</li>
+                    {% endfor %}
+                </ol>
+                </li>
+            {% endfor %}
+            </ol>
+
+        {% else %}
+            <p>No results.</p>
+        {% endif %}
+    </div>
+{% endblock content %}

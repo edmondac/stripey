@@ -222,7 +222,7 @@ class Hand(models.Model):
     name = models.CharField(max_length=30)
 
     def __unicode__(self):
-        return u"Hand {} of {}".format(self.name, self.manuscript)
+        return u"{}:{}".format(self.manuscript, self.name)
 
 
 class Book(models.Model):

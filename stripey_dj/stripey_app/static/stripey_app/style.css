@@ -70,6 +70,15 @@ body {
  float: right;
 }
 
+#search {
+ float: left;
+ padding-right: 5px;
+}
+
+#basetext {
+ float: right;
+}
+
 #footer {
  width: 100%;
  color: #ffea00;

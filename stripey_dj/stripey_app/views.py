@@ -26,6 +26,7 @@ def default_response(request, url, data):
                            ('Majuscules', maj_mss),
                            ('Minuscules', min_mss),
                            ('Lectionaries', lec_mss))
+    data['query'] = request.GET.get('query')
 
     return render_to_response(url, data)
 
@@ -57,6 +58,22 @@ def index(request):
                                          ('Minuscules', min_mss),
                                          ('Lectionaries', lec_mss)),
                              'books': books})
+
+
+def search(request):
+    """
+    Search results
+    """
+    query = request.GET.get('query')
+
+    res = MsVerse.objects.filter(raw_text__icontains=query).order_by('verse', 'hand__manuscript__liste_id')
+
+    logger.warning(res)
+
+    return default_response(request,
+                            'search.html',
+                            {'results': res,
+                             'query': query})
 
 
 def book(request):
