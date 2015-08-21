@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% load highlighting %}
+
 {% block content %}
     <div class="block">
         <h1>Search results for '{{ query }}'</h1>
@@ -11,7 +13,7 @@
                 <li>{{ verse.grouper }}
                 <ol>
                     {% for item in verse.list %}
-                      <li>{{ item.hand }}: {{ item.raw_text }}</li>
+                      <li>{{ item.hand }}: {{ item.raw_text|highlight:query }}</li>
                     {% endfor %}
                 </ol>
                 </li>

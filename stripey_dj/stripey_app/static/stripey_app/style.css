@@ -221,6 +221,10 @@ td.greek, div.greek, div.ident {
  background: green;
 }
 
+.highlight {
+ background: yellow;
+}
+
 .chord path {
  fill-opacity: .67;
  stroke: #000;

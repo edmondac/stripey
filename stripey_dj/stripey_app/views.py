@@ -8,6 +8,7 @@ from stripey_app.models import (ManuscriptTranscription, Book, Chapter,
                                 Hand, Verse, MsVerse, get_all_verses,
                                 collate, Algorithm, MsChapter, MsBook)
 from django.http import HttpResponseRedirect, HttpResponse
+
 from memoize import memoize
 logger = logging.getLogger('stripey_app.views')
 
@@ -26,7 +27,7 @@ def default_response(request, url, data):
                            ('Majuscules', maj_mss),
                            ('Minuscules', min_mss),
                            ('Lectionaries', lec_mss))
-    data['query'] = request.GET.get('query')
+    data['query'] = request.GET.get('query') or ''
 
     return render_to_response(url, data)
 
@@ -66,7 +67,11 @@ def search(request):
     """
     query = request.GET.get('query')
 
-    res = MsVerse.objects.filter(raw_text__icontains=query).order_by('verse', 'hand__manuscript__liste_id')
+    res = MsVerse.objects.filter(raw_text__icontains=query).order_by(
+        'verse__chapter__book__num',
+        'verse__chapter__num',
+        'verse__num',
+        'hand__manuscript__liste_id')
 
     logger.warning(res)
 

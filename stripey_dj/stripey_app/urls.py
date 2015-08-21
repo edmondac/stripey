@@ -1,6 +1,7 @@
 from django.conf.urls import patterns, url
 
-urlpatterns = patterns('stripey_app.views',
+urlpatterns = patterns(
+    'stripey_app.views',
     url(r'^$', 'index'),
     url(r'index.html', 'index'),
     url(r'search.html', 'search'),
@@ -17,3 +18,6 @@ urlpatterns = patterns('stripey_app.views',
     url(r'nexus_file.txt', 'nexus_file'),
 )
 
+urlpatterns += patterns(
+    '',
+    url(r'^logout/$', 'django.contrib.auth.views.logout', {'next_page': '/'}))
