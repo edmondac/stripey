@@ -34,9 +34,7 @@ class picklify(object):
 
     This also has locking, so you can only use it one at a time.
     """
-    FOLDER = os.path.join(os.environ.get('OPENSHIFT_DATA_DIR',
-                                         os.environ.get('HOME')
-                                         ), '.picklify')
+    FOLDER = os.path.join(os.environ.get('HOME'), '.picklify')
     MAXAGE = 24 * 3600 * 14  # a fortnight
 
     def __init__(self, func):
