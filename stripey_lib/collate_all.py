@@ -10,7 +10,8 @@ import urllib2
 from contextlib import contextmanager
 
 # Collatex settings:
-COLLATEX_SERVICE = "collatex-tools-1.5/bin/collatex-server"
+# COLLATEX_SERVICE = ["collatex-tools-1.5/bin/collatex-server"]
+COLLATEX_SERVICE = ["java", "-jar", "collatex-tools-1.7.1.jar", "--http"]
 COLLATEX_PORT = 7369
 SUPPORTED_ALGORITHMS = ('dekker', 'needleman-wunsch', 'medite')
 TIMEOUT = 900
@@ -35,7 +36,7 @@ import logging
 logger = logging.getLogger('collate_all.py')
 
 
-@transaction.commit_on_success
+@transaction.atomic
 def collate_verse(chapter_obj, verse_obj, mss, algo):
     logger.debug("Collating verse {}:{}:{} ({})".format(chapter_obj.book.name,
                                                         chapter_obj.num,
@@ -169,7 +170,7 @@ def collate_book(book_obj, algo, chapter_ref=None):
                 reset_queries()
 
 
-@transaction.commit_on_success
+@transaction.atomic
 def drop_all(algo, chapter_ref=None):
     """
     Clear out all collation data from the db
@@ -267,7 +268,7 @@ class CollateXService(object):
 
     def _start_service(self):
         logger.info("Starting CollateX service on port {}".format(self._port))
-        self.__class__._popen = subprocess.Popen([self._service, '-p', str(self._port)])
+        self.__class__._popen = subprocess.Popen(self._service + ['-p', str(self._port)])
         time.sleep(5)
 
     def _stop_service(self):

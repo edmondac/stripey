@@ -26,16 +26,16 @@ mods = [models.MsStripe,
 
 def delete(model):
     print "Truncating table {}".format(model)
-    cmd = "TRUNCATE TABLE {} CASCADE".format(model._meta.db_table)
-    subprocess.check_call("psql -p 5433 -U django django -c \"{}\"".format(cmd), shell=True)
+    cmd = "TRUNCATE TABLE {} CASCADE;".format(model._meta.db_table)
+    subprocess.check_call("psql -p 5434 -U django django -c \"{}\"".format(cmd), shell=True)
 
 
 def vacuum():
     cmd = "VACUUM FULL"
-    subprocess.check_call("psql -p 5433 -U django django -c \"{}\"".format(cmd), shell=True)
+    subprocess.check_call("psql -p 5434 -U django django -c \"{}\"".format(cmd), shell=True)
 
 
-print "WARNING: Using hardcoded postgres command line 'psql -p 5433 -U django django'"
+print "WARNING: Using hardcoded postgres command line 'psql -p 5434 -U django django'"
 print "Really delete everything in the stripey tables? [N/y]"
 ok = raw_input()
 if ok.strip().lower() == 'y':

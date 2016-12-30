@@ -41,6 +41,14 @@ class Snippet(object):
     def add_reading(self, text, hand_name='firsthand', hand_type='orig'):
         #print u"Adding reading {} for {}.{}".format(text, hand_name, hand_type)
         assert not self._snippets, self
+        if hand_name is None:
+            if hand_type == 'orig':
+                print "WARNING: Assuming hand None:orig is firsthand"
+                hand_name = 'firsthand'
+            elif hand_type == 'corr':
+                print "WARNING: Assuming hand None:corr is corrector"
+                hand_name = 'corrector'
+
         assert hand_name, (text, hand_name, hand_type)
         assert hand_type, (text, hand_name, hand_type)
 
@@ -390,6 +398,8 @@ class Chapter(object):
         for i in element.getchildren():
             if i.tag == "{http://www.tei-c.org/ns/1.0}ab":
                 # This is a verse
+                if 'n' not in i.attrib:
+                    import pdb; pdb.set_trace()
                 v = i.attrib['n']
                 if v.startswith('B'):
                     # e.g. B04K12V17

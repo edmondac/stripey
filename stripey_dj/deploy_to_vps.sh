@@ -20,7 +20,7 @@ read ok
 if [[ ${ok} == 'y' ]]; then
     dumpfile="django_$(date +%s).sql"
     # Dump all stripey_app* tables:
-    echo "Please enter local postgres user django's password:"
+    echo "Please enter local postgres user django's password if prompted:"
     pg_dump -U django -W -p 5434 -d django -t 'stripey_app_*' > /tmp/${dumpfile}
 
     scp /tmp/${dumpfile} django@***REMOVED***:

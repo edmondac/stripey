@@ -24,7 +24,7 @@ ms_re = re.compile("([0-9]+)_([LPNATRS0-9]+)\.xml")
 class UnexpectedFilename(Exception):
     pass
 
-@transaction.commit_on_success
+@transaction.atomic
 def load_ms(folder, f):
     """
     Load a single XML file
@@ -72,4 +72,8 @@ def load_all(folder):
         logger.error("Load failed for: \n{}".format('\n\t'.join(failures)))
 
 if __name__ == "__main__":
-    load_all(os.path.abspath(sys.argv[1]))
+    import argparse
+    parser = argparse.ArgumentParser("Load all manuscript transcriptions from a folder")
+    parser.add_argument('folder', help='Local folder containing XML files')
+    args = parser.parse_args()
+    load_all(os.path.abspath(args.folder))
