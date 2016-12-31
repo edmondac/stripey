@@ -12,7 +12,6 @@ from contextlib import contextmanager
 # Collatex settings:
 # COLLATEX_SERVICE = ["collatex-tools-1.5/bin/collatex-server"]
 COLLATEX_SERVICE = ["java", "-jar", "collatex-tools-1.7.1.jar", "--http"]
-COLLATEX_PORT = 7369
 SUPPORTED_ALGORITHMS = ('dekker', 'needleman-wunsch', 'medite')
 TIMEOUT = 900
 # levenstein distance: the edit distance threshold for optional fuzzy matching
@@ -37,7 +36,7 @@ logger = logging.getLogger('collate_all.py')
 
 
 @transaction.atomic
-def collate_verse(chapter_obj, verse_obj, mss, algo):
+def collate_verse(chapter_obj, verse_obj, mss, algo, port):
     logger.debug("Collating verse {}:{}:{} ({})".format(chapter_obj.book.name,
                                                         chapter_obj.num,
                                                         verse_obj.num,
@@ -49,7 +48,7 @@ def collate_verse(chapter_obj, verse_obj, mss, algo):
             if verse.text:
                 witnesses.append({'id': str(verse.id),
                                   'content': verse.text})
-    cx = CollateXService()
+    cx = CollateXService(port)
     try:
         # Get the apparatus from collatex - this is the clever bit...
         collation = cx.query(witnesses, algo.name)
@@ -143,7 +142,7 @@ def collate_verse(chapter_obj, verse_obj, mss, algo):
     cx.quit()
 
 
-def collate_book(book_obj, algo, chapter_ref=None):
+def collate_book(book_obj, algo, chapter_ref=None, port=7369):
     """
     Collate a particular book using the specified algo
 
@@ -163,9 +162,10 @@ def collate_book(book_obj, algo, chapter_ref=None):
                 #~ print Stripe.objects.filter(verse=verse_obj, algorithm=algo)
                 # 1. check we've not already done this one
                 if Variant.objects.filter(verse=verse_obj, algorithm=algo):
+                    logger.debug("Skipping {} ({}) as it's already done".format(v, algo))
                     continue
                 # 2. make the new collation
-                collate_verse(chapter_obj, verse_obj, mss, algo)
+                collate_verse(chapter_obj, verse_obj, mss, algo, port)
                 # 3. tidy up django's query list, to free up some memory
                 reset_queries()
 
@@ -208,7 +208,7 @@ def drop_all(algo, chapter_ref=None):
     logger.warning("Done")
 
 
-def collate_all(algo, chapter_ref=None):
+def collate_all(algo, chapter_ref=None, port=7369):
     """
     Collate everything using the collatex service
 
@@ -231,7 +231,7 @@ def collate_all(algo, chapter_ref=None):
 
     for book in Book.objects.all():
         if mubook is None or book.num == mubook:
-            collate_book(book, algo_obj, muchapter)
+            collate_book(book, algo_obj, muchapter, port)
 
 
 def tests():
@@ -263,8 +263,11 @@ class CollateXService(object):
     Manage and query collatex
     """
     _service = COLLATEX_SERVICE
-    _port = COLLATEX_PORT
     _popen = None
+
+    def __init__(self, port, timeout=900):
+        self._port = port
+        self._timeout = timeout
 
     def _start_service(self):
         logger.info("Starting CollateX service on port {}".format(self._port))
@@ -361,13 +364,13 @@ class CollateXService(object):
                                           "distance": FUZZY_EDIT_DISTANCE}
         data = json.dumps(input_d)
 
-        url = "http://localhost:{}/collate".format(COLLATEX_PORT)
+        url = "http://localhost:{}/collate".format(self._port)
         headers = {'Content-Type': 'application/json',
                    'Accept': 'application/json'}
         if not quiet:
             logger.debug("Start time {}".format(time.ctime()))
         start = time.time()
-        with timeout(TIMEOUT):
+        with timeout(self._timeout):
             req = urllib2.Request(url, data, headers)
             #print req.get_method(), data
             resp = urllib2.urlopen(req)
@@ -415,6 +418,8 @@ if __name__ == "__main__":
                         default=False, action='store_true')
     parser.add_argument('-f', '--force', help="Don't ask any questions - just do it!",
                         default=False, action='store_true')
+    parser.add_argument('-p', '--collatex-port', help="What port on which to run the collatex server",
+                        default=7369, type=int)
     parser.add_argument('--chapter', help="Collate only one specific chapter (04:11 => John 11)",
                         default=None)
     args = parser.parse_args()
@@ -439,6 +444,6 @@ if __name__ == "__main__":
                 drop_all(a, args.chapter)
 
         for a in algos:
-            collate_all(a, args.chapter)
+            collate_all(a, args.chapter, args.collatex_port)
 
         print "\n** Don't forget to delete the old picklify data"
