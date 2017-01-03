@@ -101,7 +101,7 @@ class Collator(object):
                     verse_obj = Verse.objects.get(chapter=chapter_obj, num=v)
                     # 1. check we've not already done this one
                     if Variant.objects.filter(verse=verse_obj, algorithm=self.algo):
-                        logger.debug("Skipping {} ({}) as it's already done".format(v, self.algo))
+                        logger.debug("Skipping {} ({}) as it's already done".format(v, self.algo.name))
                         continue
                     # 2. queue up the new collation
                     mss_refs = []

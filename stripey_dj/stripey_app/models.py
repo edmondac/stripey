@@ -135,7 +135,7 @@ class ManuscriptTranscription(models.Model):
 
         self.save()
 
-    def __unicode__(self):
+    def __repr__(self):
         return "Manuscript {}".format(self.ga)
 
     def display_ref(self):
@@ -221,7 +221,7 @@ class Hand(models.Model):
     manuscript = models.ForeignKey(ManuscriptTranscription)
     name = models.CharField(max_length=30)
 
-    def __unicode__(self):
+    def __repr__(self):
         return "{}:{}".format(self.manuscript, self.name)
 
 
@@ -240,7 +240,7 @@ class Chapter(models.Model):
     book = models.ForeignKey(Book)
     num = models.IntegerField()
 
-    def __unicode__(self):
+    def __repr__(self):
         return "Chapter {} {}".format(self.book.name,
                                          self.num)
 
@@ -253,7 +253,7 @@ class Verse(models.Model):
     chapter = models.ForeignKey(Chapter)
     num = models.IntegerField()
 
-    def __unicode__(self):
+    def __repr__(self):
         return "Verse {} {}:{}".format(self.chapter.book.name,
                                        self.chapter.num,
                                        self.num)
@@ -276,7 +276,7 @@ class MsVerse(models.Model):
         else:
             return self.raw_text
 
-    def __unicode__(self):
+    def __repr__(self):
         return "MsVerse: ms:{}, hand:{}, verse:{} ({})".format(
             self.hand.manuscript.id,
             self.hand.name,
@@ -290,7 +290,7 @@ class Algorithm(models.Model):
     """
     name = models.CharField(max_length=30)
 
-    def __unicode__(self):
+    def __repr__(self):
         return "Algorithm: {}".format(self.name)
 
 
@@ -320,7 +320,7 @@ class Reading(models.Model):
 
         super(Reading, self).save()
 
-    def __unicode__(self):
+    def __repr__(self):
         return "Reading: {}:{}:{}".format(
             self.variant.verse,
             self.variant.variant_num,
@@ -355,7 +355,7 @@ class MsStripe(models.Model):
     stripe = models.ForeignKey(Stripe)
     ms_verse = models.ForeignKey(MsVerse)
 
-    def __unicode__(self):
+    def __repr__(self):
         return "MsStripe: ms_verse {}, stripe {}".format(self.ms_verse,
                                                           self.stripe)
 
@@ -576,8 +576,8 @@ def collate(book_obj, chapter_obj, verse_obj, algorithm_obj, base_ms_id):
     """
     print(("Creating collation for {}:{}:{}:{}:{}"
            .format(book_obj.name,
-                   chapter_obj,
-                   verse_obj,
+                   chapter_obj.num,
+                   verse_obj.num,
                    algorithm_obj.name,
                    base_ms_id)))
 
@@ -595,5 +595,5 @@ def collate(book_obj, chapter_obj, verse_obj, algorithm_obj, base_ms_id):
 
     print(("Collating {} verses".format(len(verses))))
     for i, verse in enumerate(verses):
-        print((" - collating {}/{} - {}".format(i + 1, len(verses), verse)))
+        print((" - collating {}/{} - {}".format(i + 1, len(verses), verse.num)))
         yield _collate_verse(verse, algorithm_obj, base_ms_id)
