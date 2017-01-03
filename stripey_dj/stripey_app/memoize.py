@@ -34,6 +34,9 @@ class picklify(object):
 
     This also has locking, so you can only use it one at a time.
     """
+    if 'HOME' not in os.environ:
+        print("Forcing HOME to be /var/www")
+        os.environ['HOME'] = "/var/www"
     FOLDER = os.path.join(os.environ.get('HOME'), '.picklify')
     MAXAGE = 24 * 3600 * 14  # a fortnight
 
