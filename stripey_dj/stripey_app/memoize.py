@@ -52,7 +52,7 @@ class picklify(object):
         if args in self.mapping:
             return self.mapping[args]
 
-        myhash = hashlib.sha224(str(args)).hexdigest()
+        myhash = hashlib.sha224(str(args).encode('iso8859-1')).hexdigest()
         pickle_file = os.path.join(self.FOLDER, myhash)
         self.mapping[args] = pickle_file
         return pickle_file
