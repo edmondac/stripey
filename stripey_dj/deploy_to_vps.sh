@@ -49,5 +49,5 @@ EOF
 
     scp import.py django@***REMOVED***:
     rm import.py
-    ssh django@***REMOVED*** "python import.py 2>&1"
+    ssh django@***REMOVED*** "source venv_stripey/bin/activate && python import.py 2>&1"
 fi
