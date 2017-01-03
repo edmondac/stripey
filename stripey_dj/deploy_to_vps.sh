@@ -28,22 +28,22 @@ if [[ ${ok} == 'y' ]]; then
     cat > import.py << EOF
 # Import script for ${dumpfile}
 import subprocess
-print "Finding stripey_app* tables"
+print("Finding stripey_app* tables")
 sqltables = subprocess.check_output("psql django -c \"SELECT table_name FROM information_schema.tables WHERE table_name ILIKE 'stripey_app%';\"", shell=True)
 tables = [x.strip() for x in sqltables.splitlines() if x.strip().startswith('stripey_app')]
-print "Found tables: ", tables
+print("Found tables: {}".format(tables))
 
 if tables:
-    print "Dropping stripey_app* tables"
+    print("Dropping stripey_app* tables")
     subprocess.check_call('psql django -c "DROP TABLE {}"'.format(', '.join(tables)), shell=True)
 
-print "Vacuuming..."
+print("Vacuuming...")
 subprocess.check_call('psql django -c "VACUUM FULL"', shell=True)
 
-print "Importing new data"
+print("Importing new data")
 subprocess.check_call('psql django < ${dumpfile}', shell=True)
 
-print "Analyzing..."
+print("Analyzing...")
 subprocess.check_call('psql django -c "VACUUM ANALYZE"', shell=True)
 EOF
 
