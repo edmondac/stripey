@@ -13,10 +13,11 @@ import urllib.error
 import urllib.parse
 import multiprocessing
 import logging
+import collatex  # For Dekker
 from contextlib import contextmanager
 
 # Collatex settings:
-COLLATEX_JAR = "collatex-tools-1.7.1.jar"
+COLLATEX_JAR = "collatex-tools-1.7.1.jar"  # For Needleman-Wunsch and Medite
 # How many colatex errors before we restart the service?
 MAX_COLLATEX_ERRORS = 20
 SUPPORTED_ALGORITHMS = ('dekker', 'needleman-wunsch', 'medite')
@@ -129,18 +130,21 @@ class Collator(object):
                     witnesses.append({'id': str(verse.id),
                                       'content': verse.text})
 
-        try:
-            # Get the apparatus from collatex - this is the clever bit...
-            collation = self.cx.query(witnesses, self.algo.name)
-        except Exception as e:
-            # Collate failed
-            with self._collatex_errors.get_lock():
-                logger.error("Collate has failed us: {} (count={})".format(e, self._collatex_errors.value))
-                self._collatex_errors.value += 1
-                if self._collatex_errors.value > MAX_COLLATEX_ERRORS:
-                    self.cx.restart()
-                    self._collatex_errors.value = 0
-            return
+        if self.algo.name == 'dekker':
+            collation = collate_python(witnesses, self.algo.name)
+        else:
+            try:
+                # Get the apparatus from collatex - this is the clever bit...
+                collation = self.cx.query(witnesses, self.algo.name)
+            except Exception as e:
+                # Collate failed
+                with self._collatex_errors.get_lock():
+                    logger.error("Collate has failed us: {} (count={})".format(e, self._collatex_errors.value))
+                    self._collatex_errors.value += 1
+                    if self._collatex_errors.value > MAX_COLLATEX_ERRORS:
+                        self.cx.restart()
+                        self._collatex_errors.value = 0
+                return
 
         logger.debug(" .. collatex produced {} entries for {} witnesses".format(
                      len(collation['table']),
@@ -297,40 +301,6 @@ def collate_all(algo, *, chapter_ref=None, port=7369, timeout=900, workers=3):
             coll.collate_book(book, muchapter)
 
     coll.quit()
-
-
-def tests():
-    """
-    Collate everything using the collatex service
-    """
-    witnesses = [{'id': '1',
-                  'content': 'This is a test'},
-                 {'id': '2',
-                  'content': 'This is test'},
-                 {'id': '3',
-                  'content': 'This is a testimony'},
-                 {'id': '4',
-                  'content': 'These are tests'},
-                 {'id': '5',
-                  'content': 'This is a a test'}]
-
-    dek_resp = {'witnesses': ['1', '2', '3', '4', '5'], 'table': [[['This ', 'is '], ['This ', 'is '], ['This ', 'is '], ['These ', 'are '], ['This ', 'is ']], [['a '], [], ['a '], [], ['a ']], [[], [], ['testimony'], [], ['a ']], [['test'], ['test'], [], ['tests'], ['test']]]}
-    nw_resp = {'witnesses': ['1', '2', '3', '4', '5'], 'table': [[[], [], [], [], ['This ']], [['This '], [], ['This '], [], ['is ']], [['is ', 'a '], ['This ', 'is '], ['is ', 'a '], ['These ', 'are '], ['a ', 'a ']], [['test'], ['test'], ['testimony'], ['tests'], ['test']]]}
-    med_resp = {'witnesses': ['1', '2', '3', '4', '5'], 'table': [[[], [], [], [], ['This ']], [['This '], [], ['This '], ['These '], ['is ']], [['is '], ['This '], ['is '], ['are '], ['a ']], [['a '], ['is '], ['a '], [], ['a ']], [['test'], ['test'], ['testimony'], ['tests'], ['test']]]}
-
-    cx = CollateXService(port=12345)
-    cx.start()
-
-    try:
-        resp = cx.query(witnesses, 'dekker')
-        assert resp == dek_resp, resp
-        resp = cx.query(witnesses, 'needleman-wunsch')
-        assert resp == nw_resp, resp
-        resp = cx.query(witnesses, 'medite')
-        assert resp == med_resp, resp
-        logger.info("All tests passed")
-    finally:
-        cx.quit()
 
 
 class TimeoutException(Exception):
@@ -530,6 +500,79 @@ class CollateXService(object):
         finally:
             with self._collatex_active.get_lock():
                 self._collatex_active.value -= 1
+
+
+def collate_python(witnesses, algorithm):
+    """
+    Collate using collatex-python
+    """
+    dekcol = collatex.Collation()
+    input_d = dict(witnesses=witnesses,
+                   algorithm=algorithm)
+    if FUZZY_EDIT_DISTANCE:
+        input_d['tokenComparator'] = {"type": "levenshtein",
+                                      "distance": FUZZY_EDIT_DISTANCE}
+    collation = dekcol.create_from_dict(input_d)
+    table = collatex.collate(collation)
+
+    # Now to transform it into the same form as the java service...
+    ret = {}
+    ret['witnesses'] = sorted(x['id'] for x in witnesses)
+    ret['table'] = []
+    for column in table.columns:
+        col = []
+        for wit in ret['witnesses']:
+            col.append([str(x) for x in column.tokens_per_witness.get(wit, [])])
+        ret['table'].append(col)
+
+    print(table)
+
+    return ret
+
+
+def tests():
+    """
+    Collate everything using the collatex service
+    """
+    witnesses = [{'id': '1',
+                  'content': 'This is a test'},
+                 {'id': '2',
+                  'content': 'This is test'},
+                 {'id': '3',
+                  'content': 'This is a testimony'},
+                 {'id': '4',
+                  'content': 'These are tests'},
+                 {'id': '5',
+                  'content': 'This is a a test'}]
+
+    # NOTE: This can vary (sometimes) - so if it fails try running it again.
+    # Yes... I know...
+    dek_resp_java = {'witnesses': ['1', '2', '3', '4', '5'], 'table': [[['This ', 'is '], ['This ', 'is '], ['This ', 'is '], ['These ', 'are '], ['This ', 'is ']], [['a '], [], ['a '], [], ['a ']], [[], [], ['testimony'], [], ['a ']], [['test'], ['test'], [], ['tests'], ['test']]]}
+    dek_resp_python = {'witnesses': ['1', '2', '3', '4', '5'], 'table': [[['This', 'is'], ['This', 'is'], ['This', 'is'], ['These', 'are', 'tests'], ['This', 'is']], [[], [], [], [], ['a']], [['a'], [], ['a'], [], ['a']], [['test'], ['test'], ['testimony'], [], ['test']]]}
+
+    nw_resp = {'witnesses': ['1', '2', '3', '4', '5'], 'table': [[[], [], [], [], ['This ']], [['This '], [], ['This '], [], ['is ']], [['is ', 'a '], ['This ', 'is '], ['is ', 'a '], ['These ', 'are '], ['a ', 'a ']], [['test'], ['test'], ['testimony'], ['tests'], ['test']]]}
+    med_resp = {'witnesses': ['1', '2', '3', '4', '5'], 'table': [[[], [], [], [], ['This ']], [['This '], [], ['This '], ['These '], ['is ']], [['is '], ['This '], ['is '], ['are '], ['a ']], [['a '], ['is '], ['a '], [], ['a ']], [['test'], ['test'], ['testimony'], ['tests'], ['test']]]}
+
+    # Test Java service
+
+    cx = CollateXService(port=12345)
+    cx.start()
+
+    try:
+        resp = cx.query(witnesses, 'dekker')
+        assert resp == dek_resp_java, resp
+        resp = cx.query(witnesses, 'needleman-wunsch')
+        assert resp == nw_resp, resp
+        resp = cx.query(witnesses, 'medite')
+        assert resp == med_resp, resp
+        logger.info("All java tests passed")
+    finally:
+        cx.quit()
+
+    # Tes Python module
+    resp = collate_python(witnesses, 'dekker')
+    assert resp == dek_resp_python, "Not what I expected...\n{}\n{}".format(resp, dek_resp)
+    logger.info("All python tests passed")
 
 
 def _arg(question, default=None):
