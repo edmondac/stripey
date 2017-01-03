@@ -9,7 +9,7 @@ from stripey_app.models import (ManuscriptTranscription, Book, Chapter,
                                 collate, Algorithm, MsChapter, MsBook)
 from django.http import HttpResponseRedirect, HttpResponse
 
-from memoize import memoize
+from .memoize import memoize
 logger = logging.getLogger('stripey_app.views')
 
 
@@ -425,7 +425,7 @@ def chapter(request):
             readings[i][0].sort(key=lambda a: a[0].liste_id)
 
         # Now sort the groups so our base_ms is in the top one (if present)
-        all_readings = sorted(readings.items(), key=lambda a: a[1][1], reverse=True)
+        all_readings = sorted(list(readings.items()), key=lambda a: a[1][1], reverse=True)
 
         grouped_verses.append((vs, all_readings))
 
@@ -587,13 +587,13 @@ def _nexus_file(bk, ch, v, al, base_ms_id, variant="default", frag=0, ga_regex=N
                 if ident in matrix[verse]:
                     # Can't handle multiple instances of the same passage
                     # in a given hand. Ignore the rest...
-                    print "Ignoring {}'s subsequent reading of {}".format(
-                        ident, ms.ms_verse.verse)
+                    print(("Ignoring {}'s subsequent reading of {}".format(
+                        ident, ms.ms_verse.verse)))
                     continue
                 matrix[verse][ident] = stripe_labels
                 taxa[ident] += len(stripe_labels)
         if matrix[verse] == {}:
-            print "WARNING: Empty dict for {} - it will be omitted".format(verse)
+            print(("WARNING: Empty dict for {} - it will be omitted".format(verse)))
             del matrix[verse]
 
     # Remove fragmentary witnesses
@@ -601,8 +601,8 @@ def _nexus_file(bk, ch, v, al, base_ms_id, variant="default", frag=0, ga_regex=N
     labs = [x for x in sorted(taxa.keys())
             if taxa[x] >= frag_thresh]
     if len(labs) < len(taxa):
-        print ("WARNING: Ignoring {} fragmentary witnesses (threshold {}%)"
-               .format(len(taxa) - len(labs), frag))
+        print(("WARNING: Ignoring {} fragmentary witnesses (threshold {}%)"
+               .format(len(taxa) - len(labs), frag)))
 
     # Taxa section
     nexus = """#nexus
@@ -628,7 +628,7 @@ TAXLABELS
                 all_chars.extend(matrix[verse][lab])
             else:
                 # Add correct num of "missing" signs
-                any_old_lab = matrix[verse].keys()[0]
+                any_old_lab = list(matrix[verse].keys())[0]
                 for i in range(len(matrix[verse][any_old_lab])):
                     all_chars.append(MISSING)
         else:

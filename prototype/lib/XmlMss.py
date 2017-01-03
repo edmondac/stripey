@@ -8,7 +8,7 @@ Notes:
 """
 
 import os
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import string
 import logging
 logging.basicConfig(level=logging.DEBUG)
@@ -57,15 +57,15 @@ class Verse(object):
         Show this verse's ident, hands, text etc.
         """
         if self.hands[0] != None:
-            print "Verse %s" % (self.num, )
+            print(("Verse %s" % (self.num, )))
             for i, hand in enumerate(self.hands):
-                print "\t%s (%s) : %s" % (self.idents[i],
+                print(("\t%s (%s) : %s" % (self.idents[i],
                                           hand,
-                                          self.texts[i])
+                                          self.texts[i])))
         else:
-            print "Verse %s : %s : %s" % (self.num,
+            print(("Verse %s : %s : %s" % (self.num,
                                           self.idents[0],
-                                          self.texts[0])
+                                          self.texts[0])))
 
     def _get_ident_id(self, hand):
         """
@@ -148,7 +148,7 @@ class Verse(object):
         ret = text.lower()
 
         # Final nu
-        ret = ret.replace(u'¯', u'ν')
+        ret = ret.replace('¯', 'ν')
 
         # Nomia sacra
         # FIXME
@@ -173,7 +173,7 @@ class Verse(object):
 
             parser = getattr(self, '_parse_%s' % (tag, ), None)
             if not parser:
-                print i, i.attrib, i.text
+                print((i, i.attrib, i.text))
                 raise NameError("Don't know how to deal with %s tags"
                                 % (tag, ))
                 continue
@@ -195,7 +195,7 @@ class Verse(object):
         for el in el.iter():
             tag = el.tag.split('}')[1]
             if tag not in word_tags:
-                print el, el.attrib, el.text
+                print((el, el.attrib, el.text))
                 raise ValueError("Can't cope with %s tags in words"
                                  % (tag, ))
 
@@ -209,7 +209,7 @@ class Verse(object):
             if tag in ignore_tags:
                 continue
             if not ch.tag.endswith("}rdg"):
-                print ch, ch.attrib, ch.text
+                print((ch, ch.attrib, ch.text))
                 raise ValueError("I only want rdg tags in an app")
             if self._rdg_hand(ch) == hand:
                 # This is the bit we want
@@ -251,7 +251,7 @@ class Chapter(object):
         @returns: a list of stripe strings.
         """
         all_hands = set()
-        for v in self.verses.values():
+        for v in list(self.verses.values()):
             [all_hands.add(h) for h in v.hands]
             
         # firsthand == None: tidy up and sort
@@ -317,7 +317,7 @@ class Manuscript(object):
 
         if not os.path.exists(cf):
             logger.info("Downloading %s%s" % (base_url, self.filename))
-            data = urllib2.urlopen(base_url + self.filename).read()
+            data = urllib.request.urlopen(base_url + self.filename).read()
             with open(cf, 'w') as fh:
                 fh.write(data)
 
@@ -382,16 +382,16 @@ if __name__ == "__main__":
            Manuscript("04"),
            ]
     for i in range(1,2):
-        print "John %d" % (i, )
+        print(("John %d" % (i, )))
         for m in mss:
             ch = m.chapters.get(str(i))
             if ch:
-                print "%5s : " % (m.name, ) + repr(ch.get_stripes())
+                print(("%5s : " % (m.name, ) + repr(ch.get_stripes())))
 
     m = Manuscript("01")
     ch1 = m.chapters.get("1")
     v15 = ch1.verses.get(15)
-    print v15.show_all()
+    print((v15.show_all()))
     
     
 #    for m in mss:

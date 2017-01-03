@@ -1,4 +1,5 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 import os
 import time
@@ -6,14 +7,13 @@ import sys
 import subprocess
 import signal
 import json
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 from contextlib import contextmanager
 
 # Collatex settings:
 # COLLATEX_SERVICE = ["collatex-tools-1.5/bin/collatex-server"]
 COLLATEX_SERVICE = ["java", "-jar", "collatex-tools-1.7.1.jar", "--http"]
 SUPPORTED_ALGORITHMS = ('dekker', 'needleman-wunsch', 'medite')
-TIMEOUT = 900
 # levenstein distance: the edit distance threshold for optional fuzzy matching
 #                      of tokens; the default is exact matching
 FUZZY_EDIT_DISTANCE = 3
@@ -32,11 +32,11 @@ from django.db import transaction, reset_queries
 from django.core.exceptions import ObjectDoesNotExist
 
 import logging
-logger = logging.getLogger('collate_all.py')
+logger = logging.getLogger(__name__)
 
 
 @transaction.atomic
-def collate_verse(chapter_obj, verse_obj, mss, algo, port):
+def collate_verse(chapter_obj, verse_obj, mss, algo, port, timeout):
     logger.debug("Collating verse {}:{}:{} ({})".format(chapter_obj.book.name,
                                                         chapter_obj.num,
                                                         verse_obj.num,
@@ -48,7 +48,7 @@ def collate_verse(chapter_obj, verse_obj, mss, algo, port):
             if verse.text:
                 witnesses.append({'id': str(verse.id),
                                   'content': verse.text})
-    cx = CollateXService(port)
+    cx = CollateXService(port, timeout)
     try:
         # Get the apparatus from collatex - this is the clever bit...
         collation = cx.query(witnesses, algo.name)
@@ -80,7 +80,7 @@ def collate_verse(chapter_obj, verse_obj, mss, algo, port):
         for j, sigil in enumerate(collation['witnesses']):
             # sigil = a witness = a verse object's id
             ms_verse = MsVerse.objects.get(id=int(sigil))
-            text = unicode(' '.join([x.strip() for x in entry[j]]))
+            text = str(' '.join([x.strip() for x in entry[j]]))
 
             # Get the reading object, or make a new one
             try:
@@ -104,7 +104,7 @@ def collate_verse(chapter_obj, verse_obj, mss, algo, port):
 
     # Now sort out the stripes
     stripe_mapping = {}
-    for readings in set([tuple(a) for a in mv_readings.values()]):
+    for readings in set([tuple(a) for a in list(mv_readings.values())]):
         # Get the stripe object, or make a new one, for each unique
         # tuple of readings.
         try:
@@ -127,7 +127,7 @@ def collate_verse(chapter_obj, verse_obj, mss, algo, port):
 
         stripe_mapping[readings] = stripe
 
-    for ms_verse, readings in mv_readings.items():
+    for ms_verse, readings in list(mv_readings.items()):
         # Save our hand-stripe
         hs = MsStripe()
         hs.stripe = stripe_mapping[tuple(readings)]
@@ -142,7 +142,7 @@ def collate_verse(chapter_obj, verse_obj, mss, algo, port):
     cx.quit()
 
 
-def collate_book(book_obj, algo, chapter_ref=None, port=7369):
+def collate_book(book_obj, algo, chapter_ref=None, port=7369, timeout=900):
     """
     Collate a particular book using the specified algo
 
@@ -165,7 +165,7 @@ def collate_book(book_obj, algo, chapter_ref=None, port=7369):
                     logger.debug("Skipping {} ({}) as it's already done".format(v, algo))
                     continue
                 # 2. make the new collation
-                collate_verse(chapter_obj, verse_obj, mss, algo, port)
+                collate_verse(chapter_obj, verse_obj, mss, algo, port, timeout)
                 # 3. tidy up django's query list, to free up some memory
                 reset_queries()
 
@@ -199,16 +199,16 @@ def drop_all(algo, chapter_ref=None):
                                        verse__chapter__book__num=mubook):
             to_del.append(s)
 
-    print " > Deleting {} objects".format(len(to_del))
+    logger.warning(" > Deleting {} objects".format(len(to_del)))
     for i, x in enumerate(to_del):
         x.delete()
         sys.stdout.write("\r > {} ({}%)   ".format(i + 1, i * 100.0 / len(to_del)))
-    print
+    print()
 
     logger.warning("Done")
 
 
-def collate_all(algo, chapter_ref=None, port=7369):
+def collate_all(algo, chapter_ref=None, port=7369, timeout=900):
     """
     Collate everything using the collatex service
 
@@ -231,7 +231,7 @@ def collate_all(algo, chapter_ref=None, port=7369):
 
     for book in Book.objects.all():
         if mubook is None or book.num == mubook:
-            collate_book(book, algo_obj, muchapter, port)
+            collate_book(book, algo_obj, muchapter, port, timeout)
 
 
 def tests():
@@ -249,9 +249,9 @@ def tests():
                   'content': 'These are tests'},
                  {'id': '5',
                   'content': 'This is a a test'}]
-    print cx.query(witnesses, 'dekker')
-    print cx.query(witnesses, 'needleman-wunsch')
-    print cx.query(witnesses, 'medite')
+    print((cx.query(witnesses, 'dekker')))
+    print((cx.query(witnesses, 'needleman-wunsch')))
+    print((cx.query(witnesses, 'medite')))
 
 
 class TimeoutException(Exception):
@@ -265,7 +265,7 @@ class CollateXService(object):
     _service = COLLATEX_SERVICE
     _popen = None
 
-    def __init__(self, port, timeout=900):
+    def __init__(self, port, timeout):
         self._port = port
         self._timeout = timeout
 
@@ -362,7 +362,7 @@ class CollateXService(object):
         if FUZZY_EDIT_DISTANCE:
             input_d['tokenComparator'] = {"type": "levenshtein",
                                           "distance": FUZZY_EDIT_DISTANCE}
-        data = json.dumps(input_d)
+        data = json.dumps(input_d, encoding='iso-8859-1')
 
         url = "http://localhost:{}/collate".format(self._port)
         headers = {'Content-Type': 'application/json',
@@ -371,10 +371,10 @@ class CollateXService(object):
             logger.debug("Start time {}".format(time.ctime()))
         start = time.time()
         with timeout(self._timeout):
-            req = urllib2.Request(url, data, headers)
+            req = urllib.request.Request(url, data, headers)
             #print req.get_method(), data
-            resp = urllib2.urlopen(req)
-            #print resp.info()
+            resp = urllib.request.urlopen(req)
+            print((resp.info()))
             ret = json.loads(resp.read())
             end = time.time()
             if not quiet:
@@ -392,7 +392,7 @@ def _arg(question, default=None):
         question += ' [Y/n]'
     elif default is False:
         question += ' [y/N]'
-    val = raw_input("{}: ".format(question)).strip()
+    val = input("{}: ".format(question)).strip()
     if default is None:
         # No default, just return the value as is
         return val
@@ -413,11 +413,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-a', '--algorithm', default='dekker',
                         help='Which algorithm to use? Options are: {}, all'.format(SUPPORTED_ALGORITHMS))
-    parser.add_argument('-t', '--test', help="Just run tests and exit", default=False, action='store_true')
+    parser.add_argument('--test', help="Just run tests and exit", default=False, action='store_true')
     parser.add_argument('-c', '--clean', help="Clean out old colation before adding new",
                         default=False, action='store_true')
     parser.add_argument('-f', '--force', help="Don't ask any questions - just do it!",
                         default=False, action='store_true')
+    parser.add_argument('-t', '--timeout', help="How long until we shoot collatex (default 900 seconds)",
+                        default=900, type=int)
     parser.add_argument('-p', '--collatex-port', help="What port on which to run the collatex server",
                         default=7369, type=int)
     parser.add_argument('--chapter', help="Collate only one specific chapter (04:11 => John 11)",
@@ -436,7 +438,7 @@ if __name__ == "__main__":
         if args.clean:
             ok = (args.force or
                   _arg("Remove old ({}) collation for {} before continuing?"
-                      .format(algos, args.chapter if args.chapter else "ALL WORKS"),
+                       .format(algos, args.chapter if args.chapter else "ALL WORKS"),
                        False))
             if not ok:
                 sys.exit(1)
@@ -444,6 +446,6 @@ if __name__ == "__main__":
                 drop_all(a, args.chapter)
 
         for a in algos:
-            collate_all(a, args.chapter, args.collatex_port)
+            collate_all(a, args.chapter, args.collatex_port, args.timeout)
 
-        print "\n** Don't forget to delete the old picklify data"
+        print("\n** Don't forget to delete the old picklify data")

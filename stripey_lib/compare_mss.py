@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 """
 Compare the text of two (or more) manuscripts in stripey
 """
@@ -16,16 +16,16 @@ from django.db import transaction
 
 
 def compare(book, chapter, witnesses, hide_identical):
-    print "Comparison of {} in book {}, chapter {}".format(', '.join(witnesses), book, chapter)
+    print(("Comparison of {} in book {}, chapter {}".format(', '.join(witnesses), book, chapter)))
 
     try:
         book_obj = Book.objects.get(num=book)
     except ObjectDoesNotExist:
-        print "Can't find book {}".format(book)
+        print(("Can't find book {}".format(book)))
     try:
         chapter_obj = Chapter.objects.get(num=chapter, book=book_obj)
     except ObjectDoesNotExist:
-        print "Can't find chapter {}".format(chapter)
+        print(("Can't find chapter {}".format(chapter)))
 
     #~ for verse in MsVerse.objects.filter(verse__chapter=chapter_obj).filter(hand__manuscript__ga=:
         #~ print verse
@@ -33,7 +33,7 @@ def compare(book, chapter, witnesses, hide_identical):
     n = 0
     for verse in Verse.objects.filter(chapter=chapter_obj).order_by('num'):
         texts = {}
-        output = u"{}\n".format(verse)
+        output = "{}\n".format(verse)
         for wit in witnesses:
             readings = MsVerse.objects.filter(verse=verse).filter(hand__manuscript__ga=wit)
             for reading in readings:
@@ -43,18 +43,18 @@ def compare(book, chapter, witnesses, hide_identical):
                     ref = '{} ({})'.format(wit, reading.hand.name)
                 my_text = reading.raw_text.strip()
                 if my_text in texts:
-                    output += u"  > {} is identical to {}\n".format(ref, texts[my_text])
+                    output += "  > {} is identical to {}\n".format(ref, texts[my_text])
                 else:
                     texts[my_text] = ref
-                    output += u"  > {: <25}:{}\n".format(ref, my_text)
+                    output += "  > {: <25}:{}\n".format(ref, my_text)
 
         if hide_identical and len(texts) == 1:
             continue
 
         n += 1
-        print output
+        print(output)
 
-    print "Showing {} differences".format(n)
+    print(("Showing {} differences".format(n)))
 
 
 

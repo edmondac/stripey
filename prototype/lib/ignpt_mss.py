@@ -3,7 +3,7 @@ Load the index of mss from the IGNTP
 """
 
 import xml.etree.ElementTree as ET
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import os
 import re
 
@@ -15,7 +15,7 @@ re_table = re.compile('<table.*?</table>')
 
 def get_index_data():
     if not os.path.exists(IGNTP_CACHE):
-        data = urllib2.urlopen(IGNTP_INDEX).read()
+        data = urllib.request.urlopen(IGNTP_INDEX).read()
         tables = re_table.findall(data)
         with open(IGNTP_CACHE, 'w') as cache:
             cache.write("<xml>%s</xml>" % ('\n'.join(tables)))

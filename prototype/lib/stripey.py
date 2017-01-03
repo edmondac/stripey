@@ -58,12 +58,12 @@ for i in files:
         continue
     mss.append(MS(i))
     
-print "Loaded %d manuscripts" % (len(mss), )
+print(("Loaded %d manuscripts" % (len(mss), )))
 
 for m in mss:
-    print m
+    print(m)
 
 for v in range(6):
-    print
+    print()
     for m in mss:
-        print m.name, m.verses[v]
+        print((m.name, m.verses[v]))

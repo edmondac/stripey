@@ -10,7 +10,7 @@ manuscript will always show 'a' for each verse that is present, and
 the next variant of that verse to be found will be 'b', and so on.
 """
 
-from XmlMss import (Manuscript,
+from .XmlMss import (Manuscript,
                     Chapter,
                     Verse)
 
@@ -81,12 +81,12 @@ def html_compare(mss_ids, output_filename):
         for i in range(1,22):
             fh.write("<br><b>John %s</b><br><table>\n" % (i, ))
             for m in mss:
-                s = unicode(m.stripes_trs(str(i))).encode("UTF-8")
+                s = str(m.stripes_trs(str(i))).encode("UTF-8")
                 fh.write(s)
             fh.write("</table><hr>")
 
         fh.write("</body></html>")
-    print "Written file %s" % (output_filename, )
+    print(("Written file %s" % (output_filename, )))
 
 if __name__ == "__main__":
     html_compare(("07",

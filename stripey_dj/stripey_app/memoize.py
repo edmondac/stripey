@@ -1,5 +1,5 @@
 import threading
-import cPickle as pickle
+import pickle as pickle
 import os
 import time
 import hashlib
@@ -61,7 +61,7 @@ class picklify(object):
             if time.time() - mtime <= self.MAXAGE:
                 # Get the pickled version
                 with open(self.mapping[args], 'rb') as pf:
-                    print " - unpickle <- {}".format(self.mapping[args])
+                    print((" - unpickle <- {}".format(self.mapping[args])))
                     return pickle.load(pf)
             else:
                 # Too old - delete it
@@ -71,7 +71,7 @@ class picklify(object):
         with self.lock:
             result = self.func(*args)
             with open(pickle_file, 'wb') as pf:
-                print " - pickle -> {}".format(pickle_file)
+                print((" - pickle -> {}".format(pickle_file)))
                 pickle.dump(result, pf)
             return result
 
@@ -81,10 +81,10 @@ if __name__ == "__main__":
     def test(a, b):
         return {'a': a, 'b': b}
 
-    print test(1, 2)
-    print test(3, 4)
-    print test(1, 2)
-    print test(3, 4)
-    print test(1, 5)
-    print test(3, 4)
-    print test(1, 2)
+    print((test(1, 2)))
+    print((test(3, 4)))
+    print((test(1, 2)))
+    print((test(3, 4)))
+    print((test(1, 5)))
+    print((test(3, 4)))
+    print((test(1, 2)))

@@ -8,7 +8,7 @@ except ImportError:
     xmlmss = None
 
 from django.db.models import Max
-from memoize import memoize, picklify
+from .memoize import memoize, picklify
 
 import Levenshtein
 import unicodedata
@@ -20,7 +20,7 @@ logger = logging.getLogger('stripey_app.models')
 # can be: 'none', 'all'
 SHOW_ACCENTS = 'none'
 # If hiding accents, then also hide these characters:
-IGNORE_CHARS = u"'†"
+IGNORE_CHARS = "'†"
 
 
 def strip_accents(inp):
@@ -29,7 +29,7 @@ def strip_accents(inp):
     characters converted to their normal equivalent, and other non-alphabet
     characters removed (e.g. ')
     """
-    out = u''.join([c for c in unicodedata.normalize('NFD', inp)
+    out = ''.join([c for c in unicodedata.normalize('NFD', inp)
                     if (not unicodedata.combining(c) and
                         c not in IGNORE_CHARS)])
     #~ if inp != out:
@@ -38,9 +38,9 @@ def strip_accents(inp):
 
 
 # Quick test for strip_accents...
-test_in = u"οϋκ ην εκεινος το φως αλλ' ϊνα μαρτυρηση περι του φωτος"
-test_out = u"ουκ ην εκεινος το φως αλλ ινα μαρτυρηση περι του φωτος"
-assert strip_accents(test_in) == test_out, u"ERROR: \n{}\n{}".format(test_in, test_out)
+test_in = "οϋκ ην εκεινος το φως αλλ' ϊνα μαρτυρηση περι του φωτος"
+test_out = "ουκ ην εκεινος το φως αλλ ινα μαρτυρηση περι του φωτος"
+assert strip_accents(test_in) == test_out, "ERROR: \n{}\n{}".format(test_in, test_out)
 
 
 class ManuscriptTranscription(models.Model):
@@ -74,7 +74,7 @@ class ManuscriptTranscription(models.Model):
             if new == old:
                 continue
             elif old:
-                logger.info(u"Keeping old value for {}:{} - new value is {}".format(k, old, new))
+                logger.info("Keeping old value for {}:{} - new value is {}".format(k, old, new))
                 continue
             elif new:
                 setattr(self, k, new)
@@ -99,7 +99,7 @@ class ManuscriptTranscription(models.Model):
 
         # Save myself so that other objects can reference me
         self.save()
-        logger.debug(u"Found info: {}, {}, {}, {}".format(self.ms_name,
+        logger.debug("Found info: {}, {}, {}, {}".format(self.ms_name,
                                                           self.tischendorf,
                                                           self.ga,
                                                           self.liste_id))
@@ -111,7 +111,7 @@ class ManuscriptTranscription(models.Model):
         ms_book.book = db_book
         ms_book.save()
 
-        for ch in obj.chapters.values():
+        for ch in list(obj.chapters.values()):
             db_chapter = _get_chapter(db_book, ch.num)
 
             # First create the MsChapter
@@ -121,7 +121,7 @@ class ManuscriptTranscription(models.Model):
             ms_chapter.save()
 
             # Now get the verses
-            for verse_list in ch.verses.values():
+            for verse_list in list(ch.verses.values()):
                 for j, vs in enumerate(verse_list):
                     db_verse = _get_verse(db_chapter, vs.num)
                     for text, hand in vs.get_texts():
@@ -145,7 +145,7 @@ class ManuscriptTranscription(models.Model):
         ref = []
 
         if self.ga.startswith('P'):
-            ref = [u'𝔓{}'.format(self.ga[1:])]
+            ref = ['𝔓{}'.format(self.ga[1:])]
         else:
             if self.tischendorf:
                 ref.append(self.tischendorf)
@@ -162,14 +162,14 @@ class ManuscriptTranscription(models.Model):
             if not ref:
                 ref = [self.ms_ref]
 
-        return u", ".join(ref)
+        return ", ".join(ref)
 
     def display_short(self):
         """
         A short ref to display
         """
         if self.ga.startswith('P'):
-            return u'𝔓{}'.format(self.ga[1:])
+            return '𝔓{}'.format(self.ga[1:])
 
         if self.ga:
             return self.ga
@@ -209,7 +209,7 @@ class ManuscriptTranscription(models.Model):
                 me.append(verse)
 
         ret = []
-        keys = v_d.keys()
+        keys = list(v_d.keys())
         keys.sort()
         for v in keys:
             ret.append((v, v_d[v]))
@@ -222,7 +222,7 @@ class Hand(models.Model):
     name = models.CharField(max_length=30)
 
     def __unicode__(self):
-        return u"{}:{}".format(self.manuscript, self.name)
+        return "{}:{}".format(self.manuscript, self.name)
 
 
 class Book(models.Model):
@@ -240,6 +240,9 @@ class Chapter(models.Model):
     book = models.ForeignKey(Book)
     num = models.IntegerField()
 
+    def __unicode__(self):
+        return "Chapter {} {}".format(self.book.name,
+                                         self.num)
 
 class MsChapter(models.Model):
     chapter = models.ForeignKey(Chapter)
@@ -318,7 +321,7 @@ class Reading(models.Model):
         super(Reading, self).save()
 
     def __unicode__(self):
-        return u"Reading: {}:{}:{}".format(
+        return "Reading: {}:{}:{}".format(
             self.variant.verse,
             self.variant.variant_num,
             self.text)
@@ -340,7 +343,7 @@ class Stripe(models.Model):
         ret = super(Stripe, self).save(*args)
         for reading in self.readings.all():
             if reading.variant.algorithm.id != self.algorithm.id:
-                raise ValueError(u"Algorithm mismatch {} vs {}".format(self.algorithm,
+                raise ValueError("Algorithm mismatch {} vs {}".format(self.algorithm,
                                                                        reading.algorithm))
         return ret
 
@@ -353,7 +356,7 @@ class MsStripe(models.Model):
     ms_verse = models.ForeignKey(MsVerse)
 
     def __unicode__(self):
-        return u"MsStripe: ms_verse {}, stripe {}".format(self.ms_verse,
+        return "MsStripe: ms_verse {}, stripe {}".format(self.ms_verse,
                                                           self.stripe)
 
 
@@ -453,7 +456,7 @@ def get_all_verses(book_obj, chapter_obj, base_ms_id=None, verse_num=None):
     sorters = {}
     for x in base_texts:
         first_hands = [i.text for i in x[1] if i.hand.name == 'firsthand']
-        base = first_hands[0] if first_hands else (x[1][0].text if x[1] else u'')
+        base = first_hands[0] if first_hands else (x[1][0].text if x[1] else '')
         sorters[x[0]] = TextSorter(base)
 
     vs_d = {}
@@ -478,7 +481,7 @@ def get_all_verses(book_obj, chapter_obj, base_ms_id=None, verse_num=None):
                 vs_d[v[0]] = me
             me.append((ms, v[1]))
 
-    keys = vs_d.keys()
+    keys = list(vs_d.keys())
     keys.sort()
     all_verses = []
     for k in keys:
@@ -496,8 +499,8 @@ class TextSorter(object):
         self.base_text = base_text
 
     def __call__(self, text):
-        lev = Levenshtein.ratio(self.base_text if self.base_text else u'',
-                                text if text else u'') * 100.0
+        lev = Levenshtein.ratio(self.base_text if self.base_text else '',
+                                text if text else '') * 100.0
         return lev
 
 
@@ -508,7 +511,7 @@ class StripeSorter(TextSorter):
     """
     def __init__(self, base_ms_id, stripe_data):
         # If the verse doesn't exist in our base text, then just set it to blank
-        self.base_text = u""
+        self.base_text = ""
         for (stripe, ms_stripes) in stripe_data:
             my_ms_stripe = [x for x in ms_stripes if
                             (x.ms_verse.hand.manuscript.id == base_ms_id and
@@ -531,8 +534,8 @@ def _collate_verse(verse, algorithm_obj, base_ms_id):
     Collate a single verse - this is an internal function used
     by collate() - which should be called instead.
     """
-    print verse
-    print algorithm_obj
+    print(verse)
+    print(algorithm_obj)
     stripes = Stripe.objects.filter(verse=verse, algorithm=algorithm_obj)
 
     my_data = []
@@ -571,12 +574,12 @@ def collate(book_obj, chapter_obj, verse_obj, algorithm_obj, base_ms_id):
         ]),
      (<Verse: Verse john 1:2>...
     """
-    print ("Creating collation for {}:{}:{}:{}:{}"
+    print(("Creating collation for {}:{}:{}:{}:{}"
            .format(book_obj.name,
                    chapter_obj,
                    verse_obj,
                    algorithm_obj.name,
-                   base_ms_id))
+                   base_ms_id)))
 
     if chapter_obj:
         chapters = [chapter_obj]
@@ -590,7 +593,7 @@ def collate(book_obj, chapter_obj, verse_obj, algorithm_obj, base_ms_id):
         for chapter in chapters:
             verses.extend(Verse.objects.filter(chapter=chapter).order_by('num'))
 
-    print "Collating {} verses".format(len(verses))
+    print(("Collating {} verses".format(len(verses))))
     for i, verse in enumerate(verses):
-        print " - collating {}/{} - {}".format(i + 1, len(verses), verse)
+        print((" - collating {}/{} - {}".format(i + 1, len(verses), verse)))
         yield _collate_verse(verse, algorithm_obj, base_ms_id)

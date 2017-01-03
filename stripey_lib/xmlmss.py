@@ -43,10 +43,10 @@ class Snippet(object):
         assert not self._snippets, self
         if hand_name is None:
             if hand_type == 'orig':
-                print "WARNING: Assuming hand None:orig is firsthand"
+                print("WARNING: Assuming hand None:orig is firsthand")
                 hand_name = 'firsthand'
             elif hand_type == 'corr':
-                print "WARNING: Assuming hand None:corr is corrector"
+                print("WARNING: Assuming hand None:corr is corrector")
                 hand_name = 'corrector'
 
         assert hand_name, (text, hand_name, hand_type)
@@ -74,7 +74,7 @@ class Snippet(object):
         XXX: Is this a good idea at all? It's standard...
         """
         # Final nu
-        text = text.replace(u'¯', u'ν')
+        text = text.replace('¯', 'ν')
         while '  ' in text:
             #~ print "Stripping double space"
             text = text.replace('  ', ' ')
@@ -125,7 +125,7 @@ class Snippet(object):
         all_hands = set()
         for s in self._snippets:
             all_hands.update(s.get_hands())
-        for (hand_name, hand_type) in self._readings.keys():
+        for (hand_name, hand_type) in list(self._readings.keys()):
             all_hands.add((hand_name, hand_type))
         return all_hands
 
@@ -173,7 +173,7 @@ class Snippet(object):
                 hand_idx = order_of_hands.index(hand_name)
                 # Find hand names that exist here... Note, order_of_hands doesn't
                 # have the hand_type, so we can't use that right now...
-                present_hands_keys = self._readings.keys()
+                present_hands_keys = list(self._readings.keys())
                 present_hands = [x[0] for x in present_hands_keys]
                 hands_to_try = list(reversed(order_of_hands[:hand_idx]))
                 if not hands_to_try:
@@ -193,14 +193,14 @@ class Snippet(object):
                 else:
                     import pdb
                     pdb.set_trace()
-                    print "NO BREAK"
+                    print("NO BREAK")
 
             # Run any required post processing on the text
             ret = self._post_process(ret)
 
             if self._word_sep is True:
                 # If this is a new word, then add a space
-                ret = u" " + ret
+                ret = " " + ret
 
             # Trim out double spaces
             #~ while '  ' in ret:
@@ -342,7 +342,7 @@ class Verse(object):  # flake8: noqa
         """
         ret = self._word_reader(el, top=True)
         if el.tail and el.tail.strip():
-            print "WARNING: Word {} ({}:{}) has a tail".format(el.attrib.get('n'), self.chapter.num, self.num)
+            print(("WARNING: Word {} ({}:{}) has a tail".format(el.attrib.get('n'), self.chapter.num, self.num)))
 
         return ret
 
@@ -357,7 +357,7 @@ class Verse(object):  # flake8: noqa
             if tag in ignore_tags:
                 continue
             if not ch.tag.endswith("}rdg"):
-                print ch, ch.attrib, ch.text
+                print((ch, ch.attrib, ch.text))
                 raise ValueError("I only want rdg tags in an app")
 
             # Now parse the rdg tag to get its text
@@ -369,7 +369,7 @@ class Verse(object):  # flake8: noqa
             typ = ch.attrib.get('type')
             text = ch_snippet.get_text(order_of_hands = self.chapter.manuscript.order_of_hands)
             if text == "" and hand == typ == None:
-                print "WARNING: Empty rdg tag"
+                print("WARNING: Empty rdg tag")
             else:
                 #print u"Adding reading {} for {}:{}".format(text, hand, typ)
                 ret.add_reading(text, hand, typ)
@@ -467,7 +467,7 @@ class Manuscript(object):
 
         if self.order_of_hands == []:
             self.order_of_hands = ['firsthand']
-        print "{} hands defined: {}".format(len(self.order_of_hands), ', '.join(self.order_of_hands))
+        print(("{} hands defined: {}".format(len(self.order_of_hands), ', '.join(self.order_of_hands))))
 
         # Text
         for child in root.iter("{http://www.tei-c.org/ns/1.0}div"):
@@ -485,13 +485,14 @@ class Manuscript(object):
 
         logger.debug("Finished parsing %s" % (self.name, ))
 
+
 if __name__ == "__main__":
     import sys
     m = Manuscript("Test", sys.argv[1])
-    print m.book, m.num
-    for ch in m.chapters.values():
-        for vl in ch.verses.values():
+    print("{}:{}".format(m.book, m.num))
+    for ch in list(m.chapters.values()):
+        for vl in list(ch.verses.values()):
             for vs in vl:
-                print "> {}:{}".format(ch.num, vs.num)
+                print("> {}:{}".format(ch.num, vs.num))
                 for t, h in vs.get_texts():
-                    print h + '\t' + t
+                    print("{}\t{}".format(h, t))
