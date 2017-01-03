@@ -29,7 +29,7 @@ if [[ ${ok} == 'y' ]]; then
 # Import script for ${dumpfile}
 import subprocess
 print("Finding stripey_app* tables")
-sqltables = subprocess.check_output("psql django -c \"SELECT table_name FROM information_schema.tables WHERE table_name ILIKE 'stripey_app%';\"", shell=True)
+sqltables = subprocess.check_output("psql django -c \"SELECT table_name FROM information_schema.tables WHERE table_name ILIKE 'stripey_app%';\"", shell=True, universal_newlines=True)
 tables = [x.strip() for x in sqltables.splitlines() if x.strip().startswith('stripey_app')]
 print("Found tables: {}".format(tables))
 
