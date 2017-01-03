@@ -12,7 +12,7 @@ if [[ ${ok} != 'n' ]]; then
 
     msg="$(hg summary | head -1)"
 
-    scp -r stripey_app django@***REMOVED***:***REMOVED***/.
+    scp -r stripey_app django@***REMOVED***:django/.
 fi
 
 echo "Copy postgres database to VPS? [y/N]"

@@ -135,7 +135,7 @@ class Collator(object):
         except Exception as e:
             # Collate failed
             with self._collatex_errors.get_lock():
-                logger.error("Collate has failed us: (count={})".format(self._collatex_errors.value), exc_info=True)
+                logger.error("Collate has failed us: {} (count={})".format(e, self._collatex_errors.value))
                 self._collatex_errors.value += 1
                 if self._collatex_errors.value > MAX_COLLATEX_ERRORS:
                     self.cx.restart()
