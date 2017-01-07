@@ -51,3 +51,11 @@ EOF
     rm import.py
     ssh django@***REMOVED*** "source venv_stripey/bin/activate && python import.py 2>&1"
 fi
+
+echo "Remove server picklify data? [y/N]"
+read ok
+if [[ ${ok} == 'y' ]]; then
+    ssh www-data@***REMOVED*** "find .picklify -type f -delete 2>&1"
+fi
+
+    
