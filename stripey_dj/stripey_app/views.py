@@ -365,10 +365,17 @@ def set_base_text(request):
     """
     Sets the base text to use and returns to the HTTP REFERER
     """
-    base_ms = get_object_or_404(ManuscriptTranscription, pk=request.GET.get('base_ms_id'))
+    base_ms_id = int(request.GET.get('base_ms_id'))
+    if base_ms_id >= 0:
+        # Check that's a valid ms id
+        get_object_or_404(ManuscriptTranscription, pk=base_ms_id)
+    else:
+        # Un-set it by saying -1
+        base_ms_id = -1
+
     referer = request.META.get('HTTP_REFERER', '/index.html')
     ret = HttpResponseRedirect(referer)
-    ret.set_cookie('base_ms', value=base_ms.id, max_age=3600 * 24 * 365)
+    ret.set_cookie('base_ms', value=base_ms_id, max_age=3600 * 24 * 365)
     return ret
 
 

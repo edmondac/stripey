@@ -460,8 +460,12 @@ def get_all_verses(book_obj, chapter_obj, base_ms_id=None, verse_num=None):
     all_mss = ManuscriptTranscription.objects.all()
     base_ms = None
     if base_ms_id:
-        base_ms = ManuscriptTranscription.objects.get(id=base_ms_id)
-    else:
+        try:
+            base_ms = ManuscriptTranscription.objects.get(id=base_ms_id)
+        except ObjectDoesNotExist:
+            logger.warning("Bad base ms selected: {}".format(base_ms_id))
+
+    if base_ms is None:
         # We still need one - so pick the first we get...
         base_ms = ManuscriptTranscription.objects.all()[0]
 

@@ -35,6 +35,7 @@
                  <form action="set_base_text.html">
                      <label for="base_ms_id">Base Text:</label>
                      <select name="base_ms_id" onchange="this.form.submit()">
+                         <option value="-1">Select a base witness</option>
                          {% for class in all_mss %}
                             <option disabled>{{ class.0 }}</option>
                             {% for ms in class.1 %}
