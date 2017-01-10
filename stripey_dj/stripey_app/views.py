@@ -258,7 +258,7 @@ def book_correctors_json(request):
     """
     ms = get_object_or_404(ManuscriptTranscription, pk=request.GET.get('ms_id'))
     bk_id = request.GET.get('bk')
-    hands = [x for x in Hand.objects.filter(manuscript=ms) if x.name != 'firsthand']
+    hands = [x for x in Hand.objects.filter(manuscript=ms).order_by('handorder') if x.name != 'firsthand']
     chapters = Chapter.objects.filter(book__num=bk_id).order_by('num')
 
     matrix = []
