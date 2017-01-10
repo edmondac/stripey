@@ -7,6 +7,7 @@ Notes:
 * I'm not handling gap tags very smartly
 """
 
+from collections import defaultdict
 import logging
 logger = logging.getLogger('XmlMss')
 import xml.etree.ElementTree as ET
@@ -39,7 +40,6 @@ class Snippet(object):
         self._word_sep = word_sep
 
     def add_reading(self, text, hand_name='firsthand', hand_type='orig'):
-        #print u"Adding reading {} for {}.{}".format(text, hand_name, hand_type)
         assert not self._snippets, self
         if hand_name is None:
             if hand_type == 'orig':
@@ -76,47 +76,9 @@ class Snippet(object):
         # Final nu
         text = text.replace('¯', 'ν')
         while '  ' in text:
-            #~ print "Stripping double space"
             text = text.replace('  ', ' ')
 
         return text
-
-    #~ def flatten(self):
-        #~ """
-        #~ Flatten any snippets into readings.
-        #~ """
-        #~ if self._flat is True:
-            #~ # Already done it
-            #~ return
-#~
-        #~ if not self._snippets:
-            #~ # Nothing to do
-            #~ return
-#~
-        #~ assert self._readings == [], self
-#~
-        #~ bits = []
-        #~ all_hands = self.get_hands()
-        #~ for s in self._snippets:
-            #~ # First flatten the sub-snippet (and so on, recursively)
-            #~ s.flatten()
-            #~ r = {(h, t):s.get_text(h, t) for (h, t) in s.get_hands()}
-            #~ bits.append(r)
-            #~ all_hands.add(r)
-#~
-        #~ for (n, t) in all_hands:
-            #~ r = []
-            #~ for bit in bits:
-                #~ print bit
-                #~ if (n, t) in bit:
-                    #~ # Specific reading for this hand exists
-                    #~ r.append(bit[(n, t)])
-                #~ else:
-                    #~ r.append(bit.get((None, None), ''))
-            #~ self._readings.append((''.join([a for a in r if a]), n, t))
-#~
-        #~ #self._post_process(
-        #~ self._flat = True
 
     def get_hands(self):
         """
@@ -129,12 +91,6 @@ class Snippet(object):
             all_hands.add((hand_name, hand_type))
         return all_hands
 
-    #~ def has_hand(self, hand_name, hand_type):
-        #~ """
-        #~ Does this snippet contain a reading in the specified hand?
-        #~ """
-        #~ return (hand_name, hand_type) in self.get_hands()
-
     def get_text(self, hand_name='firsthand', hand_type='orig', order_of_hands=['firsthand']):
         """
         Return the text of a particular hand. If the hand isn't present in this
@@ -142,7 +98,6 @@ class Snippet(object):
         a hand that is present, and return that text.
         """
         assert hand_name in order_of_hands, (hand_name, hand_type, order_of_hands)
-        #~ print "Get text: {}, {}, {}".format(hand_name, hand_type, order_of_hands)
 
         if self._snippets:
             # Find our text recursively
@@ -162,7 +117,6 @@ class Snippet(object):
                 # This hand exists here
                 ret = self._readings[key]
             else:
-                #~ print "Looking for earlier readings than {}:{}".format(hand_name, hand_type)
                 # Special case for firsthand corrections...
                 if hand_name == 'firsthand':
                     if hand_type == 'alt':
@@ -202,10 +156,6 @@ class Snippet(object):
                 # If this is a new word, then add a space
                 ret = " " + ret
 
-            # Trim out double spaces
-            #~ while '  ' in ret:
-                #~ ret = ret.replace('  ', ' ')
-            #print u"Returning reading for {}:{}: {}".format(hand_name, hand_type, ret)
             return ret
 
     def __repr__(self):
@@ -225,8 +175,7 @@ class Verse(object):  # flake8: noqa
         self.chapter = chapter
         self.num = number
 
-        # Note - we can have multiple different texts if correctors have been at
-        # work.
+        # Note - we can have multiple different texts if correctors have been at work.
         self.snippet = self._parse(self.element)
 
     def get_texts(self):
@@ -244,15 +193,11 @@ class Verse(object):  # flake8: noqa
             else:
                 hand = n
             assert hand
+            assert hand.split('(')[0] in self.chapter.manuscript.order_of_hands, (hand, self.chapter.manuscript.order_of_hands)
             reading = self.snippet.get_text(n, t, self.chapter.manuscript.order_of_hands).strip()
             if reading:
                 ret.append((reading, hand))
 
-        #~ if len(ret) > 1:
-            #~ #print self.snippet
-            #~ for t, h in ret:
-                #~ print u"{}: {}".format(h, t)
-            #~ raise ValueError
         return ret
 
     def _parse(self, element):
@@ -267,17 +212,11 @@ class Verse(object):  # flake8: noqa
 
         parser = getattr(self, '_parse_%s' % (tag, ), None)
         if parser:
-            #print "Using parser:", parser
             my_snippet = parser(element)
         else:
-            #print element, element.attrib, element.text
-            #print "Don't know how to deal with %s tags - will recurse" % (tag, )
             my_snippet = Snippet()
             for i in element.getchildren():
                 my_snippet.add_snippet(self._parse(i))
-
-        #~ if my_snippet.is_empty():
-            #~ print "EMPTY", element.attrib, element.getchildren(), element.text
 
         return my_snippet
 
@@ -316,8 +255,7 @@ class Verse(object):  # flake8: noqa
                 gap = Snippet()
                 gap.add_reading(" ")
                 ret.add_snippet(gap)
-
-            for c in el._children:
+            for c in el.getchildren():
                 ret.add_snippet(self._word_reader(c))
 
         # We always want the tail, because of the way elementtree puts it on
@@ -333,7 +271,6 @@ class Verse(object):  # flake8: noqa
             space.add_reading(" ")
             ret.add_snippet(space)
 
-        #print "Word parser got:", ret
         return ret
 
     def _parse_w(self, el):
@@ -371,7 +308,6 @@ class Verse(object):  # flake8: noqa
             if text == "" and hand == typ == None:
                 print("WARNING: Empty rdg tag")
             else:
-                #print u"Adding reading {} for {}:{}".format(text, hand, typ)
                 ret.add_reading(text, hand, typ)
 
         return ret
@@ -384,7 +320,7 @@ class Chapter(object):
     """
 
     def __init__(self, element, num, manuscript):
-        self.verses = {}
+        self.verses = defaultdict(list)
         self.num = num
         self.manuscript = manuscript
         self.parse_element(element)
@@ -406,9 +342,7 @@ class Chapter(object):
                     v = v.split('V')[-1]
                 v = int(v)
                 v_obj = Verse(i, v, self)
-                already = self.verses.get(v, [])
-                already.append(v_obj)
-                self.verses[v] = already
+                self.verses[v].append(v_obj)
 
 
 class Manuscript(object):

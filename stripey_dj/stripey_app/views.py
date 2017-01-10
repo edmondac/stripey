@@ -187,8 +187,7 @@ def manuscript(request):
     else:
         hands = Hand.objects.filter(manuscript=ms)
 
-    correctors = [x.name for x in hands if x.name != 'firsthand']
-    correctors.sort()
+    correctors = [x.name for x in sorted(hands, key=lambda z:z.handorder) if x.name != 'firsthand']
 
     return default_response(request,
                             'manuscript.html',
@@ -213,24 +212,8 @@ def _manuscript_chapter_data(ms_id, bk, ch):
     # Set the verses to display
     verses = MsVerse.objects.filter(hand__in=hands)
     my_chapter.verses = verses.filter(verse__chapter__num=ch).order_by('verse__num',
-                                                                       'hand__id')
+                                                                       'hand__handorder')
     return hands, my_chapter
-
-
-#~ def manuscript_chapter(request):
-    #~ """
-    #~ Show the text for this manuscript (of the specified book/chapter or just
-    #~ the first one we find.
-    #~ """
-    #~ (ms, hands, books, chapter) = _manuscript_chapter_data(request.GET.get('ms_id'),
-                                                           #~ request.GET.get('bk'),
-                                                           #~ request.GET.get('ch'))
-    #~ return default_response(request,
-                            #~ 'manuscript.html',
-                            #~ {'ms': ms,
-                             #~ 'hands': [x.name for x in hands],
-                             #~ 'books': books,
-                             #~ 'chapter_to_show': chapter})
 
 
 def manuscript_correctors_json(request):
@@ -238,7 +221,7 @@ def manuscript_correctors_json(request):
     Return the JSON blob to draw the correctors graph for this manuscript
     """
     ms = get_object_or_404(ManuscriptTranscription, pk=request.GET.get('ms_id'))
-    hands = [x for x in Hand.objects.filter(manuscript=ms) if x.name != 'firsthand']
+    hands = [x for x in Hand.objects.filter(manuscript=ms).order_by('handorder') if x.name != 'firsthand']
     my_books = set([c.chapter.book for c in MsChapter.objects.filter(manuscript=ms)])
 
     matrix = []
@@ -325,15 +308,14 @@ def chapter_correctors_json(request):
             # initialise the empty list
             verses[v.verse.num]
         else:
-            found_hands.add(v.hand.name)
+            found_hands.add(v.hand)
             verses[v.verse.num].append(v.hand.name)
     verses_l = []
     for k in sorted(verses.keys()):
         verses_l.append((k, verses[k]))
-    ret = {'hands': list(found_hands),
+    ret = {'hands': [h.name for h in sorted(found_hands, key=lambda x: x.handorder)],
            'verses': verses_l}
-           #~ 'verses': [(v.verse.num, [x.name for x in v.hand])
-                      #~ for v in chapter.verses]}
+
     return HttpResponse(json.dumps(ret), content_type='application/json')
 
 

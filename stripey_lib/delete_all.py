@@ -6,6 +6,9 @@ import subprocess
 sys.path.append('../stripey_dj/')
 os.environ['DJANGO_SETTINGS_MODULE'] = 'stripey_dj.settings'
 
+import django
+django.setup()
+
 from stripey_app import models
 
 mods = [models.MsStripe,
@@ -37,13 +40,13 @@ def vacuum():
 
 print("WARNING: Using hardcoded postgres command line 'psql -p 5434 -U django django'")
 print("Really delete everything in the stripey tables? [N/y]")
-ok = eval(input())
+ok = input()
 if ok.strip().lower() == 'y':
     for model in mods:
         delete(model)
 
     print("Vacuum full? [Y/n]")
-    ok = eval(input())
+    ok = input()
     if ok.strip().lower() != 'n':
         vacuum()
 

@@ -125,7 +125,7 @@ class ManuscriptTranscription(models.Model):
                 for j, vs in enumerate(verse_list):
                     db_verse = _get_verse(db_chapter, vs.num)
                     for text, hand in vs.get_texts():
-                        db_hand = _get_hand(self, hand)
+                        db_hand = _get_hand(self, hand, obj.order_of_hands)
                         ms_verse = MsVerse()
                         ms_verse.verse = db_verse
                         ms_verse.hand = db_hand
@@ -220,9 +220,10 @@ class ManuscriptTranscription(models.Model):
 class Hand(models.Model):
     manuscript = models.ForeignKey(ManuscriptTranscription)
     name = models.CharField(max_length=30)
+    handorder = models.IntegerField()
 
     def __repr__(self):
-        return "{}:{}".format(self.manuscript, self.name)
+        return "{}:{} (order:{})".format(self.manuscript, self.name, self.handorder)
 
 
 class Book(models.Model):
@@ -405,9 +406,12 @@ def _get_verse(db_chapter, num):
     return db_verse
 
 
-def _get_hand(ms, hand):
+def _get_hand(ms, hand, order_of_hands):
     """
     Retrieve or create the specified hand
+
+    @param hand:
+    @param order_of_hands:
     """
     if hand is None:
         hand = 'firsthand'
@@ -415,8 +419,17 @@ def _get_hand(ms, hand):
         db_hand = Hand.objects.get(manuscript=ms, name=hand)
     except ObjectDoesNotExist:
         logger.debug("Creating hand object for {}:{}".format(ms.ms_ref, hand))
+        if hand in ('firsthand', 'firsthand(orig)'):
+            # This ensures that firsthand will always be first
+            #   (e.g. firsthand(corr) will have order 0, normally.)
+            handorder = -1
+        else:
+            # Order any further hands as defined
+            handorder = order_of_hands.index(hand.split('(')[0])
+
         db_hand = Hand()
         db_hand.name = hand
+        db_hand.handorder = handorder
         db_hand.manuscript = ms
         db_hand.save()
     return db_hand
