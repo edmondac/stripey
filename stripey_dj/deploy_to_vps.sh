@@ -5,6 +5,8 @@ function fatal {
     exit 1
 }
 
+fatal "This needs updating to work with github"
+
 echo "Commit locally and deploy to VPS? [Y/n]"
 read ok
 if [[ ${ok} != 'n' ]]; then
