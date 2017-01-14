@@ -42,14 +42,14 @@ logger = logging.getLogger(__name__)
 
 
 class Collator(object):
-    def __init__(self, algo, *, port=7369, nworkers=3, timeout=900):
+    def __init__(self, algo, *, port=7369, nworkers=3, timeout=900, collatex_jar=COLLATEX_JAR):
         self.algo = algo
         self.port = port
         self.workers = []
         self.queue = multiprocessing.Queue()
         self._collatex_errors = multiprocessing.Value('i')
         self._successful_collations = multiprocessing.Value('i')
-        self.cx = CollateXService(port, timeout, max_parallel=nworkers * 2)
+        self.cx = CollateXService(port, timeout, max_parallel=nworkers * 2, collatex_jar=collatex_jar)
         self.cx.start()
 
         # We need to close the database connections before forking new procecsses.
@@ -274,7 +274,7 @@ def drop_all(algo, chapter_ref=None):
     logger.warning("Done")
 
 
-def collate_all(algo, *, chapter_ref=None, port=7369, timeout=900, workers=3):
+def collate_all(algo, *, chapter_ref=None, port=7369, timeout=900, workers=3, collatex_jar=COLLATEX_JAR):
     """
     Collate everything using the collatex service
 
@@ -295,7 +295,7 @@ def collate_all(algo, *, chapter_ref=None, port=7369, timeout=900, workers=3):
         algo_obj.name = algo
         algo_obj.save()
 
-    coll = Collator(algo_obj, port=port, timeout=timeout, nworkers=workers)
+    coll = Collator(algo_obj, port=port, timeout=timeout, nworkers=workers, collatex_jar=collatex_jar)
     for book in Book.objects.all():
         if mubook is None or book.num == mubook:
             coll.collate_book(book, muchapter)
@@ -313,11 +313,12 @@ class CollateXService(object):
     """
     _popen = None
 
-    def __init__(self, port, timeout=900, max_parallel=10):
+    def __init__(self, port, timeout=900, max_parallel=10, collatex_jar=COLLATEX_JAR):
         self._port = port
         self._timeout = timeout
         self._max_parallel = max_parallel
         self.lock = multiprocessing.RLock()
+        self.collatex_jar = collatex_jar
         # Is Collatex OK and usable?
         self._collatex_ok = multiprocessing.Event()
         # How many queries are currently in collatex?
@@ -341,7 +342,7 @@ class CollateXService(object):
             raise RuntimeError("Something is already listening on port {}".format(self._port))
 
         logger.info("Starting CollateX service on port {}".format(self._port))
-        cmd = ["java", "-jar", COLLATEX_JAR, "--http",
+        cmd = ["java", "-jar", self.collatex_jar, "--http",
                "--max-parallel-collations", str(self._max_parallel),
                "-p", str(self._port)]
         logger.debug("Launching collatex: {}".format(' '.join(cmd)))
@@ -530,7 +531,7 @@ def collate_python(witnesses, algorithm):
     return ret
 
 
-def tests():
+def tests(collatex_jar):
     """
     Collate everything using the collatex service
     """
@@ -555,7 +556,7 @@ def tests():
 
     # Test Java service
 
-    cx = CollateXService(port=12345)
+    cx = CollateXService(port=12345, collatex_jar=collatex_jar)
     cx.start()
 
     try:
@@ -571,7 +572,7 @@ def tests():
 
     # Tes Python module
     resp = collate_python(witnesses, 'dekker')
-    assert resp == dek_resp_python, "Not what I expected...\n{}\n{}".format(resp, dek_resp)
+    assert resp == dek_resp_python, "Not what I expected...\n{}\n{}".format(resp, dek_resp_python)
     logger.info("All python tests passed")
 
 
@@ -607,6 +608,7 @@ if __name__ == "__main__":
     parser.add_argument('-a', '--algorithm', default='dekker',
                         help='Which algorithm to use? Options are: {}, all'.format(SUPPORTED_ALGORITHMS))
     parser.add_argument('--test', help="Just run tests and exit", default=False, action='store_true')
+    parser.add_argument('collatex_jar', help="Path to the collatex jar file (e.g. ./{})".format(COLLATEX_JAR))
     parser.add_argument('-c', '--clean', help="Clean out old colation before adding new",
                         default=False, action='store_true')
     parser.add_argument('-f', '--force', help="Don't ask any questions - just do it!",
@@ -623,7 +625,7 @@ if __name__ == "__main__":
 
     if args.test:
         logger.info("Running tests...")
-        tests()
+        tests(args.collatex_jar)
     else:
         if args.algorithm == 'all':
             algos = SUPPORTED_ALGORITHMS
@@ -643,6 +645,7 @@ if __name__ == "__main__":
 
         for a in algos:
             collate_all(a, chapter_ref=args.chapter, port=args.collatex_port,
-                        timeout=args.timeout, workers=args.workers)
+                        timeout=args.timeout, workers=args.workers,
+                        collatex_jar=args.collatex_jar)
 
         print("\n** Don't forget to delete the old picklify data")
