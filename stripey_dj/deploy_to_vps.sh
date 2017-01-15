@@ -9,7 +9,7 @@ echo "Update software on VPS (make sure you've committed and pushed first)? [Y/n
 read ok
 if [[ ${ok} != 'n' ]]; then
     echo "Updating remote git clone..."
-    ssh -t django@***REMOVED*** "cd django/stripey.git && git pull && cd .. && source venv_stripey/bin/activate && python manage.py collectstatic"
+    ssh -t django@***REMOVED*** "cd django/stripey.git && git pull && cd .. && source ~/venv_stripey/bin/activate && python manage.py collectstatic"
 fi
 
 echo "Copy postgres database to VPS? [y/N]"
