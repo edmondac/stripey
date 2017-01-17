@@ -19,7 +19,7 @@ from contextlib import contextmanager
 # Collatex settings:
 COLLATEX_JAR = "collatex-tools-1.7.1.jar"  # For Needleman-Wunsch and Medite
 # How many colatex errors before we restart the service?
-MAX_COLLATEX_ERRORS = 20
+MAX_COLLATEX_ERRORS = 1
 SUPPORTED_ALGORITHMS = ('python', 'dekker', 'needleman-wunsch', 'medite')
 # levenstein distance: the edit distance threshold for optional fuzzy matching
 #                      of tokens; the default is exact matching
@@ -363,7 +363,9 @@ class CollateXService(object):
     def _stop_service(self):
         logger.info("Terminating CollateX service immediately ({})"
                     .format(self.__class__._popen.pid))
-        while self.__class__._popen.poll() is None:
+        count = 0
+        while self.__class__._popen.poll() and count < 10 is None:
+            count += 1
             logger.info("Terminate...")
             self._popen.terminate()
             self.__class__._popen.communicate()
