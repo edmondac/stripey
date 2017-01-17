@@ -13,14 +13,14 @@ import urllib.error
 import urllib.parse
 import multiprocessing
 import logging
-import collatex  # For Dekker
+import collatex
 from contextlib import contextmanager
 
 # Collatex settings:
 COLLATEX_JAR = "collatex-tools-1.7.1.jar"  # For Needleman-Wunsch and Medite
 # How many colatex errors before we restart the service?
 MAX_COLLATEX_ERRORS = 20
-SUPPORTED_ALGORITHMS = ('dekker', 'needleman-wunsch', 'medite')
+SUPPORTED_ALGORITHMS = ('python', 'dekker', 'needleman-wunsch', 'medite')
 # levenstein distance: the edit distance threshold for optional fuzzy matching
 #                      of tokens; the default is exact matching
 FUZZY_EDIT_DISTANCE = 3
@@ -130,7 +130,7 @@ class Collator(object):
                     witnesses.append({'id': str(verse.id),
                                       'content': verse.text})
 
-        if self.algo.name == 'dekker':
+        if self.algo.name == 'python':
             collation = collate_python(witnesses, self.algo.name)
         else:
             try:
@@ -548,8 +548,8 @@ def tests(collatex_jar):
 
     # NOTE: This can vary (sometimes) - so if it fails try running it again.
     # Yes... I know...
-    dek_resp_java = {'witnesses': ['1', '2', '3', '4', '5'], 'table': [[['This ', 'is '], ['This ', 'is '], ['This ', 'is '], ['These ', 'are '], ['This ', 'is ']], [['a '], [], ['a '], [], ['a ']], [[], [], ['testimony'], [], ['a ']], [['test'], ['test'], [], ['tests'], ['test']]]}
-    dek_resp_python = {'witnesses': ['1', '2', '3', '4', '5'], 'table': [[['This', 'is'], ['This', 'is'], ['This', 'is'], ['These', 'are', 'tests'], ['This', 'is']], [[], [], [], [], ['a']], [['a'], [], ['a'], [], ['a']], [['test'], ['test'], ['testimony'], [], ['test']]]}
+    dek_resp = {'witnesses': ['1', '2', '3', '4', '5'], 'table': [[['This ', 'is '], ['This ', 'is '], ['This ', 'is '], ['These ', 'are '], ['This ', 'is ']], [['a '], [], ['a '], [], ['a ']], [[], [], ['testimony'], [], ['a ']], [['test'], ['test'], [], ['tests'], ['test']]]}
+    python_resp = {'witnesses': ['1', '2', '3', '4', '5'], 'table': [[['This', 'is'], ['This', 'is'], ['This', 'is'], ['These', 'are', 'tests'], ['This', 'is']], [[], [], [], [], ['a']], [['a'], [], ['a'], [], ['a']], [['test'], ['test'], ['testimony'], [], ['test']]]}
 
     nw_resp = {'witnesses': ['1', '2', '3', '4', '5'], 'table': [[[], [], [], [], ['This ']], [['This '], [], ['This '], [], ['is ']], [['is ', 'a '], ['This ', 'is '], ['is ', 'a '], ['These ', 'are '], ['a ', 'a ']], [['test'], ['test'], ['testimony'], ['tests'], ['test']]]}
     med_resp = {'witnesses': ['1', '2', '3', '4', '5'], 'table': [[[], [], [], [], ['This ']], [['This '], [], ['This '], ['These '], ['is ']], [['is '], ['This '], ['is '], ['are '], ['a ']], [['a '], ['is '], ['a '], [], ['a ']], [['test'], ['test'], ['testimony'], ['tests'], ['test']]]}
@@ -561,7 +561,7 @@ def tests(collatex_jar):
 
     try:
         resp = cx.query(witnesses, 'dekker')
-        assert resp == dek_resp_java, resp
+        assert resp == dek_resp, resp
         resp = cx.query(witnesses, 'needleman-wunsch')
         assert resp == nw_resp, resp
         resp = cx.query(witnesses, 'medite')
@@ -571,8 +571,8 @@ def tests(collatex_jar):
         cx.quit()
 
     # Tes Python module
-    resp = collate_python(witnesses, 'dekker')
-    assert resp == dek_resp_python, "Not what I expected...\n{}\n{}".format(resp, dek_resp_python)
+    resp = collate_python(witnesses, 'python')
+    assert resp == python_resp, "Not what I expected...\n{}\n{}".format(resp, python_resp)
     logger.info("All python tests passed")
 
 
