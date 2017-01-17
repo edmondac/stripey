@@ -594,7 +594,7 @@ def collate(book_obj, chapter_obj, verse_obj, algorithm_obj, base_ms_id):
     print(("Creating collation for {}:{}:{}:{}:{}"
            .format(book_obj.name,
                    chapter_obj.num,
-                   verse_obj.num,
+                   verse_obj.num if verse_obj else 'ALL',
                    algorithm_obj.name,
                    base_ms_id)))
 
