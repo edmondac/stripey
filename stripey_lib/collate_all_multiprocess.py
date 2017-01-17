@@ -49,8 +49,13 @@ class Collator(object):
         self.queue = multiprocessing.Queue()
         self._collatex_errors = multiprocessing.Value('i')
         self._successful_collations = multiprocessing.Value('i')
-        self.cx = CollateXService(port, timeout, max_parallel=nworkers * 2, collatex_jar=collatex_jar)
-        self.cx.start()
+
+        if algo.name == 'python':
+            # We don't need to start the java service
+            self.cx = None
+        else:
+            self.cx = CollateXService(port, timeout, max_parallel=nworkers * 2, collatex_jar=collatex_jar)
+            self.cx.start()
 
         # We need to close the database connections before forking new procecsses.
         # This way each process will create a new connection when it needs one.
@@ -71,8 +76,9 @@ class Collator(object):
         for t in self.workers:
             t.join()
 
-        # Tell collatex to quit
-        self.cx.quit()
+        if self.cx is not None:
+            # Tell collatex to quit
+            self.cx.quit()
 
         logger.debug("Done")
 
