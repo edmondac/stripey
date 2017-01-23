@@ -353,7 +353,17 @@ class CollateXService(object):
                "-p", str(self._port)]
         logger.debug("Launching collatex: {}".format(' '.join(cmd)))
         self.__class__._popen = subprocess.Popen(cmd)
-        time.sleep(5)
+        # Give it 30 goes to let it come up
+        for i in range(30):
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                try:
+                    s.connect(('localhost', self._port))
+                except ConnectionRefusedError:
+                    logger.debug("Collatex is not listening yet")
+                    time.sleep(1)
+                else:
+                    break
+
         if self.__class__._popen.poll() is None:
             logger.debug("Collatex process is running")
         else:
@@ -364,7 +374,8 @@ class CollateXService(object):
         logger.info("Terminating CollateX service immediately ({})"
                     .format(self.__class__._popen.pid))
         count = 0
-        while self.__class__._popen.poll() and count < 10 is None:
+        pid = self.__class__._popen.pid
+        while self.__class__._popen.poll() is None and count < 10:
             count += 1
             logger.info("Terminate...")
             self._popen.terminate()
@@ -372,13 +383,14 @@ class CollateXService(object):
             time.sleep(1)
 
         try:
-            os.kill(self.__class__._popen.pid, 0)
+            logger.debug("Checking PID {}".format(pid))
+            os.kill(pid, 0)
         except OSError:
             pass
         else:
             # It's still alive... kill it the old fashioned way
             logger.info("Kill...")
-            os.kill(self.__class__._popen.pid, 9)
+            os.kill(pid, 9)
             time.sleep(1)
 
         self.__class__._popen = None
