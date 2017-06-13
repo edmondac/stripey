@@ -255,6 +255,9 @@ class Verse(models.Model):
     num = models.IntegerField()
 
     def __repr__(self):
+        return self.ref()
+
+    def ref(self):
         return "Verse {} {}:{}".format(self.chapter.book.name,
                                        self.chapter.num,
                                        self.num)

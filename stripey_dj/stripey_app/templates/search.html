@@ -7,7 +7,7 @@
         <h1>Search results for '{{ query }}'</h1>
         {% if results %}
 
-            {% regroup results by verse as verse_list %}
+            {% regroup results by verse.ref as verse_list %}
             Found results in {{ verse_list|length }} verses.
             <ol>
             {% for verse in verse_list %}
