@@ -5,11 +5,16 @@ function fatal {
     exit 1
 }
 
+if [[ -z $1 ]]; then
+    fatal "Please supply the VPS hostname"
+fi
+VPSHOSTNAME=$1
+
 echo "Update software on VPS (make sure you've committed and pushed first)? [Y/n]"
 read ok
 if [[ ${ok} != 'n' ]]; then
     echo "Updating remote git clone..."
-    ssh -t django@***REMOVED*** "cd django/stripey.git && git pull && cd .. && source ~/venv_stripey/bin/activate && python manage.py collectstatic"
+    ssh -t django@${VPSHOSTNAME} "cd django/stripey.git && git pull && cd .. && source ~/venv_stripey/bin/activate && python manage.py collectstatic"
 fi
 
 echo "Copy postgres database to VPS? [y/N]"
@@ -20,7 +25,7 @@ if [[ ${ok} == 'y' ]]; then
     echo "Please enter local postgres user django's password if prompted:"
     pg_dump -U django -W -p 5434 -d django -t 'stripey_app_*' > /tmp/${dumpfile}
 
-    scp /tmp/${dumpfile} django@***REMOVED***:
+    scp /tmp/${dumpfile} django@${VPSHOSTNAME}:
 
     cat > import.py << EOF
 # Import script for ${dumpfile}
@@ -44,15 +49,15 @@ print("Analyzing...")
 subprocess.check_call('psql django -c "VACUUM ANALYZE"', shell=True)
 EOF
 
-    scp import.py django@***REMOVED***:
+    scp import.py django@${VPSHOSTNAME}:
     rm import.py
-    ssh django@***REMOVED*** "source venv_stripey/bin/activate && python import.py 2>&1"
+    ssh django@${VPSHOSTNAME} "source venv_stripey/bin/activate && python import.py 2>&1"
 fi
 
 echo "Remove server picklify data? [y/N]"
 read ok
 if [[ ${ok} == 'y' ]]; then
-    ssh www-data@***REMOVED*** "find .picklify -type f -delete 2>&1"
+    ssh www-data@${VPSHOSTNAME} "find .picklify -type f -delete 2>&1"
 fi
 
     
